@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\DonationItemRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use App\Models\DonationType; // 👈 Asegúrate de importar el modelo correcto
 
 class DonationItemController extends Controller
 {
@@ -26,11 +27,13 @@ class DonationItemController extends Controller
      * Show the form for creating a new resource.
      */
     public function create(): View
-    {
-        $donationItem = new DonationItem();
+{
+    $donationItem = new DonationItem();
+    $types = DonationType::all(); // 👈 Asegúrate de tener esto
 
-        return view('donation-item.create', compact('donationItem'));
-    }
+    return view('donation-item.create', compact('donationItem', 'types'));
+}
+
 
     /**
      * Store a newly created resource in storage.
@@ -57,22 +60,27 @@ class DonationItemController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit($id): View
-    {
-        $donationItem = DonationItem::find($id);
+{
+    $donationItem = DonationItem::find($id);
+    $types = DonationType::all(); // 👈 Aquí también
 
-        return view('donation-item.edit', compact('donationItem'));
-    }
+    return view('donation-item.edit', compact('donationItem', 'types'));
+}
+
 
     /**
      * Update the specified resource in storage.
      */
     public function update(DonationItemRequest $request, DonationItem $donationItem): RedirectResponse
     {
+        // Actualiza el ítem de la donación con los datos validados
         $donationItem->update($request->validated());
 
-        return Redirect::route('donation-items.index')
-            ->with('success', 'DonationItem updated successfully');
+        // Redirige a la página anterior (funciona como un "volver atrás")
+        return back()->with('success', 'DonationItem updated successfully');
     }
+
+
 
     public function destroy($id): RedirectResponse
     {

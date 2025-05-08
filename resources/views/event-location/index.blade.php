@@ -16,11 +16,22 @@
                             <span id="card_title">{{ __('Event Locations') }}</span>
 
                             <div class="float-right">
-                                <a href="{{ route('event-locations.create') }}" class="btn btn-primary btn-sm float-right" data-placement="left">
+                                <a href="{{ route('event-locations.create') }}" class="btn btn-primary btn-sm">
                                     {{ __('Create New') }}
                                 </a>
                             </div>
                         </div>
+
+                        {{-- Buscador --}}
+                        <form method="GET" action="{{ route('event-locations.index') }}" class="mt-3">
+                            <div class="input-group">
+                                <input type="text" name="search" class="form-control" placeholder="Buscar por nombre, dirección o ID del evento"
+                                    value="{{ request()->query('search') }}">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
 
                     @if ($message = Session::get('success'))
@@ -58,7 +69,8 @@
                                                     <a class="btn btn-sm btn-success" href="{{ route('event-locations.edit', $eventLocation->id) }}"><i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}</a>
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;">
+                                                    <button type="submit" class="btn btn-danger btn-sm"
+                                                        onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;">
                                                         <i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}
                                                     </button>
                                                 </form>

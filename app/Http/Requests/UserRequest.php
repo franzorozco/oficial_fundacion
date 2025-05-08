@@ -6,21 +6,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UserRequest extends FormRequest
 {
-    /**
-     * Determina si el usuario está autorizado a realizar esta solicitud.
-     *
-     * @return bool
-     */
     public function authorize()
     {
-        return true;  // Aquí puedes agregar lógica para autorizar la solicitud si es necesario.
+        return true;
     }
 
-    /**
-     * Obtiene las reglas de validación que se deben aplicar a la solicitud.
-     *
-     * @return array
-     */
     public function rules()
     {
         return [
@@ -28,6 +18,10 @@ class UserRequest extends FormRequest
             'email' => 'required|email|max:150',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
+            // Validación de la contraseña
+            'password' => $this->isMethod('post') 
+                ? 'required|string|min:8|confirmed' // Obligatorio en creación
+                : 'nullable|string|min:8|confirmed', // Opcional en edición
         ];
     }
 }

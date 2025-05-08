@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\ExternalDonor; // Asegúrate de importar el modelo
 
 use App\Models\DonationsCash;
 use Illuminate\Http\RedirectResponse;
@@ -8,19 +9,38 @@ use Illuminate\Http\Request;
 use App\Http\Requests\DonationsCashRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use App\Models\User;
+use App\Models\Campaign;
 
 class DonationsCashController extends Controller
 {
-    /**
+    /** 
      * Display a listing of the resource.
      */
     public function index(Request $request): View
     {
-        $donationsCashes = DonationsCash::paginate();
+        $query = DonationsCash::query();
+
+        if ($search = $request->input('search')) {
+            $query->whereHas('user', fn($q) => 
+                    $q->where('name', 'LIKE', "%{$search}%")
+                )
+                ->orWhereHas('external_donor', fn($q) => 
+                    $q->where('names', 'LIKE', "%{$search}%")
+                )
+                ->orWhere('method', 'LIKE', "%{$search}%")
+                ->orWhere('amount', 'LIKE', "%{$search}%")
+                ->orWhereHas('campaign', fn($q) =>
+                    $q->where('name', 'LIKE', "%{$search}%")
+                );
+        }
+
+        $donationsCashes = $query->paginate(10);
 
         return view('donations-cash.index', compact('donationsCashes'))
             ->with('i', ($request->input('page', 1) - 1) * $donationsCashes->perPage());
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -28,9 +48,12 @@ class DonationsCashController extends Controller
     public function create(): View
     {
         $donationsCash = new DonationsCash();
-
-        return view('donations-cash.create', compact('donationsCash'));
+        $donors = User::all(); // Para obtener la lista de donantes
+        $campaigns = Campaign::all(); // Para obtener la lista de campañas
+        $externalDonors = ExternalDonor::all();
+        return view('donations-cash.create', compact('donationsCash', 'donors', 'campaigns', 'externalDonors'));
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -38,7 +61,8 @@ class DonationsCashController extends Controller
     public function store(DonationsCashRequest $request): RedirectResponse
     {
         DonationsCash::create($request->validated());
-
+        
+        $donation = DonationsCash::create($request->validated());
         return Redirect::route('donations-cashes.index')
             ->with('success', 'DonationsCash created successfully.');
     }
@@ -56,12 +80,19 @@ class DonationsCashController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id): View
+    public function edit($id)
     {
-        $donationsCash = DonationsCash::find($id);
-
-        return view('donations-cash.edit', compact('donationsCash'));
+        $donationsCash = DonationsCash::findOrFail($id);
+        $campaigns = Campaign::all();
+        $donors = User::all(); // 👈 Agrega esto también
+        $externalDonors = ExternalDonor::all();
+        return view('donations-cash.edit', compact('donationsCash', 'campaigns', 'donors', 'externalDonors'));
+        
     }
+
+    
+
+
 
     /**
      * Update the specified resource in storage.

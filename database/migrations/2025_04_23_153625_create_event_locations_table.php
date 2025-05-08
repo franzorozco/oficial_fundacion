@@ -20,6 +20,9 @@ return new class extends Migration
             $table->decimal('longitud', 11, 8)->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->datetime('start_hour')->nullable();
+            $table->datetime('end_hour')->nullable();
+ 
         });
     }
 

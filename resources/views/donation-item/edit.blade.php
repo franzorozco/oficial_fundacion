@@ -17,15 +17,6 @@
                 @csrf
 
                 @include('donation-item.form')
-
-                <div class="form-group mt-3">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> {{ __('Save Changes') }}
-                    </button>
-                    <a href="{{ route('donation-items.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> {{ __('Back') }}
-                    </a>
-                </div>
             </form>
         </div>
     </div>

@@ -16,13 +16,12 @@
     <div class="card">
         <div class="card-header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-
                 <span id="card_title">
                     {{ __('Financial Accounts') }}
                 </span>
 
                 <div class="float-right">
-                    <a href="{{ route('financial-accounts.create') }}" class="btn btn-primary btn-sm float-right" data-placement="left">
+                    <a href="{{ route('financial-accounts.create') }}" class="btn btn-primary btn-sm" data-placement="left">
                         {{ __('Create New') }}
                     </a>
                 </div>
@@ -30,6 +29,24 @@
         </div>
 
         <div class="card-body bg-white">
+            <!-- Barra de búsqueda y filtros -->
+            <form method="GET" action="{{ route('financial-accounts.index') }}" class="mb-3">
+                <div class="row">
+                    <div class="col-md-4">
+                        <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search by Name or Type">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" name="min_balance" value="{{ request('min_balance') }}" class="form-control" placeholder="Min Balance">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" name="max_balance" value="{{ request('max_balance') }}" class="form-control" placeholder="Max Balance">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">Apply Filters</button>
+                    </div>
+                </div>
+            </form>
+
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
                     <thead class="thead">

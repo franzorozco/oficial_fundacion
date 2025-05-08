@@ -35,7 +35,10 @@ class EventLocation extends Model
 	protected $casts = [
 		'event_id' => 'int',
 		'latitud' => 'float',
-		'longitud' => 'float'
+		'longitud' => 'float',
+		'start_hour' => 'datetime',
+		'end_hour' => 'datetime'
+		
 	];
 
 	protected $fillable = [
@@ -43,7 +46,9 @@ class EventLocation extends Model
 		'location_name',
 		'address',
 		'latitud',
-		'longitud'
+		'longitud',
+		'start_hour',
+		'end_hour'
 	];
 
 	public function event()

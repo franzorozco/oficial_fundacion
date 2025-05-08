@@ -12,33 +12,30 @@
             <div class="col-sm-12">
                 <div class="card">
                     <div class="card-header">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span id="card_title">
+                        <div class="card-header d-flex flex-wrap gap-2 align-items-center">
+                            <span id="card_title" class="me-auto">
                                 {{ __('Donations Cashes') }}
                             </span>
-        <!-- Formulario de búsqueda estilizado -->
-                            <div class="card-body pt-3 pb-0">
-                                <form method="GET" action="{{ route('donations-cashes.index') }}">
-                                    <div class="input-group mb-3">
-                                        <input 
-                                            type="text" 
-                                            name="search" 
-                                            class="form-control" 
-                                            placeholder="{{ __('Search by donor, method, campaign...') }}" 
-                                            value="{{ request()->search }}"
-                                        >
-                                        <button class="btn btn-outline-primary" type="submit">
-                                            <i class="fas fa-search"></i> {{ __('Search') }}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                            <div class="float-right">
-                                <a href="{{ route('donations-cashes.create') }}" class="btn btn-primary btn-sm float-right" data-placement="left">
-                                    {{ __('Create New') }}
-                                </a>
-                            </div>
+
+                        
+                            <a href="{{ route('donations-cashes.create') }}" class="btn btn-primary btn-sm">
+                                {{ __('Create New') }}
+                            </a>
                         </div>
+                        <form method="GET" action="{{ route('donations-cashes.index') }}" class="flex-grow-1">
+                                <div class="input-group w-100">
+                                    <input 
+                                        type="text" 
+                                        name="search" 
+                                        class="form-control" 
+                                        placeholder="{{ __('Search by donor, method, campaign...') }}" 
+                                        value="{{ request()->search }}"
+                                    >
+                                    <button class="btn btn-outline-primary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </form>
                     </div>
 
                     @if ($message = Session::get('success'))
@@ -54,12 +51,12 @@
                                 <thead class="thead">
                                     <tr>
                                         <th>No</th>
-                                        <th>Donor Id</th>
-                                        <th>External Donor Id</th>
+                                        <th>Donor Name</th> <!-- Aquí cambiaremos para mostrar el nombre -->
+                                        <th>External Donor Name</th> <!-- Aquí mostramos el nombre del external donor -->
                                         <th>Amount</th>
                                         <th>Method</th>
                                         <th>Donation Date</th>
-                                        <th>Campaign Id</th>
+                                        <th>Campaign Name</th> <!-- Aquí mostramos el nombre de la campaña -->
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -67,12 +64,12 @@
                                     @foreach ($donationsCashes as $donationsCash)
                                         <tr>
                                             <td>{{ ++$i }}</td>
-                                            <td>{{ $donationsCash->donor_id }}</td>
-                                            <td>{{ $donationsCash->external_donor_id }}</td>
+                                            <td>{{ $donationsCash->user ? $donationsCash->user->name : 'N/A' }}</td> <!-- Muestra el nombre del donante -->
+                                            <td>{{ $donationsCash->external_donor ? $donationsCash->external_donor->names : 'N/A' }}</td> <!-- Muestra el nombre del external donor -->
                                             <td>{{ $donationsCash->amount }}</td>
                                             <td>{{ $donationsCash->method }}</td>
                                             <td>{{ $donationsCash->donation_date }}</td>
-                                            <td>{{ $donationsCash->campaign_id }}</td>
+                                            <td>{{ $donationsCash->campaign ? $donationsCash->campaign->name : 'N/A' }}</td> <!-- Muestra el nombre de la campaña -->
 
                                             <td>
                                                 <form action="{{ route('donations-cashes.destroy', $donationsCash->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this record?');">

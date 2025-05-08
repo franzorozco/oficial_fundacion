@@ -55,11 +55,13 @@ class DonationsCash extends Model
 	public function external_donor()
 	{
 		return $this->belongsTo(ExternalDonor::class);
+		
 	}
 
 	public function user()
 	{
 		return $this->belongsTo(User::class, 'donor_id');
+		
 	}
 
 	public function campaign()

@@ -8,8 +8,15 @@
         </div>
         <div class="form-group mb-2 mb20">
             <label for="donation_type_id" class="form-label">{{ __('Donation Type Id') }}</label>
-            <input type="text" name="donation_type_id" class="form-control @error('donation_type_id') is-invalid @enderror" value="{{ old('donation_type_id', $donationItem?->donation_type_id) }}" id="donation_type_id" placeholder="Donation Type Id">
-            {!! $errors->first('donation_type_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            <select name="donation_type_id" class="form-control">
+    @foreach($types as $type)
+        <option value="{{ $type->id }}" {{ old('donation_type_id', $donationItem?->donation_type_id) == $type->id ? 'selected' : '' }}>
+            {{ $type->name }}
+        </option>
+    @endforeach
+</select>
+
+
         </div>
         <div class="form-group mb-2 mb20">
             <label for="item_name" class="form-label">{{ __('Item Name') }}</label>
@@ -36,4 +43,4 @@
     <div class="col-md-12 mt20 mt-2">
         <button type="submit" class="btn btn-primary">{{ __('Submit') }}</button>
     </div>
-</div>
+</div> 

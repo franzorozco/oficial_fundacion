@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\User;
 
 /**
  * Class DonationRequest
@@ -37,20 +38,20 @@ class DonationRequest extends Model
 	protected $table = 'donation_requests';
 
 	protected $casts = [
-		'applicant_user__id' => 'int',
-		'user_in_charge_id' => 'int',
-		'donation_id' => 'int',
-		'request_date' => 'datetime'
-	];
+        'applicant_user_id' => 'int',  // Cambiar el nombre del campo
+        'user_in_charge_id' => 'int',
+        'donation_id' => 'int',
+        'request_date' => 'datetime',
+    ];
 
 	protected $fillable = [
-		'applicant_user__id',
-		'user_in_charge_id',
-		'donation_id',
-		'request_date',
-		'notes',
-		'state'
-	];
+        'applicant_user_id',  // Cambiar el nombre del campo
+        'user_in_charge_id',
+        'donation_id',
+        'request_date',
+        'notes',
+        'state',
+    ];
 
 	public function user()
 	{

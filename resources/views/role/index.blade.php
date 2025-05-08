@@ -14,16 +14,26 @@
                     {{ __('Roles') }}
                 </span>
 
-                <div class="float-right">
-                    <a href="{{ route('roles.create') }}" class="btn btn-primary btn-sm" data-placement="left">
-                        {{ __('Create New') }}
+                <div class="float-right d-flex gap-2">
+                    <a href="{{ route('roles.trashed') }}" class="btn btn-danger btn-sm">
+                        <i class="fa fa-trash"></i> Ver Eliminados
+                    </a>
+                    <a href="{{ route('roles.create') }}" class="btn btn-primary btn-sm">
+                        <i class="fa fa-plus"></i> Crear Nuevo
                     </a>
                 </div>
+
             </div>
         </div>
 
         @if ($message = Session::get('success'))
             <div class="alert alert-success m-4">
+                <p>{{ $message }}</p>
+            </div>
+        @endif
+
+        @if ($message = Session::get('error'))
+            <div class="alert alert-danger m-4">
                 <p>{{ $message }}</p>
             </div>
         @endif

@@ -16,11 +16,30 @@ class EventParticipantController extends Controller
      */
     public function index(Request $request): View
     {
-        $eventParticipants = EventParticipant::paginate();
+        $query = EventParticipant::query();
 
-        return view('event-participant.index', compact('eventParticipants'))
+        // Filtros
+        if ($request->filled('search')) {
+            $query->where('observations', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('event_id')) {
+            $query->where('event_id', $request->event_id);
+        }
+
+        $eventParticipants = $query->paginate(10)->appends($request->all());
+
+        // Extraer IDs únicos de eventos para los filtros
+        $uniqueEventIds = EventParticipant::select('event_id')->distinct()->pluck('event_id');
+
+        return view('event-participant.index', compact('eventParticipants', 'uniqueEventIds'))
             ->with('i', ($request->input('page', 1) - 1) * $eventParticipants->perPage());
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -37,11 +56,24 @@ class EventParticipantController extends Controller
      */
     public function store(EventParticipantRequest $request): RedirectResponse
     {
-        EventParticipant::create($request->validated());
-
-        return Redirect::route('event-participants.index')
-            ->with('success', 'EventParticipant created successfully.');
+        $data = $request->validated();
+        $data['registration_date'] = now();
+    
+        // Verifica que la ubicación pertenezca al evento
+        $location = \App\Models\EventLocation::where('id', $data['event_locations_id'])
+            ->where('event_id', $data['event_id'])
+            ->first();
+    
+        if (!$location) {
+            return Redirect::back()->withErrors(['event_locations_id' => 'La ubicación seleccionada no pertenece a este evento.']);
+        }
+    
+        EventParticipant::create($data);
+    
+        return Redirect::route('events.show', $data['event_id'])
+            ->with('success', 'Participante agregado correctamente.');
     }
+    
 
     /**
      * Display the specified resource.

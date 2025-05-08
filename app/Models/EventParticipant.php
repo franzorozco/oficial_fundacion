@@ -42,10 +42,12 @@ class EventParticipant extends Model
 	protected $fillable = [
 		'event_id',
 		'user_id',
+		'event_locations_id',
 		'registration_date',
 		'observations',
 		'status'
 	];
+	
 
 	public function event()
 	{
@@ -56,4 +58,10 @@ class EventParticipant extends Model
 	{
 		return $this->belongsTo(User::class);
 	}
+
+	public function eventLocation()
+	{
+		return $this->belongsTo(EventLocation::class, 'event_locations_id');
+	}
+
 }

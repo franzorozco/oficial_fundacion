@@ -320,15 +320,7 @@ return [
             'url' => 'admin/blog',
             'can' => 'manage-blog',
         ],
-       
-        [
-            'text' => 'pages',
-            'url' => 'admin/pages',
-            'icon' => 'far fa-fw fa-file',
-            'label' => 4,
-            'label_color' => 'success',
-        ],
-
+     
 
 
 
@@ -338,6 +330,14 @@ return [
             'url'  => 'users',
             'icon' => 'fas fa-users',
             'can' => 'users.home',
+            'label' => 'Madre',
+        ],
+
+        [
+            'text' => 'Roles de sistema',
+            'url'  => 'roles',
+            'icon' => 'fas fa-user-shield',
+            'label' => 'Madre',
         ],
         
         [
@@ -345,6 +345,7 @@ return [
             'url'  => 'donations',
             'icon' => 'fas fa-box',
             'can' => 'donations.home',
+            'label' => 'Madre',
         ],
         
         [
@@ -352,6 +353,7 @@ return [
             'url'  => 'campaigns',
             'icon' => 'fas fa-bullhorn',
             'can' => 'campaigns.home',
+            'label' => 'Madre',
         ],
         
         [
@@ -359,6 +361,7 @@ return [
             'url'  => 'campaign-finances',
             'icon' => 'fas fa-wallet',
             'can' => 'campaign-finances.home',
+            'label' => 'Madre',
         ],
         
         [
@@ -366,6 +369,7 @@ return [
             'url'  => 'donations-cashes',
             'icon' => 'fas fa-money-bill-wave',
             'can' => 'donations-cashes.home',
+            'label' => 'Madre',
         ],
         
         [
@@ -380,6 +384,7 @@ return [
             'url'  => 'donation-requests',
             'icon' => 'fas fa-hand-holding-heart',
             'can' => 'donation-requests.home',
+            'label' => 'Madre',
         ],
         
         [
@@ -422,6 +427,7 @@ return [
             'url'  => 'external-donors',
             'icon' => 'fas fa-handshake',
             'can' => 'external-donors.home',
+            'label' => 'Madre',
         ],
         
         [
@@ -429,6 +435,7 @@ return [
             'url'  => 'financial-accounts',
             'icon' => 'fas fa-university',
             'can' => 'financial-accounts.home',
+            'label' => 'Madre',
         ],
         
         [
@@ -457,6 +464,7 @@ return [
             'url'  => 'volunteer-verifications',
             'icon' => 'fas fa-check-circle',
             'can' => 'volunteer-verifications.home',
+            'label' => 'Madre',
         ],
         
 

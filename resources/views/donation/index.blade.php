@@ -14,11 +14,11 @@
                     {{ __('Donations') }}
                 </span>
                 <div class="mb-3">
-                <form action="{{ route('donations.index') }}" method="GET" class="form-inline d-flex" role="search">
-                    <input type="text" name="search" class="form-control mr-2" placeholder="Buscar donaciones..." value="{{ request('search') }}">
-                    <button class="btn btn-outline-primary" type="submit">Buscar</button>
-                </form>
-        </div>
+                    <form action="{{ route('donations.index') }}" method="GET" class="form-inline d-flex" role="search">
+                        <input type="text" name="search" class="form-control mr-2" placeholder="Buscar donaciones..." value="{{ request('search') }}">
+                        <button class="btn btn-outline-primary" type="submit">Buscar</button>
+                    </form>
+                </div>
                 <a href="{{ route('donations.create') }}" class="btn btn-primary btn-sm" data-placement="left">
                     {{ __('Create New') }}
                 </a>
@@ -28,10 +28,8 @@
         @if ($message = Session::get('success'))
             <div class="alert alert-success m-4">
                 <p>{{ $message }}</p>
-                
             </div>
         @endif
-       
 
         <div class="card-body bg-white">
             <div class="table-responsive">
@@ -39,13 +37,13 @@
                     <thead class="thead">
                         <tr>
                             <th>No</th>
-                            <th>External Donor Id</th>
-                            <th>User Id</th>
-                            <th>Received By Id</th>
-                            <th>Status Id</th>
-                            <th>During Campaign Id</th>
-                            <th>Donation Date</th>
-                            <th>Notes</th>
+                            <th>Donante externo</th>
+                            <th>Usuario registrado</th>
+                            <th>Recibido por</th>
+                            <th>Estado</th>
+                            <th>Campaña</th>
+                            <th>Fecha</th>
+                            <th>Notas</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -53,11 +51,11 @@
                         @foreach ($donations as $donation)
                             <tr>
                                 <td>{{ ++$i }}</td>
-                                <td>{{ $donation->external_donor_id }}</td>
-                                <td>{{ $donation->user_id }}</td>
-                                <td>{{ $donation->received_by_id }}</td>
-                                <td>{{ $donation->status_id }}</td>
-                                <td>{{ $donation->during_campaign_id }}</td>
+                                <td>{{ $donation->externalDonor->names ?? '-' }}</td>
+                                <td>{{ $donation->user->name ?? '-' }}</td>
+                                <td>{{ $donation->receivedBy->name ?? '-' }}</td>
+                                <td>{{ $donation->status->name ?? '-' }}</td>
+                                <td>{{ $donation->campaign->name ?? '-' }}</td>
                                 <td>{{ $donation->donation_date }}</td>
                                 <td>{{ $donation->notes }}</td>
                                 <td>
@@ -70,7 +68,7 @@
                                         </a>
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;">
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('¿Estás seguro de eliminar?') ? this.closest('form').submit() : false;">
                                             <i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}
                                         </button>
                                     </form>

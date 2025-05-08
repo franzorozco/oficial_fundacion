@@ -16,11 +16,19 @@ class EventLocationController extends Controller
      */
     public function index(Request $request): View
     {
-        $eventLocations = EventLocation::paginate();
+        $search = $request->input('search');
+
+        $eventLocations = EventLocation::when($search, function ($query, $search) {
+            return $query->where('location_name', 'LIKE', "%{$search}%")
+                        ->orWhere('address', 'LIKE', "%{$search}%")
+                        ->orWhere('event_id', 'LIKE', "%{$search}%");
+        })->paginate();
 
         return view('event-location.index', compact('eventLocations'))
             ->with('i', ($request->input('page', 1) - 1) * $eventLocations->perPage());
     }
+
+
 
     /**
      * Show the form for creating a new resource.

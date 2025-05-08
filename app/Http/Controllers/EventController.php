@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Http\Requests\EventRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use App\Models\User;
+use App\Models\Campaign;
 
 class EventController extends Controller
 {
@@ -16,11 +18,22 @@ class EventController extends Controller
      */
     public function index(Request $request): View
     {
-        $events = Event::paginate();
+        $query = Event::with(['campaign', 'user']);
+
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+
+        if ($request->filled('campaign_id')) {
+            $query->where('campaign_id', $request->campaign_id);
+        }
+
+        $events = $query->paginate();
 
         return view('event.index', compact('events'))
             ->with('i', ($request->input('page', 1) - 1) * $events->perPage());
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -46,11 +59,17 @@ class EventController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id): View
+    public function show($id)
     {
-        $event = Event::find($id);
+        // Cargar el evento con las relaciones necesarias
+        $event = Event::with('eventParticipants', 'eventLocations')->findOrFail($id);
 
-        return view('event.show', compact('event'));
+        // Obtener usuarios que no están registrados como participantes en este evento
+        $users = User::whereDoesntHave('eventParticipants', function ($query) use ($id) {
+            $query->where('event_id', $id);
+        })->get();
+
+        return view('event.show', compact('event', 'users'));
     }
 
     /**
@@ -58,9 +77,11 @@ class EventController extends Controller
      */
     public function edit($id): View
     {
-        $event = Event::find($id);
+        $event = Event::findOrFail($id);
+        $campaigns = Campaign::pluck('name', 'id'); // id => name
+        $users = User::pluck('name', 'id');         // id => name
 
-        return view('event.edit', compact('event'));
+        return view('event.edit', compact('event', 'campaigns', 'users'));
     }
 
     /**
@@ -74,9 +95,12 @@ class EventController extends Controller
             ->with('success', 'Event updated successfully');
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy($id): RedirectResponse
     {
-        Event::find($id)->delete();
+        Event::findOrFail($id)->delete();
 
         return Redirect::route('events.index')
             ->with('success', 'Event deleted successfully');

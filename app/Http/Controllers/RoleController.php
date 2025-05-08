@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Http\Request;
@@ -69,10 +68,11 @@ class RoleController extends Controller
     public function edit(Role $role): View
     {
         $permissions     = Permission::all();
-        $rolePermissions = $role->permissions->pluck('id')->toArray();
+        $rolePermissions = $role->permissions->pluck('id')->toArray(); // Recoge los permisos del rol
 
         return view('role.edit', compact('role', 'permissions', 'rolePermissions'));
     }
+
 
     /**
      * Update the specified resource in storage.
@@ -96,11 +96,42 @@ class RoleController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy(Role $role): RedirectResponse
-    {
-        // Soft-delete
-        $role->delete();
-
+{
+    // Verificar si el rol es el del usuario actual
+    $user = auth()->user();
+    if ($role->id === $user->roles->first()->id) {
         return Redirect::route('roles.index')
+            ->with('error', 'No puedes eliminar tu propio rol.');
+    }
+
+    // Verificar si el rol es "donor" o "volunteer"
+    if (in_array($role->name, ['donor', 'volunteer', 'admin'])) {
+        return Redirect::route('roles.index')
+            ->with('error', 'Este rol no puede ser eliminado.');
+    }
+
+    // Si pasa las verificaciones, realizar el soft-delete
+    $role->delete();
+
+    return Redirect::route('roles.index')
             ->with('success', 'Rol eliminado exitosamente.');
     }
+
+    public function trashed(Request $request): View
+    {
+        $roles = Role::onlyTrashed()->paginate();
+
+        return view('role.trashed', compact('roles'))
+            ->with('i', ($request->input('page', 1) - 1) * $roles->perPage());
+    }
+
+    public function restore($id): RedirectResponse
+    {
+        $role = Role::onlyTrashed()->findOrFail($id);
+        $role->restore();
+
+        return Redirect::route('roles.trashed')->with('success', 'Rol restaurado exitosamente.');
+        
+    }
+
 }

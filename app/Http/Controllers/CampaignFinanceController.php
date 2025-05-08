@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Http\Requests\CampaignFinanceRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use App\Models\Campaign; // Asegúrate de tener esta línea al inicio del archivo
+use App\Models\User; // Asegúrate de tener esta línea al inicio del archivo
 
 class CampaignFinanceController extends Controller
 {
@@ -16,7 +18,17 @@ class CampaignFinanceController extends Controller
      */
     public function index(Request $request): View
     {
-        $campaignFinances = CampaignFinance::paginate();
+        $search = $request->input('search');
+
+        $campaignFinances = CampaignFinance::with(['campaign', 'user'])
+            ->when($search, function ($query, $search) {
+                $query->whereHas('campaign', function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%");
+                })->orWhereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%");
+                });
+            })
+            ->paginate(10);
 
         return view('campaign-finance.index', compact('campaignFinances'))
             ->with('i', ($request->input('page', 1) - 1) * $campaignFinances->perPage());
@@ -28,8 +40,10 @@ class CampaignFinanceController extends Controller
     public function create(): View
     {
         $campaignFinance = new CampaignFinance();
+        $campaigns = Campaign::all(); // Obtener todas las campañas
+        $users = User::all(); // Obtener todos los usuarios (gerentes)
 
-        return view('campaign-finance.create', compact('campaignFinance'));
+        return view('campaign-finance.create', compact('campaignFinance', 'campaigns', 'users'));
     }
 
     /**
@@ -59,8 +73,10 @@ class CampaignFinanceController extends Controller
     public function edit($id): View
     {
         $campaignFinance = CampaignFinance::find($id);
+        $campaigns = Campaign::all(); // Obtener todas las campañas
+        $users = User::all(); // Obtener todos los usuarios (gerentes)
 
-        return view('campaign-finance.edit', compact('campaignFinance'));
+        return view('campaign-finance.edit', compact('campaignFinance', 'campaigns', 'users'));
     }
 
     /**

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('unit', 50)->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

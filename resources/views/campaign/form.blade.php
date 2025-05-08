@@ -1,11 +1,20 @@
 <div class="row padding-1 p-1">
     <div class="col-md-12">
         
+
         <div class="form-group mb-2 mb20">
-            <label for="creator_id" class="form-label">{{ __('Creator Id') }}</label>
-            <input type="text" name="creator_id" class="form-control @error('creator_id') is-invalid @enderror" value="{{ old('creator_id', $campaign?->creator_id) }}" id="creator_id" placeholder="Creator Id">
+            <label for="creator_id" class="form-label">{{ __('Creator name') }}</label>
+            <select name="creator_id" class="form-control @error('creator_id') is-invalid @enderror" id="creator_id">
+                <option value="">{{ __('Select a creator') }}</option>
+                @foreach($users as $user)
+                    <option value="{{ $user->id }}" {{ old('creator_id', $campaign?->creator_id) == $user->id ? 'selected' : '' }}>
+                        {{ $user->name }}
+                    </option>
+                @endforeach
+            </select>
             {!! $errors->first('creator_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
+
         <div class="form-group mb-2 mb20">
             <label for="name" class="form-label">{{ __('Name') }}</label>
             <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $campaign?->name) }}" id="name" placeholder="Name">

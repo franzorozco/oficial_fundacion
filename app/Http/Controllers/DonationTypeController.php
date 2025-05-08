@@ -16,11 +16,20 @@ class DonationTypeController extends Controller
      */
     public function index(Request $request): View
     {
-        $donationTypes = DonationType::paginate();
+        $query = DonationType::query();
+
+        if ($request->has('search') && $request->search !== null) {
+            $searchTerm = $request->search;
+            $query->where('name', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('description', 'LIKE', "%{$searchTerm}%");
+        }
+
+        $donationTypes = $query->paginate();
 
         return view('donation-type.index', compact('donationTypes'))
             ->with('i', ($request->input('page', 1) - 1) * $donationTypes->perPage());
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -48,7 +57,8 @@ class DonationTypeController extends Controller
      */
     public function show($id): View
     {
-        $donationType = DonationType::find($id);
+        $donationType = DonationType::findOrFail($id);
+        
 
         return view('donation-type.show', compact('donationType'));
     }
@@ -58,7 +68,8 @@ class DonationTypeController extends Controller
      */
     public function edit($id): View
     {
-        $donationType = DonationType::find($id);
+        $donationType = DonationType::findOrFail($id);
+
 
         return view('donation-type.edit', compact('donationType'));
     }
@@ -67,18 +78,22 @@ class DonationTypeController extends Controller
      * Update the specified resource in storage.
      */
     public function update(DonationTypeRequest $request, DonationType $donationType): RedirectResponse
-    {
-        $donationType->update($request->validated());
+{
+    $donationType->update($request->validated());
 
-        return Redirect::route('donation-types.index')
-            ->with('success', 'DonationType updated successfully');
-    }
+    return Redirect::route('donation-types.index')
+        ->with('success', 'El tipo de donación ha sido actualizado correctamente.');
+}
 
-    public function destroy($id): RedirectResponse
-    {
-        DonationType::find($id)->delete();
 
-        return Redirect::route('donation-types.index')
-            ->with('success', 'DonationType deleted successfully');
-    }
+public function destroy($id): RedirectResponse
+{
+    $donationType = DonationType::findOrFail($id);  // Cambiado a findOrFail
+
+    $donationType->delete();
+
+    return Redirect::route('donation-types.index')
+        ->with('success', 'Tipo de donación eliminado correctamente');
+}
+
 }

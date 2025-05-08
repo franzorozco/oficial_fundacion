@@ -16,11 +16,32 @@ class ExternalDonorController extends Controller
      */
     public function index(Request $request): View
     {
-        $externalDonors = ExternalDonor::paginate();
+        $query = ExternalDonor::query();
+
+        // Filtros por búsqueda general
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('names', 'like', '%' . $request->search . '%')
+                ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // Filtro por apellido paterno
+        if ($request->filled('paternal')) {
+            $query->where('paternal_surname', 'like', '%' . $request->paternal . '%');
+        }
+
+        // Filtro por apellido materno
+        if ($request->filled('maternal')) {
+            $query->where('maternal_surname', 'like', '%' . $request->maternal . '%');
+        }
+
+        $externalDonors = $query->paginate(10);
 
         return view('external-donor.index', compact('externalDonors'))
             ->with('i', ($request->input('page', 1) - 1) * $externalDonors->perPage());
     }
+
 
     /**
      * Show the form for creating a new resource.

@@ -1,9 +1,5 @@
 <?php
 
-/**
- * Created by Reliese Model.
- */
-
 namespace App\Models;
 
 use Carbon\Carbon;
@@ -26,66 +22,94 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property Carbon|null $updated_at
  * @property string|null $deleted_at
  * 
- * @property User $user
- * @property ExternalDonor|null $external_donor
- * @property DonationStatus $donation_status
+ * @property User|null $user
+ * @property User|null $receivedBy
+ * @property ExternalDonor|null $externalDonor
+ * @property DonationStatus|null $status
  * @property Campaign|null $campaign
- * @property Collection|DonationItem[] $donation_items
- * @property Collection|DonationRequest[] $donation_requests
+ * @property Collection|DonationItem[] $donationItems
+ * @property Collection|DonationRequest[] $donationRequests
  *
  * @package App\Models
  */
 class Donation extends Model
 {
-	use SoftDeletes;
-	protected $table = 'donations';
+    use SoftDeletes;
 
-	protected $casts = [
-		'external_donor_id' => 'int',
-		'user_id' => 'int',
-		'received_by_id' => 'int',
-		'status_id' => 'int',
-		'during_campaign_id' => 'int',
-		'donation_date' => 'datetime'
-	];
+    protected $table = 'donations';
 
-	protected $fillable = [
-		'external_donor_id',
-		'user_id',
-		'received_by_id',
-		'status_id',
-		'during_campaign_id',
-		'donation_date',
-		'notes'
-	];
+    protected $casts = [
+        'external_donor_id' => 'integer',
+        'user_id' => 'integer',
+        'received_by_id' => 'integer',
+        'status_id' => 'integer',
+        'during_campaign_id' => 'integer',
+        'donation_date' => 'datetime',
+    ];
 
-	public function user()
-	{
-		return $this->belongsTo(User::class, 'received_by_id');
-	}
+    protected $fillable = [
+        'external_donor_id',
+        'user_id',
+        'received_by_id',
+        'status_id',
+        'during_campaign_id',
+        'donation_date',
+        'notes',
+    ];
 
-	public function external_donor()
-	{
-		return $this->belongsTo(ExternalDonor::class);
-	}
+    /** 
+     * Relación con el donante interno (usuario registrado).
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
-	public function donation_status()
-	{
-		return $this->belongsTo(DonationStatus::class, 'status_id');
-	}
+    /** 
+     * Relación con el receptor (usuario que recibe la donación).
+     */
+    public function receivedBy()
+    {
+        return $this->belongsTo(User::class, 'received_by_id');
+    }
 
-	public function campaign()
-	{
-		return $this->belongsTo(Campaign::class, 'during_campaign_id');
-	}
+    /** 
+     * Relación con el donante externo.
+     */
+    public function externalDonor()
+    {
+        return $this->belongsTo(ExternalDonor::class, 'external_donor_id');
+    }
 
-	public function donation_items()
-	{
-		return $this->hasMany(DonationItem::class);
-	}
+    /** 
+     * Relación con el estado de la donación.
+     */
+    public function status()
+    {
+        return $this->belongsTo(DonationStatus::class, 'status_id');
+    }
 
-	public function donation_requests()
-	{
-		return $this->hasMany(DonationRequest::class);
-	}
+    /** 
+     * Relación con la campaña durante la cual se hizo la donación.
+     */
+    public function campaign()
+    {
+        return $this->belongsTo(Campaign::class, 'during_campaign_id');
+    }
+
+    /**
+     * Relación con los ítems de la donación (donation_items).
+     */
+    public function items()
+    {
+        return $this->hasMany(DonationItem::class);
+    }
+
+    /**
+     * (Opcional) Relación con las solicitudes de donación si existieran.
+     */
+    public function donationRequests()
+    {
+        return $this->hasMany(DonationRequest::class);
+    }
 }

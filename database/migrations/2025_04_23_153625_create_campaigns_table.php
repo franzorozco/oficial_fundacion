@@ -18,8 +18,6 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->time('start_hour')->nullable();
-            $table->time('end_hour')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Http\Requests\DonationRequestRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use App\Models\User;
+use App\Models\Donation;
 
 class DonationRequestController extends Controller
 {
@@ -25,23 +27,28 @@ class DonationRequestController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
-    {
-        $donationRequest = new DonationRequest();
+    // DonationRequestController.php
 
-        return view('donation-request.create', compact('donationRequest'));
+    public function create()
+    {
+        $users = User::all(); // o aplica filtros si es necesario
+        $donations = Donation::all(); // si usas esta variable también
+        $donationRequest = new DonationRequest(); // para mantener compatibilidad con el old()
+
+        return view('donation-request.create', compact('users', 'donations', 'donationRequest'));
     }
+
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(DonationRequestRequest $request): RedirectResponse
-    {
-        DonationRequest::create($request->validated());
+{
+    DonationRequest::create($request->validated());
 
-        return Redirect::route('donation-requests.index')
-            ->with('success', 'DonationRequest created successfully.');
-    }
+    return Redirect::route('donation-requests.index')
+        ->with('success', 'DonationRequest created successfully.');
+}
 
     /**
      * Display the specified resource.
@@ -59,20 +66,37 @@ class DonationRequestController extends Controller
     public function edit($id): View
     {
         $donationRequest = DonationRequest::find($id);
-
-        return view('donation-request.edit', compact('donationRequest'));
+        $users = User::all(); // Obtener todos los usuarios
+        $donations = Donation::all(); // Obtener todas las donaciones
+    
+        return view('donation-request.edit', compact('donationRequest', 'users', 'donations'));
     }
+    
 
     /**
      * Update the specified resource in storage.
      */
     public function update(DonationRequestRequest $request, DonationRequest $donationRequest): RedirectResponse
     {
-        $donationRequest->update($request->validated());
-
+        // Actualiza la solicitud de donación con los datos validados
+        $donationRequest->update([
+            'applicant_user__id' => $request->input('applicant_user__id'),
+            'user_in_charge_id' => $request->input('user_in_charge_id'),
+            'donation_id' => $request->input('donation_id'),
+            'request_date' => $request->input('request_date'),
+            'notes' => $request->input('notes'),
+            'state' => $request->input('state'),
+        ]);
+        
+        
+        
         return Redirect::route('donation-requests.index')
             ->with('success', 'DonationRequest updated successfully');
     }
+    
+
+    
+
 
     public function destroy($id): RedirectResponse
     {

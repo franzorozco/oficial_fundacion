@@ -16,23 +16,22 @@
                             <span id="card_title">
                                 {{ __('Donation Requests') }}
                             </span>
-                            <!-- Buscador estilizado -->
-<div class="card-body pt-0">
-    <form method="GET" action="{{ route('donation-requests.index') }}">
-        <div class="input-group mb-3">
-            <input 
-                type="text" 
-                name="search" 
-                class="form-control" 
-                placeholder="{{ __('Search by notes, state, user id...') }}" 
-                value="{{ request()->search }}"
-            >
-            <button class="btn btn-outline-primary" type="submit">
-                <i class="fas fa-search"></i> {{ __('Search') }}
-            </button>
-        </div>
-    </form>
-</div>
+                            <div class="card-body pt-0">
+                                <form method="GET" action="{{ route('donation-requests.index') }}">
+                                    <div class="input-group mb-3">
+                                        <input 
+                                            type="text" 
+                                            name="search" 
+                                            class="form-control" 
+                                            placeholder="{{ __('Search by notes, state, user id...') }}" 
+                                            value="{{ request()->search }}"
+                                        >
+                                        <button class="btn btn-outline-primary" type="submit">
+                                            <i class="fas fa-search"></i> {{ __('Search') }}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
 
                             <div class="float-right">
                                 <a href="{{ route('donation-requests.create') }}" class="btn btn-primary btn-sm">
@@ -54,9 +53,9 @@
                                 <thead>
                                     <tr>
                                         <th>No</th>
-                                        <th>Applicant User Id</th>
-                                        <th>User In Charge Id</th>
-                                        <th>Donation Id</th>
+                                        <th>Applicant User</th> <!-- Modificado -->
+                                        <th>User In Charge</th> <!-- Modificado -->
+                                        <th>Donation</th>
                                         <th>Request Date</th>
                                         <th>Notes</th>
                                         <th>State</th>
@@ -67,9 +66,9 @@
                                     @foreach ($donationRequests as $donationRequest)
                                         <tr>
                                             <td>{{ ++$i }}</td>
-                                            <td>{{ $donationRequest->applicant_user__id }}</td>
-                                            <td>{{ $donationRequest->user_in_charge_id }}</td>
-                                            <td>{{ $donationRequest->donation_id }}</td>
+                                            <td>{{ optional($donationRequest->user)->name ?? 'N/A' }}</td> <!-- Modificado -->
+                                            <td>{{ optional($donationRequest->user)->name ?? 'N/A' }}</td> <!-- Modificado -->
+                                            <td>{{ optional($donationRequest->donation)->id ?? 'N/A' }}</td> <!-- Modificado (si deseas el nombre de la donación) -->
                                             <td>{{ $donationRequest->request_date }}</td>
                                             <td>{{ $donationRequest->notes }}</td>
                                             <td>{{ $donationRequest->state }}</td>

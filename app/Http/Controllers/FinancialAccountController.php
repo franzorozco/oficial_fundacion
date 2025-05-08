@@ -16,7 +16,25 @@ class FinancialAccountController extends Controller
      */
     public function index(Request $request): View
     {
-        $financialAccounts = FinancialAccount::paginate();
+        $query = FinancialAccount::query();
+
+        // Filtros
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('type', 'like', '%' . $search . '%');
+        }
+
+        if ($request->has('min_balance')) {
+            $query->where('balance', '>=', $request->input('min_balance'));
+        }
+
+        if ($request->has('max_balance')) {
+            $query->where('balance', '<=', $request->input('max_balance'));
+        }
+
+        // Paginación con los filtros aplicados
+        $financialAccounts = $query->paginate();
 
         return view('financial-account.index', compact('financialAccounts'))
             ->with('i', ($request->input('page', 1) - 1) * $financialAccounts->perPage());

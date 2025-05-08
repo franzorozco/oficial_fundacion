@@ -31,7 +31,7 @@ class Event extends Model
     use SoftDeletes;
 
     protected $perPage = 20;
-
+ 
     /**
      * The attributes that are mass assignable.
      *
@@ -46,6 +46,7 @@ class Event extends Model
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class, 'creator_id', 'id');
+        
     }
     
     /**
@@ -61,7 +62,7 @@ class Event extends Model
      */
     public function eventLocations()
     {
-        return $this->hasMany(\App\Models\EventLocation::class, 'id', 'event_id');
+        return $this->hasMany(\App\Models\EventLocation::class, 'event_id', 'id');
     }
     
     /**
@@ -69,7 +70,8 @@ class Event extends Model
      */
     public function eventParticipants()
     {
-        return $this->hasMany(\App\Models\EventParticipant::class, 'id', 'event_id');
+        return $this->hasMany(\App\Models\EventParticipant::class, 'event_id', 'id');
+        
     }
     
     /**

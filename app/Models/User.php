@@ -107,9 +107,14 @@ class User extends Authenticatable
 	{
 		return $this->hasMany(EventParticipant::class);
 	}
-
-	public function events()
+	
+	public function eventParticipants()
 	{
+		return $this->hasMany(EventParticipant::class);
+	}
+	
+	public function events()
+	{ 
 		return $this->hasMany(Event::class, 'creator_id');
 	}
 
@@ -126,6 +131,11 @@ class User extends Authenticatable
 	public function profiles()
 	{
 		return $this->hasMany(Profile::class);
+	}
+
+	public function profile()
+	{
+		return $this->hasOne(Profile::class);
 	}
 
 	public function recommendations()

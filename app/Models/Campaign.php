@@ -45,8 +45,6 @@ class Campaign extends Model
 		'creator_id' => 'int',
 		'start_date' => 'datetime',
 		'end_date' => 'datetime',
-		'start_hour' => 'datetime',
-		'end_hour' => 'datetime'
 	];
 
 	protected $fillable = [
@@ -55,8 +53,6 @@ class Campaign extends Model
 		'description',
 		'start_date',
 		'end_date',
-		'start_hour',
-		'end_hour'
 	];
 
 	public function user()

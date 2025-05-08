@@ -36,6 +36,8 @@
                             <th>No</th>
                             <th>Creator</th>
                             <th>Name</th>
+                            <th>Eventos</th>
+
                             <th>Description</th>
                             <th>Start Date</th>
                             <th>End Date</th>
@@ -48,8 +50,10 @@
                         @foreach ($campaigns as $campaign)
                             <tr>
                                 <td>{{ ++$i }}</td>
-                                <td>{{ $campaign->creator->name ?? 'N/A' }}</td>
+                                <td>{{ $campaign->user->name ?? 'N/A' }}</td>
                                 <td>{{ $campaign->name }}</td>
+                                <td>{{ $campaign->events_count }}</td>
+
                                 <td>{{ $campaign->description }}</td>
                                 <td>{{ $campaign->start_date }}</td>
                                 <td>{{ $campaign->end_date }}</td>

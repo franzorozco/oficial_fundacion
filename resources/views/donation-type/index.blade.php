@@ -5,7 +5,7 @@
 @section('content_header')
     <h1>{{ __('Donation Types') }}</h1>
 @stop
-
+ 
 @section('content')
     <div class="container-fluid">
         <div class="row">
@@ -22,7 +22,19 @@
                                     {{ __('Create New') }}
                                 </a>
                             </div>
+                            
                         </div>
+                        <div class="p-3">
+                            <form action="{{ route('donation-types.index') }}" method="GET">
+                                <div class="input-group mb-3">
+                                    <input type="text" name="search" class="form-control" placeholder="{{ __('Search donation type') }}" value="{{ request('search') }}">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
                     </div>
 
                     @if ($message = Session::get('success'))

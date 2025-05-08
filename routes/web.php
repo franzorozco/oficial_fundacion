@@ -20,7 +20,7 @@ use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\FinancialAccountController;
 use App\Http\Controllers\VolunteerVerificationController;
 use App\Http\Controllers\DonationRequestDescriptionController;
-
+use App\Http\Controllers\HomeController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -40,6 +40,10 @@ require __DIR__.'/auth.php';
 
 Route::resource('users', UserController::class);
 Route::get('/users/editRol/{id}', [UserController::class, 'editRol'])->name('users.editRol'); 
+Route::get('users/trashed', [UserController::class, 'trashed'])->name('users.trashed');
+Route::put('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
+Route::delete('users/{id}/force-delete', [UserController::class, 'forceDelete'])->name('users.forceDelete');
+
 Route::resource('donations', DonationController::class);
 Route::resource('campaigns', CampaignController::class);
 Route::resource('campaign-finances', CampaignFinanceController::class);
@@ -58,3 +62,7 @@ Route::resource('profiles', ProfileController::class);
 Route::resource('transactions', TransactionController::class);
 Route::resource('volunteer-verifications', VolunteerVerificationController::class);
 Route::resource('roles', RoleController::class)->names('roles');
+Route::get('roles/trashed', [RoleController::class, 'trashed'])->name('roles.trashed');
+Route::put('roles/{id}/restore', [RoleController::class, 'restore'])->name('roles.restore');
+
+Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');

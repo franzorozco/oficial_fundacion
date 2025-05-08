@@ -9,6 +9,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Class DonationItem
@@ -31,6 +32,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class DonationItem extends Model
 {
+	use SoftDeletes;
 	protected $table = 'donation_items';
 
 	protected $casts = [
@@ -55,7 +57,7 @@ class DonationItem extends Model
 
 	public function donation_type()
 	{
-		return $this->belongsTo(DonationType::class);
+		return $this->belongsTo(DonationType::class, 'donation_type_id');
 	}
 
 	public function donation_item_photos()

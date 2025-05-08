@@ -13,13 +13,22 @@ return new class extends Migration
     {
         Schema::create('event_participants', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('event_id')->index('event_id');
-            $table->unsignedBigInteger('user_id')->index('user_id');
+
+            $table->unsignedBigInteger('event_id')->index();
+            $table->unsignedBigInteger('event_locations_id')->index();
+            $table->unsignedBigInteger('user_id')->index();
+
             $table->timestamp('registration_date')->useCurrent();
             $table->text('observations')->nullable();
-            $table->enum('status', ['registered', 'attended', 'absent'])->nullable()->default('registered');
+            $table->enum('status', ['registered', 'attended', 'absent'])->default('registered');
+
             $table->timestamps();
             $table->softDeletes();
+
+
+            $table->foreign('event_locations_id')
+                ->references('id')->on('event_locations')
+                ->onDelete('cascade');
         });
     }
 

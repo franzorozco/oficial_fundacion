@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Donation;
+use App\Models\User;
+use App\Models\ExternalDonor;
+use App\Models\DonationStatus;
+use App\Models\Campaign;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\DonationRequest;
@@ -16,7 +20,7 @@ class DonationController extends Controller
      */
     public function index(Request $request): View
     {
-        $donations = Donation::paginate();
+        $donations = Donation::with(['user', 'receivedBy', 'externalDonor', 'status', 'campaign'])->paginate();
 
         return view('donation.index', compact('donations'))
             ->with('i', ($request->input('page', 1) - 1) * $donations->perPage());
@@ -29,8 +33,15 @@ class DonationController extends Controller
     {
         $donation = new Donation();
 
-        return view('donation.create', compact('donation'));
+        $users = User::pluck('name', 'id');
+        $externalDonors = ExternalDonor::pluck('names', 'id');
+        $statuses = DonationStatus::pluck('name', 'id');
+        $campaigns = Campaign::pluck('name', 'id');
+
+        return view('donation.create', compact('donation', 'users', 'externalDonors', 'statuses', 'campaigns'));
     }
+
+    
 
     /**
      * Store a newly created resource in storage.
@@ -48,20 +59,32 @@ class DonationController extends Controller
      */
     public function show($id): View
     {
-        $donation = Donation::find($id);
+        $donation = Donation::with(['user', 'receivedBy', 'externalDonor', 'status', 'campaign', 'items', 'items.donation_type'])->findOrFail($id);
 
         return view('donation.show', compact('donation'));
+        
     }
-
+   
+    
     /**
      * Show the form for editing the specified resource.
      */
     public function edit($id): View
     {
-        $donation = Donation::find($id);
-
-        return view('donation.edit', compact('donation'));
+        $donation = Donation::findOrFail($id);
+    
+        // Obtener los usuarios, donantes externos, estados y campañas
+        $users = User::all();  // Devuelve la colección completa de usuarios
+        $externalDonors = ExternalDonor::all();  // Devuelve la colección completa de donantes externos
+        $statuses = DonationStatus::all();  // Devuelve la colección completa de estados
+        $campaigns = Campaign::all();  // Devuelve la colección completa de campañas
+    
+        // Si los "receivers" son usuarios, asigna la lista de usuarios a la variable $receivers
+        $receivers = $users; // Aquí puedes personalizar la asignación si es necesario
+    
+        return view('donation.edit', compact('donation', 'users', 'externalDonors', 'statuses', 'campaigns', 'receivers'));
     }
+    
 
     /**
      * Update the specified resource in storage.
@@ -74,9 +97,12 @@ class DonationController extends Controller
             ->with('success', 'Donation updated successfully');
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy($id): RedirectResponse
     {
-        Donation::find($id)->delete();
+        Donation::findOrFail($id)->delete();
 
         return Redirect::route('donations.index')
             ->with('success', 'Donation deleted successfully');

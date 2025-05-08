@@ -1,16 +1,30 @@
 <div class="row padding-1 p-1">
     <div class="col-md-12">
         
-        <div class="form-group mb-2 mb20">
-            <label for="campaign_id" class="form-label">{{ __('Campaign Id') }}</label>
-            <input type="text" name="campaign_id" class="form-control @error('campaign_id') is-invalid @enderror" value="{{ old('campaign_id', $event?->campaign_id) }}" id="campaign_id" placeholder="Campaign Id">
-            {!! $errors->first('campaign_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        <div class="form-group mb-2">
+            <label for="campaign_id" class="form-label">{{ __('Campaign') }}</label>
+            <select name="campaign_id" id="campaign_id" class="form-control @error('campaign_id') is-invalid @enderror">
+                @foreach($campaigns as $id => $name)
+                    <option value="{{ $id }}" {{ old('campaign_id', $event->campaign_id) == $id ? 'selected' : '' }}>
+                        {{ $name }}
+                    </option>
+                @endforeach
+            </select>
+            {!! $errors->first('campaign_id', '<div class="invalid-feedback"><strong>:message</strong></div>') !!}
         </div>
-        <div class="form-group mb-2 mb20">
-            <label for="creator_id" class="form-label">{{ __('Creator Id') }}</label>
-            <input type="text" name="creator_id" class="form-control @error('creator_id') is-invalid @enderror" value="{{ old('creator_id', $event?->creator_id) }}" id="creator_id" placeholder="Creator Id">
-            {!! $errors->first('creator_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+
+        <div class="form-group mb-2">
+            <label for="creator_id" class="form-label">{{ __('Creator') }}</label>
+            <select name="creator_id" id="creator_id" class="form-control @error('creator_id') is-invalid @enderror">
+                @foreach($users as $id => $name)
+                    <option value="{{ $id }}" {{ old('creator_id', $event->creator_id) == $id ? 'selected' : '' }}>
+                        {{ $name }}
+                    </option>
+                @endforeach
+            </select>
+            {!! $errors->first('creator_id', '<div class="invalid-feedback"><strong>:message</strong></div>') !!}
         </div>
+
         <div class="form-group mb-2 mb20">
             <label for="name" class="form-label">{{ __('Name') }}</label>
             <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $event?->name) }}" id="name" placeholder="Name">

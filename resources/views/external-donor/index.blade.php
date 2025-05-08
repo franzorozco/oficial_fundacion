@@ -15,18 +15,23 @@
 
     <div class="card">
         <div class="card-header">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-
-                <span id="card_title">
-                    {{ __('External Donors') }}
-                </span>
-
-                <div class="float-right">
-                    <a href="{{ route('external-donors.create') }}" class="btn btn-primary btn-sm" data-placement="left">
-                        {{ __('Create New') }}
-                    </a>
+            <form method="GET" action="{{ route('external-donors.index') }}">
+                <div class="row">
+                    <div class="col-md-3">
+                        <input type="text" name="search" class="form-control" placeholder="Buscar por nombre o correo" value="{{ request('search') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="paternal" class="form-control" placeholder="Apellido paterno" value="{{ request('paternal') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="maternal" class="form-control" placeholder="Apellido materno" value="{{ request('maternal') }}">
+                    </div>
+                    <div class="col-md-3 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary mr-2">Filtrar</button>
+                        <a href="{{ route('external-donors.index') }}" class="btn btn-secondary">Limpiar</a>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
 
         <div class="card-body bg-white">
