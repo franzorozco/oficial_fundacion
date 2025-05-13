@@ -1,12 +1,13 @@
 @extends('adminlte::page')
 
-@section('title', 'Cuentas Financieras')
+@section('title', 'Cuentas Financieras Eliminadas')
 
 @section('content_header')
-    <h1>{{ __('Cuentas Financieras') }}</h1>
+    <h1>{{ __('Cuentas Financieras Eliminadas') }}</h1>
 @endsection
 
 @section('content')
+
     @if ($message = Session::get('success'))
         <div class="alert alert-success m-4">
             <p>{{ $message }}</p>
@@ -17,28 +18,20 @@
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <span id="card_title">
-                    {{ __('Cuentas Financieras') }}
+                    {{ __('Cuentas Financieras Eliminadas') }}
                 </span>
 
                 <div class="float-right">
-                    <a href="{{ route('financial-accounts.create') }}" class="btn btn-outline-primary btn-sm me-2">
-                        <i class="fa fa-plus"></i> {{ __('Crear Nueva') }}
+                    <a href="{{ route('financial-accounts.index') }}" class="btn btn-outline-primary btn-sm me-2">
+                        <i class="fa fa-arrow-left"></i> {{ __('Volver a Cuentas Activas') }}
                     </a>
-                    <a href="{{ route('financial-accounts.pdf') }}" class="btn btn-outline-info btn-sm me-2">
-                        <i class="fa fa-file-pdf"></i> {{ __('Generar PDF') }}
-                    </a>
-                    <a href="{{ route('financial-accounts.trashed') }}" class="btn btn-outline-dark btn-sm">
-                        <i class="fa fa-trash-alt"></i> {{ __('Ver Cuentas Eliminadas') }}
-                    </a>
-
                 </div>
-
             </div>
         </div>
- 
+
         <div class="card-body bg-white">
             <!-- Barra de búsqueda y filtros -->
-            <form method="GET" action="{{ route('financial-accounts.index') }}" class="mb-3">
+            <form method="GET" action="{{ route('financial-accounts.trashed') }}" class="mb-3">
                 <div class="row g-3">
                     <div class="col-md-4">
                         <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Buscar por Nombre o Tipo">
@@ -78,24 +71,25 @@
                                 <td>{{ $financialAccount->balance }}</td>
                                 <td>{{ $financialAccount->description }}</td>
                                 <td>
-                                    <form action="{{ route('financial-accounts.destroy', $financialAccount->id) }}" method="POST" class="d-inline">
-                                        <a class="btn btn-outline-primary btn-sm" href="{{ route('financial-accounts.show', $financialAccount->id) }}">
-                                            <i class="fa fa-eye"></i> {{ __('Ver') }}
-                                        </a>
-                                        <a class="btn btn-outline-success btn-sm" href="{{ route('financial-accounts.edit', $financialAccount->id) }}">
-                                            <i class="fa fa-edit"></i> {{ __('Editar') }}
-                                        </a>
+                                    <form action="{{ route('financial-accounts.restore', $financialAccount->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-outline-success btn-sm">
+                                            <i class="fa fa-undo"></i> {{ __('Restaurar') }}
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('financial-accounts.forceDelete', $financialAccount->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="event.preventDefault(); confirm('¿Estás seguro de eliminar?') ? this.closest('form').submit() : false;">
-                                            <i class="fa fa-trash"></i> {{ __('Eliminar') }}
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="event.preventDefault(); confirm('¿Estás seguro de eliminar permanentemente?') ? this.closest('form').submit() : false;">
+                                            <i class="fa fa-trash"></i> {{ __('Eliminar Permanentemente') }}
                                         </button>
                                     </form>
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
-                </table> 
+                </table>    
             </div>
         </div>
     </div>

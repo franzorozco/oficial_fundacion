@@ -21,6 +21,9 @@ use App\Http\Controllers\FinancialAccountController;
 use App\Http\Controllers\VolunteerVerificationController;
 use App\Http\Controllers\DonationRequestDescriptionController;
 use App\Http\Controllers\HomeController;
+
+
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -38,12 +41,88 @@ Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.
 require __DIR__.'/auth.php';
 
 
-Route::resource('users', UserController::class);
+
+/* PDFs Para reportes*/
+
+Route::get('/campaigns/pdf', [CampaignController::class, 'generatePdf'])->name('campaigns.pdf.all');
+
+Route::get('users/pdf', [UserController::class, 'generatePDF'])->name('users.pdf');
+Route::get('/donations/{id}/pdf', [DonationController::class, 'generatePdf'])->name('donations.pdf');
+Route::get('/donations/pdf/all', [DonationController::class, 'generateAllDonationsPdf'])->name('donations.pdf.all');
+Route::get('/campaign-finances/export-pdf', [CampaignFinanceController::class, 'exportPdf'])->name('campaign-finances.export-pdf');
+Route::get('/donations-cashes/pdf', [DonationsCashController::class, 'exportPdf'])->name('donations-cashes.pdf');
+Route::get('/donation-requests/pdf', [DonationRequestController::class, 'exportPdf'])->name('donation-requests.pdf');
+Route::get('external-donors/pdf', [ExternalDonorController::class, 'generatePDF'])->name('external-donors.pdf');
+Route::get('financial-accounts/pdf', [FinancialAccountController::class, 'generatePDF'])->name('financial-accounts.pdf');
+Route::get('volunteer-verifications/pdf', [VolunteerVerificationController::class, 'generatePdf'])->name('volunteer-verifications.pdf');
+
+
+
+
+
+
+
+/* Eliminaciones de tablas*/
 Route::get('/users/editRol/{id}', [UserController::class, 'editRol'])->name('users.editRol'); 
 Route::get('users/trashed', [UserController::class, 'trashed'])->name('users.trashed');
 Route::put('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
 Route::delete('users/{id}/force-delete', [UserController::class, 'forceDelete'])->name('users.forceDelete');
 
+
+Route::get('roles/trashed', [RoleController::class, 'trashed'])->name('roles.trashed');
+Route::put('/roles/{id}/restore', [RoleController::class, 'restore'])->name('roles.restore');
+
+Route::get('donations/trashed', [DonationController::class, 'trashed'])->name('donations.trashed');
+Route::put('donations/{id}/restore', [DonationController::class, 'restore'])->name('donations.restore');
+Route::delete('donations/{id}/forceDelete', [DonationController::class, 'forceDelete'])->name('donations.forceDelete');
+
+// Campañas eliminadas (soft deleted)
+Route::get('campaigns/trashed', [CampaignController::class, 'trashed'])->name('campaigns.trashed');
+Route::put('campaigns/{id}/restore', [CampaignController::class, 'restore'])->name('campaigns.restore');
+Route::delete('campaigns/{id}/force-delete', [CampaignController::class, 'forceDelete'])->name('campaigns.forceDelete');
+
+Route::get('campaign-finances/trashed', [CampaignFinanceController::class, 'trashed'])->name('campaign-finances.trashed');
+Route::put('campaign-finances/{id}/restore', [CampaignFinanceController::class, 'restore'])->name('campaign-finances.restore');
+Route::delete('campaign-finances/{id}/destroy-permanently', [CampaignFinanceController::class, 'destroyPermanently'])->name('campaign-finances.destroy-permanently');
+
+Route::get('donations-cashes/trashed', [DonationsCashController::class, 'trashed'])->name('donations-cashes.trashed');
+Route::post('donations-cashes/{id}/restore', [DonationsCashController::class, 'restore'])->name('donations-cashes.restore');
+Route::delete('donations-cashes/{id}/force-delete', [DonationsCashController::class, 'forceDelete'])->name('donations-cashes.force-delete');
+
+Route::get('donation-requests/trashed', [DonationRequestController::class, 'trashed'])->name('donation-requests.trashed');
+Route::post('donation-requests/{id}/restore', [DonationRequestController::class, 'restore'])->name('donation-requests.restore');
+Route::delete('donation-requests/{id}/force-delete', [DonationRequestController::class, 'forceDelete'])->name('donation-requests.force-delete');
+
+Route::get('external-donors/trashed', [ExternalDonorController::class, 'trashed'])->name('external-donors.trashed');
+Route::put('external-donors/{id}/restore', [ExternalDonorController::class, 'restore'])->name('external-donors.restore');
+Route::delete('external-donors/{id}/force-delete', [ExternalDonorController::class, 'forceDelete'])->name('external-donors.forceDelete');
+
+
+Route::get('financial-accounts/trashed', [FinancialAccountController::class, 'trashed'])->name('financial-accounts.trashed');
+Route::patch('financial-accounts/{id}/restore', [FinancialAccountController::class, 'restore'])->name('financial-accounts.restore');
+Route::delete('financial-accounts/{id}/force-delete', [FinancialAccountController::class, 'forceDelete'])->name('financial-accounts.forceDelete');
+
+Route::get('volunteer-verifications/trashed', [VolunteerVerificationController::class, 'trashed'])->name('volunteer-verifications.trashed');
+Route::put('volunteer-verifications/{id}/restore', [VolunteerVerificationController::class, 'restore'])->name('volunteer-verifications.restore');
+Route::delete('volunteer-verifications/{id}/force-delete', [VolunteerVerificationController::class, 'forceDelete'])->name('volunteer-verifications.forceDelete');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Route::resource('users', UserController::class);
 Route::resource('donations', DonationController::class);
 Route::resource('campaigns', CampaignController::class);
 Route::resource('campaign-finances', CampaignFinanceController::class);
@@ -64,5 +143,4 @@ Route::resource('volunteer-verifications', VolunteerVerificationController::clas
 Route::resource('roles', RoleController::class)->names('roles');
 Route::get('roles/trashed', [RoleController::class, 'trashed'])->name('roles.trashed');
 Route::put('roles/{id}/restore', [RoleController::class, 'restore'])->name('roles.restore');
-
 Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');

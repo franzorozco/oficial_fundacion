@@ -8,7 +8,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\SoftDeletes;  // Asegúrate de importar este trait
 /**
  * Class ExternalDonor
  * 
@@ -25,27 +25,28 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @package App\Models
  */
-class ExternalDonor extends Model
-{
-	protected $table = 'external_donor';
-	public $timestamps = false;
-
-	protected $fillable = [
-		'names',
-		'paternal_surname',
-		'maternal_surname',
-		'email',
-		'phone',
-		'address'
-	];
-
-	public function donations()
+	class ExternalDonor extends Model
 	{
-		return $this->hasMany(Donation::class);
-	}
+		use SoftDeletes;  // Añade SoftDeletes aquí
+		protected $table = 'external_donor';
+		public $timestamps = false;
 
-	public function donations_cashes()
-	{
-		return $this->hasMany(DonationsCash::class);
+		protected $fillable = [
+			'names',
+			'paternal_surname',
+			'maternal_surname',
+			'email',
+			'phone',
+			'address'
+		];
+
+		public function donations()
+		{
+			return $this->hasMany(Donation::class);
+		}
+
+		public function donations_cashes()
+		{
+			return $this->hasMany(DonationsCash::class);
+		}
 	}
-}

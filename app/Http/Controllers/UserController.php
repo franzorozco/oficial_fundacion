@@ -9,6 +9,7 @@ use App\Http\Requests\UserRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
+use FPDF;
 
 class UserController extends Controller
 {
@@ -166,43 +167,124 @@ class UserController extends Controller
 
     
     public function trashed(Request $request): View
-{
-    $query = User::onlyTrashed(); // Solo usuarios eliminados
+    {
+        $query = User::onlyTrashed(); // Solo usuarios eliminados
 
-    if ($request->has('search') && $request->input('search') != '') {
-        $search = $request->input('search');
-        $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%$search%")
-              ->orWhere('email', 'like', "%$search%")
-              ->orWhere('phone', 'like', "%$search%")
-              ->orWhere('address', 'like', "%$search%");
-        });
+        if ($request->has('search') && $request->input('search') != '') {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                ->orWhere('email', 'like', "%$search%")
+                ->orWhere('phone', 'like', "%$search%")
+                ->orWhere('address', 'like', "%$search%");
+            });
+        }
+
+        $users = $query->paginate();
+
+        return view('user.trashed', compact('users'))
+            ->with('i', ($request->input('page', 1) - 1) * $users->perPage());
     }
 
-    $users = $query->paginate();
 
-    return view('user.trashed', compact('users'))
-        ->with('i', ($request->input('page', 1) - 1) * $users->perPage());
-}
+        
+
+    public function restore($id): RedirectResponse
+    {
+        $user = User::onlyTrashed()->findOrFail($id);
+        $user->restore();
+
+        return redirect()->route('users.trashed')->with('success', 'User restored successfully.');
+    }
+
+    public function forceDelete($id): RedirectResponse
+    {
+        $user = User::onlyTrashed()->findOrFail($id);
+        $user->forceDelete();
+
+        return redirect()->route('users.trashed')->with('success', 'User permanently deleted.');
+    }
 
 
+    public function generatePDF(Request $request)
+    {
+        // Comienza la consulta con todos los usuarios (incluyendo los eliminados, si aplica)
+        $query = User::withTrashed()->with('profile');
     
-
-public function restore($id): RedirectResponse
-{
-    $user = User::onlyTrashed()->findOrFail($id);
-    $user->restore();
-
-    return redirect()->route('users.trashed')->with('success', 'User restored successfully.');
-}
-
-public function forceDelete($id): RedirectResponse
-{
-    $user = User::onlyTrashed()->findOrFail($id);
-    $user->forceDelete();
-
-    return redirect()->route('users.trashed')->with('success', 'User permanently deleted.');
-}
+        // Verifica si se ha aplicado un filtro de búsqueda
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('email', 'like', "%$search%")
+                  ->orWhere('phone', 'like', "%$search%")
+                  ->orWhere('address', 'like', "%$search%");
+            });
+        }
+    
+        // Ejecuta la consulta para obtener los usuarios filtrados o todos
+        $users = $query->get();
+    
+        // Crear el PDF
+        $pdf = new Fpdf();
+        $pdf->SetTitle('Detalle de Usuarios');
+        $pdf->SetFont('Arial', '', 10);
+    
+        // Iterar sobre los usuarios y agregar la información al PDF
+        foreach ($users as $user) {
+            $pdf->AddPage();
+    
+            $pdf->SetFont('Arial', 'B', 14);
+            $pdf->Cell(0, 10, 'Datos del Usuario', 0, 1, 'C');
+            $pdf->Ln(2);
+    
+            $pdf->SetFont('Arial', '', 10);
+    
+            // Datos básicos del usuario
+            $pdf->Cell(50, 7, 'ID:', 0, 0); $pdf->Cell(0, 7, $user->id, 0, 1);
+            $pdf->Cell(50, 7, 'Nombre:', 0, 0); $pdf->Cell(0, 7, $user->name, 0, 1);
+            $pdf->Cell(50, 7, 'Correo:', 0, 0); $pdf->Cell(0, 7, $user->email, 0, 1);
+            $pdf->Cell(50, 7, 'Telefono:', 0, 0); $pdf->Cell(0, 7, $user->phone ?? '-', 0, 1);
+            $pdf->Cell(50, 7, 'Direccion:', 0, 0); $pdf->Cell(0, 7, $user->address ?? '-', 0, 1);
+            $pdf->Cell(50, 7, 'Email verificado:', 0, 0); $pdf->Cell(0, 7, $user->email_verified_at ?? '-', 0, 1);
+            $pdf->Cell(50, 7, 'Fecha de creación:', 0, 0); $pdf->Cell(0, 7, $user->created_at, 0, 1);
+            $pdf->Cell(50, 7, 'Fecha de actualización:', 0, 0); $pdf->Cell(0, 7, $user->updated_at, 0, 1);
+            $pdf->Cell(50, 7, 'Eliminado:', 0, 0); $pdf->Cell(0, 7, $user->deleted_at ?? 'No', 0, 1);
+            $pdf->Ln(5);
+    
+            // Datos del perfil si existe
+            if ($user->profile) {
+                $profile = $user->profile;
+    
+                $pdf->SetFont('Arial', 'B', 12);
+                $pdf->Cell(0, 10, 'Perfil del Usuario', 0, 1);
+                $pdf->SetFont('Arial', '', 10);
+    
+                $pdf->Cell(50, 7, 'Bio:', 0, 0); $pdf->MultiCell(0, 7, $profile->bio ?? '-');
+                $pdf->Cell(50, 7, 'Documento:', 0, 0); $pdf->Cell(0, 7, $profile->document_number ?? '-', 0, 1);
+                $pdf->Cell(50, 7, 'Fecha de nacimiento:', 0, 0); $pdf->Cell(0, 7, $profile->birthdate ?? '-', 0, 1);
+                $pdf->Cell(50, 7, 'Habilidades:', 0, 0); $pdf->MultiCell(0, 7, $profile->skills ?? '-');
+                $pdf->Cell(50, 7, 'Intereses:', 0, 0); $pdf->MultiCell(0, 7, $profile->interests ?? '-');
+                $pdf->Cell(50, 7, 'Disponibilidad (días):', 0, 0); $pdf->Cell(0, 7, $profile->availability_days ?? '-', 0, 1);
+                $pdf->Cell(50, 7, 'Disponibilidad (horas):', 0, 0); $pdf->Cell(0, 7, $profile->availability_hours ?? '-', 0, 1);
+                $pdf->Cell(50, 7, 'Ubicación:', 0, 0); $pdf->Cell(0, 7, $profile->location ?? '-', 0, 1);
+                $pdf->Cell(50, 7, '¿Transporte disponible?:', 0, 0); $pdf->Cell(0, 7, $profile->transport_available ? 'Sí' : 'No', 0, 1);
+                $pdf->Cell(50, 7, 'Nivel de experiencia:', 0, 0); $pdf->Cell(0, 7, ucfirst($profile->experience_level), 0, 1);
+                $pdf->Cell(50, 7, 'Condición física:', 0, 0); $pdf->Cell(0, 7, ucfirst($profile->physical_condition), 0, 1);
+                $pdf->Cell(50, 7, 'Tareas preferidas:', 0, 0); $pdf->MultiCell(0, 7, $profile->preferred_tasks ?? '-');
+                $pdf->Cell(50, 7, 'Idiomas:', 0, 0); $pdf->Cell(0, 7, $profile->languages_spoken ?? '-', 0, 1);
+            } else {
+                $pdf->Cell(0, 10, 'Sin perfil asociado.', 0, 1);
+            }
+    
+            $pdf->Ln(10);
+        }
+    
+        // Devolver el PDF generado para su descarga
+        $pdf->Output('D', 'detalle_usuarios.pdf');
+        exit;
+    }
+    
 
 
 }

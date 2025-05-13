@@ -11,17 +11,18 @@ class ExternalDonorRequest extends FormRequest
         return true; 
     }
 
-    public function rules(): array
-    {
-        return [
-            'names' => 'required|string|max:100',
-            'paternal_surname' => 'nullable|string|max:100',
-            'maternal_surname' => 'nullable|string|max:100',
+    public function rules()
+{
+    return [
+        'names' => 'required|string|max:255',
+        'paternal_surname' => 'required|string|max:255',
+        'maternal_surname' => 'required|string|max:255',
+        'email' => 'nullable|required|email|max:255|unique:external_donor,email,',
+        'phone' => 'nullable|string|max:20',
+        'address' => 'nullable|string|max:255',
+    ];
+}
 
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
-        ];
-    }
 
     public function messages(): array
     {

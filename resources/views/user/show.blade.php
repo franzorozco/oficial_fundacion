@@ -68,15 +68,13 @@
 @section('content')
 <div class="container">
     <div class="profile-card">
-        {{-- Header con foto y nombre --}}
+        {{-- Encabezado con foto y nombre --}}
         <div class="profile-header">
             
         <img src="{{ $user && $user->profile && $user->profile->photo && file_exists(storage_path('app/public/' . $user->profile->photo)) 
-    ? asset('storage/' . $user->profile->photo) 
-    : asset('storage/users/user_default.jpg') }}"
-alt="Profile Photo" class="profile-photo">
-
-
+            ? asset('storage/' . $user->profile->photo) 
+            : asset('storage/users/user_default.jpg') }}"
+        alt="Foto de Perfil" class="profile-photo">
 
             <div>
                 <h2 class="profile-name">{{ $user->name }}</h2>
@@ -84,36 +82,37 @@ alt="Profile Photo" class="profile-photo">
             </div>
         </div>
 
-        {{-- Información básica de usuario --}}
+        {{-- Información básica del usuario --}}
         <div class="profile-section">
-            <h5>{{ __('Información de Usuario') }}</h5>
-            <div class="profile-info"><strong>{{ __('Name') }}:</strong> {{ $user->name }}</div>
-            <div class="profile-info"><strong>{{ __('Email') }}:</strong> {{ $user->email }}</div>
-            <div class="profile-info"><strong>{{ __('Phone') }}:</strong> {{ $user->phone ?? 'N/A' }}</div>
-            <div class="profile-info"><strong>{{ __('Address') }}:</strong> {{ $user->address ?? 'N/A' }}</div>
+            <h5>{{ __('Información del Usuario') }}</h5>
+            <div class="profile-info"><strong>{{ __('Nombre') }}:</strong> {{ $user->name }}</div>
+            <div class="profile-info"><strong>{{ __('Correo Electrónico') }}:</strong> {{ $user->email }}</div>
+            <div class="profile-info"><strong>{{ __('Teléfono') }}:</strong> {{ $user->phone ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Dirección') }}:</strong> {{ $user->address ?? 'N/A' }}</div>
         </div>
 
         {{-- Información del perfil --}}
         <div class="profile-section">
             <h5>{{ __('Información del Perfil') }}</h5>
-            <div class="profile-info"><strong>{{ __('Bio') }}:</strong> {{ $user->profile->bio ?? 'N/A' }}</div>
-            <div class="profile-info"><strong>{{ __('Document Number') }}:</strong> {{ $user->profile->document_number ?? 'N/A' }}</div>
-            <div class="profile-info"><strong>{{ __('Birthdate') }}:</strong> {{ $user->profile->birthdate ?? 'N/A' }}</div>
-            <div class="profile-info"><strong>{{ __('Skills') }}:</strong> {{ $user->profile->skills ?? 'N/A' }}</div>
-            <div class="profile-info"><strong>{{ __('Interests') }}:</strong> {{ $user->profile->interests ?? 'N/A' }}</div>
-            <div class="profile-info"><strong>{{ __('Availability Days') }}:</strong> {{ $user->profile->availability_days ?? 'N/A' }}</div>
-            <div class="profile-info"><strong>{{ __('Availability Hours') }}:</strong> {{ $user->profile->availability_hours ?? 'N/A' }}</div>
-            <div class="profile-info"><strong>{{ __('Location') }}:</strong> {{ $user->profile->location ?? 'N/A' }}</div>
-            <div class="profile-info"><strong>{{ __('Transport Available') }}:</strong>
-                {{ optional($user->profile)->transport_available ? 'Yes' : 'No' }}
+            <div class="profile-info"><strong>{{ __('Biografía') }}:</strong> {{ $user->profile->bio ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Número de Documento') }}:</strong> {{ $user->profile->document_number ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Fecha de Nacimiento') }}:</strong> {{ $user->profile->birthdate ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Habilidades') }}:</strong> {{ $user->profile->skills ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Intereses') }}:</strong> {{ $user->profile->interests ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Días de Disponibilidad') }}:</strong> {{ $user->profile->availability_days ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Horas de Disponibilidad') }}:</strong> {{ $user->profile->availability_hours ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Ubicación') }}:</strong> {{ $user->profile->location ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Transporte Disponible') }}:</strong>
+                {{ optional($user->profile)->transport_available ? 'Sí' : 'No' }}
             </div>
-            <div class="profile-info"><strong>{{ __('Experience Level') }}:</strong> {{ $user->profile->experience_level ?? 'N/A' }}</div>
-            <div class="profile-info"><strong>{{ __('Physical Condition') }}:</strong> {{ $user->profile->physical_condition ?? 'N/A' }}</div>
-            <div class="profile-info"><strong>{{ __('Preferred Tasks') }}:</strong> {{ $user->profile->preferred_tasks ?? 'N/A' }}</div>
-            <div class="profile-info"><strong>{{ __('Languages Spoken') }}:</strong> {{ $user->profile->languages_spoken ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Nivel de Experiencia') }}:</strong> {{ $user->profile->experience_level ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Condición Física') }}:</strong> {{ $user->profile->physical_condition ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Tareas Preferidas') }}:</strong> {{ $user->profile->preferred_tasks ?? 'N/A' }}</div>
+            <div class="profile-info"><strong>{{ __('Idiomas Hablados') }}:</strong> {{ $user->profile->languages_spoken ?? 'N/A' }}</div>
         </div>
     </div>
 </div>
+
 @endsection
 
 

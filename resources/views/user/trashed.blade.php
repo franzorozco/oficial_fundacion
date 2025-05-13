@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Deleted Users')
+@section('title', 'Usuarios Eliminados')
 
 @section('content_header')
-    <h1>Deleted Users</h1>
+    <h1>Usuarios Eliminados</h1>
 @stop
 
 @section('content')
@@ -16,9 +16,9 @@
     <div class="card">
         <div class="card-header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span id="card_title">{{ __('Deleted Users') }}</span>
+                <span id="card_title">{{ __('Usuarios Eliminados') }}</span>
                 <a href="{{ route('users.index') }}" class="btn btn-primary btn-sm">
-                    {{ __('Back to Users') }}
+                    {{ __('Volver a Usuarios') }}
                 </a>
             </div>
         </div>
@@ -29,12 +29,12 @@
                     <thead class="thead">
                         <tr>
                             <th>No</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Address</th>
-                            <th>Role</th>
-                            <th>Actions</th>
+                            <th>Nombre</th>
+                            <th>Correo Electrónico</th>
+                            <th>Teléfono</th>
+                            <th>Dirección</th>
+                            <th>Rol</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -49,22 +49,22 @@
                                     @if ($user->roles->isNotEmpty())
                                         {{ $user->roles->first()->name }}
                                     @else
-                                        No Role
+                                        Sin Rol
                                     @endif
                                 </td>
                                 <td>
-                                    <form action="{{ route('users.restore', $user->id) }}" method="POST">
+                                    <form action="{{ route('users.restore', $user->id) }}" method="POST" style="display:inline-block;">
                                         @csrf
                                         @method('PUT')
                                         <button type="submit" class="btn btn-success btn-sm">
-                                            <i class="fa fa-fw fa-undo"></i> Restore
+                                            <i class="fa fa-fw fa-undo"></i> Restaurar
                                         </button>
                                     </form>
-                                    <form action="{{ route('users.forceDelete', $user->id) }}" method="POST">
+                                    <form action="{{ route('users.forceDelete', $user->id) }}" method="POST" style="display:inline-block;">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm">
-                                            <i class="fa fa-fw fa-trash"></i> Permanently Delete
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar permanentemente este usuario?');">
+                                            <i class="fa fa-fw fa-trash"></i> Eliminar Permanentemente
                                         </button>
                                     </form>
                                 </td>

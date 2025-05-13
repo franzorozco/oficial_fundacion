@@ -16,9 +16,13 @@ return new class extends Migration
             $table->string('names', 100);
             $table->string('paternal_surname', 100)->nullable();
             $table->string('maternal_surname', 100)->nullable();
-            $table->string('email', 150)->unique('email');
+            $table->string('email', 150)->unique()->nullable();
+
             $table->string('phone', 20)->nullable();
             $table->string('address')->nullable();
+
+            // Agregar la columna para el SoftDeletes
+            $table->softDeletes(); // Esto agrega la columna 'deleted_at' de tipo TIMESTAMP
         });
     }
 

@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', __('Finanzas de la Campaña'))
+@section('title', __('Finanzas Eliminadas'))
 
 @section('content_header')
-    <h1 class="mb-3">{{ __('Finanzas de la Campaña') }}</h1>
+    <h1 class="mb-3">{{ __('Finanzas Eliminadas') }}</h1>
 @stop
 
 @section('content')
@@ -15,32 +15,7 @@
         </div>
     @endif
 
-    {{-- Acciones --}}
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="w-100">
-            <form method="GET" action="{{ route('campaign-finances.index') }}" class="d-flex gap-2 w-100">
-                <input type="text" name="search" class="form-control" placeholder="Buscar campaña o gerente..." value="{{ request('search') }}">
-                <button type="submit" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-search"></i> {{ __('Buscar') }}
-                </button>
-            </form>
-        </div>
-
-        <div class="d-flex gap-2">
-            <a href="{{ route('campaign-finances.create') }}" class="btn btn-sm btn-outline-primary ">
-                <i class="fas fa-plus"></i> {{ __('Crear Nuevo') }}
-            </a>
-            <a href="{{ route('campaign-finances.export-pdf', request()->query()) }}" class="btn btn-sm  btn-outline-danger ">
-                <i class="fas fa-file-pdf"></i> {{ __('Exportar a PDF') }}
-            </a>
-            <a href="{{ route('campaign-finances.trashed') }}" class="btn btn-sm btn-outline-danger ">
-                <i class="fas fa-trash-alt"></i> {{ __('Ver Finanzas Eliminadas') }}
-            </a>
-
-        </div>
-    </div>
-
-    {{-- Tabla de Finanzas --}}
+    {{-- Tabla de Finanzas Eliminadas --}}
     <div class="card shadow-sm">
         <div class="card-body table-responsive p-0">
             <table class="table table-hover text-nowrap align-middle">
@@ -69,24 +44,25 @@
                                 </span>
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('campaign-finances.show', $campaignFinance->id) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-eye"></i> {{ __('Ver') }}
-                                </a>
-                                <a href="{{ route('campaign-finances.edit', $campaignFinance->id) }}" class="btn btn-sm btn-outline-success">
-                                    <i class="fas fa-edit"></i> {{ __('Editar') }}
-                                </a>
-                                <form action="{{ route('campaign-finances.destroy', $campaignFinance->id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar este registro?')">
+                                <form action="{{ route('campaign-finances.restore', $campaignFinance->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('PUT')
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-undo"></i> {{ __('Restaurar') }}
+                                    </button>
+                                </form>
+                                <form action="{{ route('campaign-finances.destroy-permanently', $campaignFinance->id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar este registro permanentemente?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-trash-alt"></i> {{ __('Eliminar') }}
+                                        <i class="fas fa-trash-alt"></i> {{ __('Eliminar Definitivamente') }}
                                     </button>
                                 </form>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted">{{ __('No se encontraron registros') }}</td>
+                            <td colspan="7" class="text-center text-muted">{{ __('No se encontraron registros eliminados') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

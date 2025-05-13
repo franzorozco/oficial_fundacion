@@ -4,125 +4,118 @@
     <h1>{{ __('Show') }} Event</h1>
 @endsection
 @section('content')
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span class="card-title">{{ __('Show') }} Event</span>
-            <a class="btn btn-primary btn-sm" href="{{ route('events.index') }}">{{ __('Back') }}</a>
+    {{-- Información del Evento --}}
+    <div class="card shadow-sm rounded">
+        <div class="card-header d-flex justify-content-between align-items-center bg-dark text-white">
+            <h3 class="mb-0">{{ __('Show') }} {{ $event->name }}</h3>
+            <a class="btn btn-outline-light btn-sm" href="{{ route('events.index') }}">
+                <i class="fas fa-arrow-left"></i> {{ __('Back') }}
+            </a>
         </div>
-        <div class="card-body bg-white">
-            <div class="form-group mb-2">
-                <strong>Campaign Id:</strong>
-                {{ $event->campaign->name }}
-            </div>
-            <div class="form-group mb-2">
-                <strong>Creator Id:</strong>
-                {{ $event->user->name }}
-            </div>
-            <div class="form-group mb-2">
-                <strong>Name:</strong>
-                {{ $event->name }}
-            </div>
-            <div class="form-group mb-2">
-                <strong>Description:</strong>
-                {{ $event->description }}
-            </div>
-            <div class="form-group mb-2">
-                <strong>Event Date:</strong>
-                {{ $event->event_date }}
-            </div>
+        <div class="card-body bg-light">
+            <dl class="row">
+                <dt class="col-sm-3">Campaña:</dt>
+                <dd class="col-sm-9">{{ $event->campaign->name }}</dd>
+
+                <dt class="col-sm-3">Creador:</dt>
+                <dd class="col-sm-9">{{ $event->user->name }}</dd>
+
+                <dt class="col-sm-3">Nombre:</dt>
+                <dd class="col-sm-9">{{ $event->name }}</dd>
+
+                <dt class="col-sm-3">Descripción:</dt>
+                <dd class="col-sm-9">{{ $event->description }}</dd>
+
+                <dt class="col-sm-3">Fecha del Evento:</dt>
+                <dd class="col-sm-9">{{ $event->event_date }}</dd>
+            </dl>
         </div>
     </div>
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-end mb-2">
-                <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalNuevaUbicacion">
-                    + Nueva Ubicación
-                </button>
-            </div>
-            <h4>Ubicaciones del Evento</h4>
-        </div>
-        @foreach($event->eventLocations as $location)
-            <div class="col-md-4 mb-3">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <div id="map-{{ $location->id }}" style="width: 100%; height: 200px;" class="mb-3 rounded"></div>
 
-                        <h5 class="card-title">{{ $location->location_name }}</h5>
-                        <p class="card-text">
-                            <strong>Dirección:</strong> {{ $location->address ?? 'No especificada' }}<br>
-                            <strong>Latitud:</strong> {{ $location->latitud ?? 'N/A' }}<br>
-                            <strong>Longitud:</strong> {{ $location->longitud ?? 'N/A' }}<br>
-                            <strong>Fecha de Registro:</strong> {{ $location->created_at ? $location->created_at->format('d/m/Y H:i') : 'No registrada' }}<br>
-                            <strong>Hora de Inicio:</strong> {{ $location->start_hour ? \Carbon\Carbon::parse($location->start_hour)->format('H:i') : 'No definida' }}<br>
-                            <strong>Hora de Fin:</strong> {{ $location->end_hour ? \Carbon\Carbon::parse($location->end_hour)->format('H:i') : 'No definida' }}<br>
-                        </p>
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('event-locations.show', $location->id) }}" class="btn btn-outline-info btn-sm">Ver</a>
-                            <a href="{{ route('event-locations.edit', $location->id) }}" class="btn btn-outline-warning btn-sm">Editar</a>
-                            <form action="{{ route('event-locations.destroy', $location->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar esta ubicación?')">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-outline-danger btn-sm" type="submit">Eliminar</button>
-                            </form>
+    {{-- Ubicaciones --}}
+    <div class="mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 class="mb-0">Ubicaciones del Evento</h4>
+            <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalNuevaUbicacion">
+                + Nueva Ubicación
+            </button>
+        </div>
+
+        <div class="row">
+            @foreach($event->eventLocations as $location)
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div id="map-{{ $location->id }}" style="width: 100%; height: 200px;" class="mb-3 rounded bg-secondary"></div>
+                            <h5 class="card-title">{{ $location->location_name }}</h5>
+                            <p class="card-text mb-1">
+                                <strong>Dirección:</strong> {{ $location->address ?? 'No especificada' }}<br>
+                                <strong>Latitud:</strong> {{ $location->latitud ?? 'N/A' }}<br>
+                                <strong>Longitud:</strong> {{ $location->longitud ?? 'N/A' }}<br>
+                                <strong>Registrado:</strong> {{ optional($location->created_at)->format('d/m/Y H:i') }}<br>
+                                <strong>Hora de Inicio:</strong> {{ $location->start_hour ? \Carbon\Carbon::parse($location->start_hour)->format('H:i') : 'No definida' }}<br>
+                                <strong>Hora de Fin:</strong> {{ $location->end_hour ? \Carbon\Carbon::parse($location->end_hour)->format('H:i') : 'No definida' }}
+                            </p>
+                            <div class="d-flex gap-2 mt-2">
+                                <a href="{{ route('event-locations.show', $location->id) }}" class="btn btn-outline-info btn-sm">Ver</a>
+                                <a href="{{ route('event-locations.edit', $location->id) }}" class="btn btn-outline-warning btn-sm">Editar</a>
+                                <form action="{{ route('event-locations.destroy', $location->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar esta ubicación?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-outline-danger btn-sm" type="submit">Eliminar</button>
+                                </form>
+                            </div>
                         </div>
-
                     </div>
                 </div>
-            </div>
-        @endforeach
-    </div>
- 
-    <h4>Participantes del Evento</h4>
-    <div class="d-flex justify-content-end mb-2">
-        
-
-    <!-- Cambio para versiones anteriores a Bootstrap 5 -->
-    <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalAgregarParticipante">
-        + Agregar Participante
-    </button>
-
-
-    </div>
-    @forelse($event->eventParticipants as $participant)
-        @php
-            $user = $participant->user;
-            $profilePhoto = $user->profile_photo
-                ? asset('storage/' . $user->profile_photo)
-                : asset('storage/users/user_default.jpg');
-        @endphp
-        <div class="card mb-3">
-            <div class="card-body d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                    <div class="me-3">
-                        <img src="{{ $profilePhoto }}"
-                            alt="Foto de {{ $user->name }}"
-                            class="rounded-circle shadow-sm"
-                            style="width: 80px; height: 80px; object-fit: cover;">
-                    </div>
-                    <div>
-                        <h5 class="card-title mb-1">{{ $user->name ?? 'Sin nombre' }}</h5>
-                        <p class="card-text mb-0">
-                            <strong>Email:</strong> {{ $user->email ?? 'No disponible' }}<br>
-                            <strong>Fecha de Registro:</strong> {{ $participant->registration_date }}<br>
-                            <strong>Estado:</strong> {{ ucfirst($participant->status) }}<br>
-                            <strong>Observaciones:</strong> {{ $participant->observations ?? 'Ninguna' }}
-                        </p>
-                    </div>
-                </div>
-                <div class="d-flex justify-content-end gap-2">
-                    <a href="{{ route('users.show', $user->id) }}" class="btn btn-outline-info btn-sm">Ver</a>
-                    <form action="{{ route('event-participants.destroy', $participant->id) }}" method="POST" onsubmit="return confirm('¿Eliminar participante del evento?')">
-                        @csrf
-                        @method('DELETE')
-                        <button class="btn btn-outline-danger btn-sm" type="submit">Eliminar</button>
-                    </form>
-                </div>
-            </div>
+            @endforeach
         </div>
-    @empty
-        <p>No hay participantes registrados en este evento.</p>
-    @endforelse
+    </div>
 
+    {{-- Participantes --}}
+    <div class="mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 class="mb-0">Participantes del Evento</h4>
+            <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalAgregarParticipante">
+                + Agregar Participante
+            </button>
+        </div>
+
+        @forelse($event->eventParticipants as $participant)
+            @php
+                $user = $participant->user;
+                $profilePhoto = $user->profile_photo
+                    ? asset('storage/' . $user->profile_photo)
+                    : asset('storage/users/user_default.jpg');
+            @endphp
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body d-flex align-items-center justify-content-between flex-column flex-md-row gap-3">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ $profilePhoto }}" alt="Foto de {{ $user->name }}" class="rounded-circle shadow-sm me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                        <div>
+                            <h5 class="card-title mb-1">{{ $user->name ?? 'Sin nombre' }}</h5>
+                            <p class="mb-0">
+                                <strong>Email:</strong> {{ $user->email ?? 'No disponible' }}<br>
+                                <strong>Registro:</strong> {{ $participant->registration_date }}<br>
+                                <strong>Estado:</strong> {{ ucfirst($participant->status) }}<br>
+                                <strong>Observaciones:</strong> {{ $participant->observations ?? 'Ninguna' }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('users.show', $user->id) }}" class="btn btn-outline-info btn-sm">Ver</a>
+                        <form action="{{ route('event-participants.destroy', $participant->id) }}" method="POST" onsubmit="return confirm('¿Eliminar participante del evento?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-outline-danger btn-sm" type="submit">Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <p class="text-muted">No hay participantes registrados en este evento.</p>
+        @endforelse
+ 
 
 
 
@@ -179,10 +172,6 @@
         </div>
     </div>
 
-
-
-
-
     <!-- Modal Agregar Participante -->
     <div class="modal fade" id="modalAgregarParticipante" tabindex="-1" aria-labelledby="modalAgregarParticipanteLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -225,10 +214,6 @@
             </form>
         </div>
     </div>
-
-
-
-
 
 @endsection
 @section('js')

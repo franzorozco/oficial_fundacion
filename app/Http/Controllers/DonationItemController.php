@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\DonationItem;
+use App\Models\DonationItemPhoto;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\DonationItemRequest;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use App\Models\DonationType; // 👈 Asegúrate de importar el modelo correcto
+use App\Models\DonationType;
 
 class DonationItemController extends Controller
 {
@@ -27,23 +29,33 @@ class DonationItemController extends Controller
      * Show the form for creating a new resource.
      */
     public function create(): View
-{
-    $donationItem = new DonationItem();
-    $types = DonationType::all(); // 👈 Asegúrate de tener esto
+    {
+        $donationItem = new DonationItem();
+        $types = DonationType::all();
 
-    return view('donation-item.create', compact('donationItem', 'types'));
-}
-
+        return view('donation-item.create', compact('donationItem', 'types'));
+    }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(DonationItemRequest $request): RedirectResponse
     {
-        DonationItem::create($request->validated());
+        // Crear ítem de donación
+        $item = DonationItem::create($request->validated());
 
-        return Redirect::route('donation-items.index')
-            ->with('success', 'DonationItem created successfully.');
+        // Guardar fotografía si se envió
+        if ($request->hasFile('photo')) {
+            $path = $request->file('photo')->store('items_donations', 'public');
+
+            DonationItemPhoto::create([
+                'donation_item_id' => $item->id,
+                'photo_url' => basename($path),
+            ]);
+        }
+
+        // Redirige a la donación correspondiente o al index si viene de ahí
+        return redirect()->back()->with('success', 'Ítem agregado correctamente.');
     }
 
     /**
@@ -60,27 +72,22 @@ class DonationItemController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit($id): View
-{
-    $donationItem = DonationItem::find($id);
-    $types = DonationType::all(); // 👈 Aquí también
+    {
+        $donationItem = DonationItem::find($id);
+        $types = DonationType::all();
 
-    return view('donation-item.edit', compact('donationItem', 'types'));
-}
-
+        return view('donation-item.edit', compact('donationItem', 'types'));
+    }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(DonationItemRequest $request, DonationItem $donationItem): RedirectResponse
     {
-        // Actualiza el ítem de la donación con los datos validados
         $donationItem->update($request->validated());
 
-        // Redirige a la página anterior (funciona como un "volver atrás")
         return back()->with('success', 'DonationItem updated successfully');
     }
-
-
 
     public function destroy($id): RedirectResponse
     {

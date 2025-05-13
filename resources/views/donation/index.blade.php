@@ -9,32 +9,43 @@
 @section('content')
     <div class="card">
         <div class="card-header">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span id="card_title">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                <span id="card_title" class="h5 m-0">
                     {{ __('Donations') }}
                 </span>
-                <div class="mb-3">
-                    <form action="{{ route('donations.index') }}" method="GET" class="form-inline d-flex" role="search">
-                        <input type="text" name="search" class="form-control mr-2" placeholder="Buscar donaciones..." value="{{ request('search') }}">
-                        <button class="btn btn-outline-primary" type="submit">Buscar</button>
-                    </form>
+
+                <form action="{{ route('donations.index') }}" method="GET" class="d-flex flex-wrap gap-2" role="search">
+                    <input type="text" name="search" class="form-control" placeholder="Buscar donaciones..." value="{{ request('search') }}">
+                    <button class="btn btn-outline-primary btn-sm" type="submit">
+                        <i class="fa fa-search"></i> Buscar
+                    </button>
+                </form>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ route('donations.create') }}" class="btn btn-outline-success btn-sm">
+                        <i class="fa fa-plus"></i> {{ __('Create New') }}
+                    </a>
+                    <a href="{{ route('donations.pdf.all') }}" class="btn btn-outline-info btn-sm">
+                        <i class="fa fa-file-pdf"></i> Descargar PDF de Todas
+                    </a>
+                    <a href="{{ route('donations.trashed') }}" class="btn btn-outline-dark btn-sm">
+                        <i class="fa fa-trash"></i> Ver eliminados
+                    </a>
+
                 </div>
-                <a href="{{ route('donations.create') }}" class="btn btn-primary btn-sm" data-placement="left">
-                    {{ __('Create New') }}
-                </a>
             </div>
         </div>
 
         @if ($message = Session::get('success'))
             <div class="alert alert-success m-4">
-                <p>{{ $message }}</p>
+                <p class="mb-0">{{ $message }}</p>
             </div>
         @endif
 
         <div class="card-body bg-white">
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="thead">
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
                         <tr>
                             <th>No</th>
                             <th>Donante externo</th>
@@ -44,7 +55,7 @@
                             <th>Campaña</th>
                             <th>Fecha</th>
                             <th>Notas</th>
-                            <th></th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -58,20 +69,25 @@
                                 <td>{{ $donation->campaign->name ?? '-' }}</td>
                                 <td>{{ $donation->donation_date }}</td>
                                 <td>{{ $donation->notes }}</td>
-                                <td>
-                                    <form action="{{ route('donations.destroy', $donation->id) }}" method="POST">
-                                        <a class="btn btn-sm btn-primary" href="{{ route('donations.show', $donation->id) }}">
-                                            <i class="fa fa-fw fa-eye"></i> {{ __('Show') }}
+                                <td> 
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <a class="btn btn-outline-primary btn-sm" href="{{ route('donations.show', $donation->id) }}">
+                                            <i class="fa fa-eye"></i>
                                         </a>
-                                        <a class="btn btn-sm btn-success" href="{{ route('donations.edit', $donation->id) }}">
-                                            <i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}
+                                        <a class="btn btn-outline-success btn-sm" href="{{ route('donations.edit', $donation->id) }}">
+                                            <i class="fa fa-edit"></i>
                                         </a>
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('¿Estás seguro de eliminar?') ? this.closest('form').submit() : false;">
-                                            <i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}
-                                        </button>
-                                    </form>
+                                        <a class="btn btn-outline-info btn-sm" href="{{ route('donations.pdf', $donation->id) }}">
+                                            <i class="fa fa-file-pdf"></i>
+                                        </a>
+                                        <form action="{{ route('donations.destroy', $donation->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -81,5 +97,7 @@
         </div>
     </div>
 
-    {!! $donations->withQueryString()->links() !!}
+    <div class="mt-3">
+        {!! $donations->withQueryString()->links() !!}
+    </div>
 @endsection

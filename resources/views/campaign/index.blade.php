@@ -8,42 +8,55 @@
 
 @section('content')
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span id="card_title">{{ __('Campaigns') }}</span>
-            <div class="mb-3">
-                <form action="{{ route('campaigns.index') }}" method="GET" class="form-inline d-flex" role="search">
-                    <input type="text" name="search" class="form-control mr-2" placeholder="Buscar campañas..." value="{{ request('search') }}">
-                    <button class="btn btn-outline-primary" type="submit">Buscar</button>
-                </form>
-            </div>
+        <div class="card-header">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                <span id="card_title" class="h5 m-0">
+                    {{ __('Campaigns') }}
+                </span>
 
-            <a href="{{ route('campaigns.create') }}" class="btn btn-primary btn-sm">
-                {{ __('Create New') }}
-            </a>
+                <form action="{{ route('campaigns.index') }}" method="GET" class="d-flex flex-wrap gap-2" role="search">
+                    <input type="text" name="search" class="form-control" placeholder="Buscar campañas..." value="{{ request('search') }}">
+                    <button class="btn btn-outline-primary btn-sm" type="submit">
+                        <i class="fa fa-search"></i> Buscar
+                    </button>
+                </form>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ route('campaigns.create') }}" class="btn btn-outline-success btn-sm">
+                        <i class="fa fa-plus"></i> {{ __('Create New') }}
+                    </a>
+                    <a href="{{ route('campaigns.pdf.all', ['search' => request('search')]) }}" class="btn btn-outline-info btn-sm">
+                        <i class="fa fa-file-pdf"></i> Descargar PDF
+                    </a>
+                    <a href="{{ route('campaigns.trashed') }}" class="btn btn-outline-darck btn-sm">
+                        <i class="fa fa-trash-restore"></i> Ver Eliminadas
+                    </a>
+
+                </div>
+            </div>
         </div>
 
         @if ($message = Session::get('success'))
             <div class="alert alert-success m-4">
-                <p>{{ $message }}</p>
+                <p class="mb-0">{{ $message }}</p>
             </div>
         @endif
 
         <div class="card-body bg-white">
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table class="table table-striped table-hover align-middle">
                     <thead>
                         <tr>
                             <th>No</th>
                             <th>Creator</th>
                             <th>Name</th>
                             <th>Eventos</th>
-
                             <th>Description</th>
                             <th>Start Date</th>
                             <th>End Date</th>
                             <th>Start Hour</th>
                             <th>End Hour</th>
-                            <th>Actions</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -53,27 +66,27 @@
                                 <td>{{ $campaign->user->name ?? 'N/A' }}</td>
                                 <td>{{ $campaign->name }}</td>
                                 <td>{{ $campaign->events_count }}</td>
-
                                 <td>{{ $campaign->description }}</td>
                                 <td>{{ $campaign->start_date }}</td>
                                 <td>{{ $campaign->end_date }}</td>
                                 <td>{{ $campaign->start_hour }}</td>
                                 <td>{{ $campaign->end_hour }}</td>
                                 <td>
-                                    <form action="{{ route('campaigns.destroy', $campaign->id) }}" method="POST" class="d-inline">
-                                        <a class="btn btn-sm btn-primary" href="{{ route('campaigns.show', $campaign->id) }}">
-                                            <i class="fa fa-fw fa-eye"></i> {{ __('Show') }}
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <a class="btn btn-outline-primary btn-sm" href="{{ route('campaigns.show', $campaign->id) }}">
+                                            <i class="fa fa-eye"></i>
                                         </a>
-                                        <a class="btn btn-sm btn-success" href="{{ route('campaigns.edit', $campaign->id) }}">
-                                            <i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}
+                                        <a class="btn btn-outline-success btn-sm" href="{{ route('campaigns.edit', $campaign->id) }}">
+                                            <i class="fa fa-edit"></i>
                                         </a>
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm"
-                                            onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;">
-                                            <i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}
-                                        </button>
-                                    </form>
+                                        <form action="{{ route('campaigns.destroy', $campaign->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -83,5 +96,7 @@
         </div>
     </div>
 
-    {!! $campaigns->withQueryString()->links() !!}
+    <div class="mt-3">
+        {!! $campaigns->withQueryString()->links() !!}
+    </div>
 @endsection

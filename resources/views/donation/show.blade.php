@@ -59,9 +59,15 @@
 
     {{-- Ítems de la Donación --}}
     <div class="card shadow-sm rounded mt-4">
-        <div class="card-header bg-dark text-white">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
             <h3 class="mb-0">Ítems de la Donación</h3>
+            <!-- Botón para abrir modal -->
+            <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                <i class="fas fa-plus"></i> Agregar Ítem
+            </button>
+
         </div>
+
 
         <div class="card-body">
             @if ($donation->items->count() > 0)
@@ -73,7 +79,7 @@
                                 @php
                                     $photo = $item->donation_item_photos->first();
                                     $photoUrl = $photo && !empty($photo->photo_url)
-                                        ? asset('storage/items_donations/' . $photo->photo_url)
+                                        ? asset('storage/' . $photo->photo_url)
                                         : asset('storage/items_donations/default-item.png');
                                 @endphp
 
@@ -139,6 +145,64 @@
                     </div>
                 @endforeach
                 </div>
+
+                <!-- Modal para agregar ítem -->
+                <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <form action="{{ route('donation-items.store') }}" method="POST" enctype="multipart/form-data" class="modal-content">
+                            @csrf
+                            <input type="hidden" name="donation_id" value="{{ $donation->id }}">
+
+                            <div class="modal-header bg-dark text-white">
+                                <h5 class="modal-title" id="addItemModalLabel">Agregar Ítem</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="item_name" class="form-label">Nombre del Ítem</label>
+                                    <input type="text" name="item_name" class="form-control" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="donation_type_id" class="form-label">Tipo de Donación</label>
+                                    <select name="donation_type_id" class="form-select" required>
+                                        @foreach(App\Models\DonationType::all() as $type)
+                                            <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="quantity" class="form-label">Cantidad</label>
+                                        <input type="number" name="quantity" class="form-control" min="1" required>
+                                    </div>
+                                    <div class="col">
+                                        <label for="unit" class="form-label">Unidad</label>
+                                        <input type="text" name="unit" class="form-control">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Descripción</label>
+                                    <textarea name="description" class="form-control" rows="3"></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="photo" class="form-label">Fotografía</label>
+                                    <input type="file" name="photo" accept="image/*" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-success">Guardar Ítem</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
             @else
                 <div class="alert alert-info">
                     No hay ítems registrados para esta donación.

@@ -16,7 +16,7 @@ use App\Models\User;
  * Class DonationRequest
  * 
  * @property int $id
- * @property int $applicant_user__id
+ * @property int $applicant_user_id  // Corregido el nombre del campo
  * @property int|null $user_in_charge_id
  * @property int $donation_id
  * @property Carbon $request_date
@@ -34,18 +34,19 @@ use App\Models\User;
  */
 class DonationRequest extends Model
 {
-	use SoftDeletes;
-	protected $table = 'donation_requests';
+    use SoftDeletes;
+    
+    protected $table = 'donation_requests';
 
-	protected $casts = [
-        'applicant_user_id' => 'int',  // Cambiar el nombre del campo
+    protected $casts = [
+        'applicant_user_id' => 'int',  // Cambiado el nombre del campo
         'user_in_charge_id' => 'int',
         'donation_id' => 'int',
         'request_date' => 'datetime',
     ];
 
-	protected $fillable = [
-        'applicant_user_id',  // Cambiar el nombre del campo
+    protected $fillable = [
+        'applicant_user_id',  // Corregido el nombre del campo
         'user_in_charge_id',
         'donation_id',
         'request_date',
@@ -53,18 +54,35 @@ class DonationRequest extends Model
         'state',
     ];
 
-	public function user()
-	{
-		return $this->belongsTo(User::class, 'user_in_charge_id');
-	}
+    /**
+     * Relación con el usuario solicitante (applicant_user_id)
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'applicant_user_id'); // Cambiado el campo de relación
+    }
 
-	public function donation()
-	{
-		return $this->belongsTo(Donation::class);
-	}
+    /**
+     * Relación con la donación asociada
+     */
+    public function donation()
+    {
+        return $this->belongsTo(Donation::class);
+    }
 
-	public function donation_request_descriptions()
-	{
-		return $this->hasMany(DonationRequestDescription::class);
-	}
+    /**
+     * Relación con las descripciones de la solicitud de donación
+     */
+    public function donation_request_descriptions()
+    {
+        return $this->hasMany(DonationRequestDescription::class);
+    }
+
+    /**
+     * Relación con el usuario encargado (user_in_charge_id)
+     */
+    public function userInCharge()
+    {
+        return $this->belongsTo(User::class, 'user_in_charge_id'); // Agregado el campo de encargado
+    }
 }
