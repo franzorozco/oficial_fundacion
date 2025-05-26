@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use App\Models\User;
 use FPDF;
+
 class CampaignController extends Controller
 {
     /**
@@ -42,12 +43,12 @@ class CampaignController extends Controller
      * Show the form for creating a new resource.
      */
     public function create(): View
-{
-    $campaign = new Campaign();
-    $users = User::all(); // Para usar en un select
+    {
+        $campaign = new Campaign();
+        $users = User::all(); // Para usar en un select
 
-    return view('campaign.create', compact('campaign', 'users'));
-}
+        return view('campaign.create', compact('campaign', 'users'));
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -76,12 +77,12 @@ class CampaignController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit($id): View
-{
-    $campaign = Campaign::find($id);
-    $users = User::all();
+    {
+        $campaign = Campaign::find($id);
+        $users = User::all();
 
-    return view('campaign.edit', compact('campaign', 'users'));
-}
+        return view('campaign.edit', compact('campaign', 'users'));
+    }
 
     /**
      * Update the specified resource in storage.
@@ -104,94 +105,94 @@ class CampaignController extends Controller
     
     
     public function generatePdf (Request $request)
-{
-    $search = $request->input('search'); // Obtener el término de búsqueda
+    {
+        $search = $request->input('search'); // Obtener el término de búsqueda
 
-    // Filtrar las campañas si existe un término de búsqueda
-    $campaigns = Campaign::with('user')
-        ->withCount('events') // Cuenta directa de eventos
-        ->when($search, function ($query, $search) {
-            return $query->where('name', 'like', "%{$search}%")
-                         ->orWhere('description', 'like', "%{$search}%")
-                         ->orWhereHas('user', function ($query) use ($search) {
-                             return $query->where('name', 'like', "%{$search}%");
-                         });
-        })
-        ->get();
+        // Filtrar las campañas si existe un término de búsqueda
+        $campaigns = Campaign::with('user')
+            ->withCount('events') // Cuenta directa de eventos
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'like', "%{$search}%")
+                            ->orWhere('description', 'like', "%{$search}%")
+                            ->orWhereHas('user', function ($query) use ($search) {
+                                return $query->where('name', 'like', "%{$search}%");
+                            });
+            })
+            ->get();
 
-    // Crear una instancia de FPDF
-    $pdf = new FPDF('L'); // 'L' indica orientación horizontal
-    $pdf->AddPage();
+        // Crear una instancia de FPDF
+        $pdf = new FPDF('L'); // 'L' indica orientación horizontal
+        $pdf->AddPage();
 
-    // Título
-    $pdf->SetFont('Arial', 'B', 16);
-    $pdf->Cell(0, 10, 'List of Campaigns', 0, 1, 'C');
-    $pdf->Ln(10);
+        // Título
+        $pdf->SetFont('Arial', 'B', 16);
+        $pdf->Cell(0, 10, 'List of Campaigns', 0, 1, 'C');
+        $pdf->Ln(10);
 
-    // Encabezado de la tabla
-    $pdf->SetFont('Arial', 'B', 12);
-    $pdf->Cell(20, 10, 'No', 1, 0, 'C');
-    $pdf->Cell(40, 10, 'Creator', 1, 0, 'C');
-    $pdf->Cell(40, 10, 'Name', 1, 0, 'C');
-    $pdf->Cell(30, 10, 'Events', 1, 0, 'C');
-    $pdf->Cell(40, 10, 'Description', 1, 0, 'C');
-    $pdf->Cell(30, 10, 'Start Date', 1, 0, 'C');
-    $pdf->Cell(30, 10, 'End Date', 1, 0, 'C');
-    $pdf->Cell(30, 10, 'Start Hour', 1, 0, 'C');
-    $pdf->Cell(30, 10, 'End Hour', 1, 1, 'C');
+        // Encabezado de la tabla
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(20, 10, 'No', 1, 0, 'C');
+        $pdf->Cell(40, 10, 'Creator', 1, 0, 'C');
+        $pdf->Cell(40, 10, 'Name', 1, 0, 'C');
+        $pdf->Cell(30, 10, 'Events', 1, 0, 'C');
+        $pdf->Cell(40, 10, 'Description', 1, 0, 'C');
+        $pdf->Cell(30, 10, 'Start Date', 1, 0, 'C');
+        $pdf->Cell(30, 10, 'End Date', 1, 0, 'C');
+        $pdf->Cell(30, 10, 'Start Hour', 1, 0, 'C');
+        $pdf->Cell(30, 10, 'End Hour', 1, 1, 'C');
 
-    // Detalles de las campañas
-    $pdf->SetFont('Arial', '', 12);
-    foreach ($campaigns as $index => $campaign) {
-        $pdf->Cell(20, 10, ++$index, 1, 0, 'C');
-        $pdf->Cell(40, 10, $campaign->user->name ?? '-', 1, 0, 'C');
-        $pdf->Cell(40, 10, $campaign->name, 1, 0, 'C');
-        $pdf->Cell(30, 10, $campaign->events_count, 1, 0, 'C');
-        $pdf->Cell(40, 10, $campaign->description, 1, 0, 'C');
-        $pdf->Cell(30, 10, $campaign->start_date, 1, 0, 'C');
-        $pdf->Cell(30, 10, $campaign->end_date, 1, 0, 'C');
-        $pdf->Cell(30, 10, $campaign->start_hour, 1, 0, 'C');
-        $pdf->Cell(30, 10, $campaign->end_hour, 1, 1, 'C');
+        // Detalles de las campañas
+        $pdf->SetFont('Arial', '', 12);
+        foreach ($campaigns as $index => $campaign) {
+            $pdf->Cell(20, 10, ++$index, 1, 0, 'C');
+            $pdf->Cell(40, 10, $campaign->user->name ?? '-', 1, 0, 'C');
+            $pdf->Cell(40, 10, $campaign->name, 1, 0, 'C');
+            $pdf->Cell(30, 10, $campaign->events_count, 1, 0, 'C');
+            $pdf->Cell(40, 10, $campaign->description, 1, 0, 'C');
+            $pdf->Cell(30, 10, $campaign->start_date, 1, 0, 'C');
+            $pdf->Cell(30, 10, $campaign->end_date, 1, 0, 'C');
+            $pdf->Cell(30, 10, $campaign->start_hour, 1, 0, 'C');
+            $pdf->Cell(30, 10, $campaign->end_hour, 1, 1, 'C');
+        }
+
+        // Forzar la descarga del PDF
+        $pdf->Output('D', 'filtered_campaigns.pdf');
+    }
+    public function trashed(Request $request): View
+    {
+        $search = $request->input('search');
+
+        $campaigns = Campaign::onlyTrashed()
+            ->with('user')
+            ->withCount('events')
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'like', "%{$search}%")
+                            ->orWhere('description', 'like', "%{$search}%")
+                            ->orWhereHas('user', function ($query) use ($search) {
+                                return $query->where('name', 'like', "%{$search}%");
+                            });
+            })
+            ->paginate(10);
+
+        return view('campaign.trashed', compact('campaigns'))
+            ->with('i', ($request->input('page', 1) - 1) * $campaigns->perPage());
     }
 
-    // Forzar la descarga del PDF
-    $pdf->Output('D', 'filtered_campaigns.pdf');
-}
-public function trashed(Request $request): View
-{
-    $search = $request->input('search');
+        public function restore($id): RedirectResponse
+    {
+        $campaign = Campaign::onlyTrashed()->findOrFail($id);
+        $campaign->restore();
 
-    $campaigns = Campaign::onlyTrashed()
-        ->with('user')
-        ->withCount('events')
-        ->when($search, function ($query, $search) {
-            return $query->where('name', 'like', "%{$search}%")
-                         ->orWhere('description', 'like', "%{$search}%")
-                         ->orWhereHas('user', function ($query) use ($search) {
-                             return $query->where('name', 'like', "%{$search}%");
-                         });
-        })
-        ->paginate(10);
+        return redirect()->route('campaigns.trashed')->with('success', 'Campaign restored successfully.');
+    }
 
-    return view('campaign.trashed', compact('campaigns'))
-        ->with('i', ($request->input('page', 1) - 1) * $campaigns->perPage());
-}
+    public function forceDelete($id): RedirectResponse
+    {
+        $campaign = Campaign::onlyTrashed()->findOrFail($id);
+        $campaign->forceDelete();
 
-    public function restore($id): RedirectResponse
-{
-    $campaign = Campaign::onlyTrashed()->findOrFail($id);
-    $campaign->restore();
-
-    return redirect()->route('campaigns.trashed')->with('success', 'Campaign restored successfully.');
-}
-
-public function forceDelete($id): RedirectResponse
-{
-    $campaign = Campaign::onlyTrashed()->findOrFail($id);
-    $campaign->forceDelete();
-
-    return redirect()->route('campaigns.trashed')->with('success', 'Campaign permanently deleted.');
-}
+        return redirect()->route('campaigns.trashed')->with('success', 'Campaign permanently deleted.');
+    }
 
 
 

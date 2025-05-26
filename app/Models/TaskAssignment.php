@@ -59,4 +59,10 @@ class TaskAssignment extends Model
 	{
 		return $this->belongsTo(Task::class);
 	}
+	
+	public function donationRequest()
+	{
+		return $this->belongsTo(DonationRequest::class, 'donation_request_id');
+	}
+
 }

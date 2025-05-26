@@ -105,4 +105,32 @@ class EventController extends Controller
         return Redirect::route('events.index')
             ->with('success', 'Event deleted successfully');
     }
+    public function trashed(Request $request): View
+    {
+        $events = Event::onlyTrashed() // Solo los eventos eliminados (soft deleted)
+            ->with(['campaign', 'user'])
+            ->paginate();
+
+        return view('event.trashed', compact('events'))
+            ->with('i', ($request->input('page', 1) - 1) * $events->perPage());
+    }
+
+    public function restore($id): RedirectResponse
+    {
+        $event = Event::withTrashed()->findOrFail($id);
+        $event->restore(); // Restaurar el evento
+
+        return Redirect::route('events.trashed')
+            ->with('success', 'Evento restaurado exitosamente.');
+    }
+
+    public function forceDelete($id): RedirectResponse
+    {
+        $event = Event::withTrashed()->findOrFail($id);
+        $event->forceDelete(); // Eliminar permanentemente el evento
+
+        return Redirect::route('events.trashed')
+            ->with('success', 'Evento eliminado permanentemente.');
+    }
+
 }

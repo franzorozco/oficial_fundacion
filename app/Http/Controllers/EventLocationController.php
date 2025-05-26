@@ -89,4 +89,29 @@ class EventLocationController extends Controller
         return Redirect::route('event-locations.index')
             ->with('success', 'EventLocation deleted successfully');
     }
+
+    public function trashed(Request $request): View
+    {
+        $eventLocations = EventLocation::onlyTrashed()->paginate();
+        return view('event-location.trashed', compact('eventLocations'))
+            ->with('i', ($request->input('page', 1) - 1) * $eventLocations->perPage());
+    }
+
+    public function restore($id): RedirectResponse
+    {
+        $eventLocation = EventLocation::onlyTrashed()->findOrFail($id);
+        $eventLocation->restore();
+
+        return redirect()->route('event-locations.trashed')
+            ->with('success', 'Ubicación restaurada exitosamente.');
+    }
+
+    public function forceDelete($id): RedirectResponse
+    {
+        $eventLocation = EventLocation::onlyTrashed()->findOrFail($id);
+        $eventLocation->forceDelete();
+
+        return redirect()->route('event-locations.trashed')
+            ->with('success', 'Ubicación eliminada permanentemente.');
+    }
 }

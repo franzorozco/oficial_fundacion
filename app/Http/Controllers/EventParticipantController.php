@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\EventParticipant;
-use Illuminate\Http\RedirectResponse;
+use App\Models\Event;
+use App\Models\User;
+use App\Models\Campaign;  // Asegúrate de incluir este modelo
 use Illuminate\Http\Request;
 use App\Http\Requests\EventParticipantRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class EventParticipantController extends Controller
 {
@@ -40,15 +43,20 @@ class EventParticipantController extends Controller
             ->with('i', ($request->input('page', 1) - 1) * $eventParticipants->perPage());
     }
 
-
     /**
      * Show the form for creating a new resource.
      */
     public function create(): View
     {
+        // Obtener eventos, usuarios y campañas
+        $events = Event::pluck('name', 'id');
+        $users = User::pluck('name', 'id');
+        $campaigns = Campaign::pluck('name', 'id');  // Obtener las campañas
+
+        // Crear una nueva instancia de EventParticipant para el formulario de creación
         $eventParticipant = new EventParticipant();
 
-        return view('event-participant.create', compact('eventParticipant'));
+        return view('event-participant.create', compact('events', 'users', 'campaigns', 'eventParticipant'));
     }
 
     /**
@@ -58,29 +66,30 @@ class EventParticipantController extends Controller
     {
         $data = $request->validated();
         $data['registration_date'] = now();
-    
-        // Verifica que la ubicación pertenezca al evento
+
+        // Validar que la ubicación pertenezca al evento
         $location = \App\Models\EventLocation::where('id', $data['event_locations_id'])
             ->where('event_id', $data['event_id'])
             ->first();
-    
+
         if (!$location) {
-            return Redirect::back()->withErrors(['event_locations_id' => 'La ubicación seleccionada no pertenece a este evento.']);
+            return Redirect::back()->withErrors([
+                'event_locations_id' => 'La ubicación seleccionada no pertenece a este evento.'
+            ]);
         }
-    
+
         EventParticipant::create($data);
-    
+
         return Redirect::route('events.show', $data['event_id'])
             ->with('success', 'Participante agregado correctamente.');
     }
-    
 
     /**
      * Display the specified resource.
      */
     public function show($id): View
     {
-        $eventParticipant = EventParticipant::find($id);
+        $eventParticipant = EventParticipant::findOrFail($id);
 
         return view('event-participant.show', compact('eventParticipant'));
     }
@@ -88,12 +97,22 @@ class EventParticipantController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id): View
-    {
-        $eventParticipant = EventParticipant::find($id);
+    public function edit(EventParticipant $eventParticipant): View
+{
+    $events = Event::pluck('name', 'id');
+    $users = User::pluck('name', 'id');
+    $campaigns = Campaign::pluck('name', 'id');  // Obtener las campañas
+    $eventLocations = \App\Models\EventLocation::where('event_id', $eventParticipant->event_id)->pluck('location_name', 'id');
 
-        return view('event-participant.edit', compact('eventParticipant'));
-    }
+    return view('event-participant.edit', [
+        'eventParticipant' => $eventParticipant,
+        'events' => $events,
+        'users' => $users,
+        'campaigns' => $campaigns,
+        'eventLocations' => $eventLocations,  // Pasar las ubicaciones a la vista
+    ]);
+}
+
 
     /**
      * Update the specified resource in storage.
@@ -103,14 +122,31 @@ class EventParticipantController extends Controller
         $eventParticipant->update($request->validated());
 
         return Redirect::route('event-participants.index')
-            ->with('success', 'EventParticipant updated successfully');
+            ->with('success', 'Participante actualizado correctamente.');
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy($id): RedirectResponse
     {
-        EventParticipant::find($id)->delete();
+        EventParticipant::findOrFail($id)->delete();
 
         return Redirect::route('event-participants.index')
-            ->with('success', 'EventParticipant deleted successfully');
+            ->with('success', 'Participante eliminado correctamente.');
     }
+
+    public function getEventsByCampaign($campaignId)
+    {
+        $events = Event::where('campaign_id', $campaignId)->pluck('name', 'id');
+        return response()->json(['events' => $events]);
+    }
+
+    public function getLocationsByEvent($eventId)
+    {
+        $locations = EventLocation::where('event_id', $eventId)->pluck('name', 'id');
+        return response()->json(['locations' => $locations]);
+    }
+
+
 }

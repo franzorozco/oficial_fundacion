@@ -46,7 +46,7 @@
         <div class="form-group mb-2">
             <label for="address" class="form-label">Dirección</label>
             <input type="text" name="address" class="form-control @error('address') is-invalid @enderror"
-                value="{{ old('address', $user?->address) }}" id="address" placeholder="Dirección">
+                    value="{{ old('address', $user?->address) }}" id="address" placeholder="Dirección">
             {!! $errors->first('address', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
     </div>
@@ -55,7 +55,7 @@
         <div class="form-group mb-2">
             <label for="document_number" class="form-label">Número de documento</label>
             <input type="text" name="document_number" class="form-control @error('document_number') is-invalid @enderror"
-                value="{{ old('document_number', $user?->profile?->document_number) }}" id="document_number" placeholder="Número de documento">
+                    value="{{ old('document_number', $user?->profile?->document_number) }}" id="document_number" placeholder="Número de documento">
             {!! $errors->first('document_number', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
     </div>
@@ -73,48 +73,77 @@
         <div class="form-group mb-2">
             <label for="location" class="form-label">Ubicación</label>
             <input type="text" name="location" class="form-control @error('location') is-invalid @enderror"
-                value="{{ old('location', $user?->profile?->location) }}" id="location" placeholder="Ubicación">
+       value="{{ old('location', $user?->profile?->location) }}" id="location" placeholder="Ubicación">
             {!! $errors->first('location', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
     </div>
 
+    <!-- Idiomas hablados -->
     <div class="col-md-6">
         <div class="form-group mb-2">
             <label for="languages_spoken" class="form-label">Idiomas hablados</label>
-            <input type="text" name="languages_spoken" class="form-control @error('languages_spoken') is-invalid @enderror"
-                value="{{ old('languages_spoken', $user?->profile?->languages_spoken) }}" id="languages_spoken" placeholder="Ej: Español, Inglés">
-            {!! $errors->first('languages_spoken', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            <input type="text" name="languages_spoken" class="form-control" id="languages_spoken" placeholder="Ej: Español, Inglés" readonly>
+            <div class="mt-2" id="language-options" class="d-flex flex-wrap gap-1">
+                @php
+                    $idiomas = ['Español', 'Inglés', 'Francés', 'Portugués', 'Quechua', 'Aymara'];
+                @endphp
+                @foreach($idiomas as $idioma)
+                    <button type="button" class="btn btn-outline-dark btn-sm language-btn">{{ $idioma }}</button>
+                @endforeach
+            </div>
         </div>
     </div>
 
+    <!-- Días disponibles -->
     <div class="col-md-6">
         <div class="form-group mb-2">
             <label for="availability_days" class="form-label">Días disponibles</label>
-            <input type="text" name="availability_days" class="form-control @error('availability_days') is-invalid @enderror"
-                value="{{ old('availability_days', $user?->profile?->availability_days) }}" id="availability_days" placeholder="Ej: Lunes, Miércoles">
-            {!! $errors->first('availability_days', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            <input type="text" name="availability_days" class="form-control" id="availability_days" placeholder="Ej: Lunes, Miércoles" readonly>
+            <div class="mt-2" id="days-options" class="d-flex flex-wrap gap-1">
+                @php
+                    $dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                @endphp
+                @foreach($dias as $dia)
+                    <button type="button" class="btn btn-outline-dark btn-sm day-btn">{{ $dia }}</button>
+                @endforeach
+            </div>
         </div>
     </div>
 
+
+        <!-- Horas disponibles -->
     <div class="col-md-6">
         <div class="form-group mb-2">
             <label for="availability_hours" class="form-label">Horas disponibles</label>
-            <input type="text" name="availability_hours" class="form-control @error('availability_hours') is-invalid @enderror"
-                value="{{ old('availability_hours', $user?->profile?->availability_hours) }}" id="availability_hours" placeholder="Ej: 9am-5pm">
-            {!! $errors->first('availability_hours', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            <input type="text" name="availability_hours" class="form-control" id="availability_hours" placeholder="Ej: Mañana, Tarde" readonly>
+            <div class="mt-2" id="hours-options" class="d-flex flex-wrap gap-1">
+                @php
+                    $horas = ['Mañana', 'Medio día', 'Tarde', 'Noche', 'Todo el día'];
+                @endphp
+                @foreach($horas as $hora)
+                    <button type="button" class="btn btn-outline-dark btn-sm hour-btn">{{ $hora }}</button>
+                @endforeach
+            </div>
         </div>
     </div>
 
+
+        <!-- Tipos de transporte -->
     <div class="col-md-6">
         <div class="form-group mb-2">
-            <label for="transport_available" class="form-label">¿Cuenta con transporte?</label>
-            <select name="transport_available" id="transport_available" class="form-control @error('transport_available') is-invalid @enderror">
-                <option value="0" {{ old('transport_available', $user?->profile?->transport_available) == 0 ? 'selected' : '' }}>No</option>
-                <option value="1" {{ old('transport_available', $user?->profile?->transport_available) == 1 ? 'selected' : '' }}>Sí</option>
-            </select>
-            {!! $errors->first('transport_available', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            <label for="transport_available" class="form-label">Tipos de transporte</label>
+            <input type="text" name="transport_available" class="form-control" id="transport_available" placeholder="Ej: Bicicleta, Auto" readonly>
+            <div class="mt-2" id="transport-options" class="d-flex flex-wrap gap-1">
+                @php
+                    $transportes = ['A pie', 'Bicicleta', 'Moto', 'Auto', 'Camioneta', 'Transporte público'];
+                @endphp
+                @foreach($transportes as $transporte)
+                    <button type="button" class="btn btn-outline-dark btn-sm transport-btn">{{ $transporte }}</button>
+                @endforeach
+            </div>
         </div>
     </div>
+
 
     <div class="col-md-6">
         <div class="form-group mb-2">
@@ -147,4 +176,212 @@
             {!! $errors->first('bio', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
     </div>
+
+    <div class="col-md-6">
+        <div class="form-group mb-2">
+            <label for="latitude" class="form-label">Latitud</label>
+            <input type="text" name="latitude" id="latitude" class="form-control" readonly
+       value="{{ old('latitude', $user?->profile?->latitude) }}">
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="form-group mb-2">
+            <label for="longitude" class="form-label">Longitud</label>
+           <input type="text" name="longitude" id="longitude" class="form-control" readonly
+       value="{{ old('longitude', $user?->profile?->longitude) }}">
+        </div>
+    </div>
+
+    <div class="col-md-12">
+        <div class="form-group mb-2">
+            <label for="map" class="form-label">Selecciona tu ubicación en el mapa</label>
+            <div id="map" style="width: 100%; height: 400px; border-radius: 10px;"></div>
+        </div>
+    </div>
+
+
+
 </div>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2GCanK5Gxm26zDyPrKc7MNy7WhAJZK7M&callback=initMap" async defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const languageInput = document.getElementById('languages_spoken');
+    const dayInput = document.getElementById('availability_days');
+
+    const selectedLanguages = new Set();
+    const selectedDays = new Set();
+
+    document.querySelectorAll('.language-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const lang = btn.textContent.trim();
+            if (selectedLanguages.has(lang)) {
+                selectedLanguages.delete(lang);
+                btn.classList.remove('btn-dark');
+                btn.classList.add('btn-outline-dark');
+            } else {
+                selectedLanguages.add(lang);
+                btn.classList.add('btn-dark');
+                btn.classList.remove('btn-outline-dark');
+            }
+            languageInput.value = Array.from(selectedLanguages).join(', ');
+        });
+    });
+
+    document.querySelectorAll('.day-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const day = btn.textContent.trim();
+            if (selectedDays.has(day)) {
+                selectedDays.delete(day);
+                btn.classList.remove('btn-dark btn-sm');
+                btn.classList.add('btn-outline-dark');
+            } else {
+                selectedDays.add(day);
+                btn.classList.add('btn-dark btn-sm');
+                btn.classList.remove('btn-outline-dark');
+            }
+            dayInput.value = Array.from(selectedDays).join(', ');
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    function setupSelection(inputId, buttonClass) {
+        const input = document.getElementById(inputId);
+        const buttons = document.querySelectorAll(`.${buttonClass}`);
+        let selected = [];
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const value = button.textContent;
+                const index = selected.indexOf(value);
+
+                if (index === -1) {
+                    selected.push(value);
+                    button.classList.add('active');
+                } else {
+                    selected.splice(index, 1);
+                    button.classList.remove('active');
+                }
+
+                input.value = selected.join(', ');
+            });
+        });
+    }
+    setupSelection('languages_spoken', 'language-btn');
+    setupSelection('availability_days', 'day-btn');
+    setupSelection('availability_hours', 'hour-btn');
+    setupSelection('transport_available', 'transport-btn');
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
+    const locationInput = document.getElementById('location'); // país + departamento
+    const addressInput = document.getElementById('address');   // dirección exacta (calle, zona, etc.)
+
+    let map, marker, geocoder;
+
+    function initMap() {
+        // Obtén lat y lng desde los inputs, si existen y son válidos
+        const latInput = document.getElementById('latitude').value;
+        const lngInput = document.getElementById('longitude').value;
+
+        // Convierte a float
+        const lat = parseFloat(latInput);
+        const lng = parseFloat(lngInput);
+
+        // Si lat o lng no son números válidos, pon valores por defecto
+        const initialLat = !isNaN(lat) ? lat : -16.5; // Ej: latitud de Bolivia
+        const initialLng = !isNaN(lng) ? lng : -68.15; // Ej: longitud de Bolivia
+
+        // Crea el mapa centrado en la ubicación o valor por defecto
+        const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 12,
+            center: { lat: initialLat, lng: initialLng },
+        });
+
+        // Crea un marcador si hay lat y lng válidos
+        let marker = null;
+        if (!isNaN(lat) && !isNaN(lng)) {
+            marker = new google.maps.Marker({
+                position: { lat, lng },
+                map: map,
+                draggable: true
+            });
+        } else {
+            // Si quieres, crea un marcador inicial en el centro y que sea draggable
+            marker = new google.maps.Marker({
+                position: { lat: initialLat, lng: initialLng },
+                map: map,
+                draggable: true
+            });
+        }
+
+        // Evento para actualizar inputs cuando se mueve el marcador
+        marker.addListener('dragend', function() {
+            const position = marker.getPosition();
+            document.getElementById('latitude').value = position.lat();
+            document.getElementById('longitude').value = position.lng();
+        });
+
+        // Opcional: si quieres que al hacer click en el mapa cambie el marcador y los inputs
+        map.addListener('click', function(event) {
+            const clickedLocation = event.latLng;
+            marker.setPosition(clickedLocation);
+            document.getElementById('latitude').value = clickedLocation.lat();
+            document.getElementById('longitude').value = clickedLocation.lng();
+        });
+    }
+
+
+    function updateLocation(lat, lng) {
+        latitudeInput.value = lat.toFixed(6);
+        longitudeInput.value = lng.toFixed(6);
+
+        const latlng = { lat: lat, lng: lng };
+        geocoder.geocode({ location: latlng }, (results, status) => {
+            if (status === 'OK') {
+                if (results[0]) {
+                    // Buscar componentes del address
+                    const addressComponents = results[0].address_components;
+                    // Extraer país y departamento
+                    let country = '';
+                    let department = '';
+                    let street = '';
+
+                    addressComponents.forEach(component => {
+                        const types = component.types;
+
+                        if (types.includes('country')) {
+                            country = component.long_name;
+                        }
+                        if (types.includes('administrative_area_level_1')) {
+                            department = component.long_name;
+                        }
+                        if (types.includes('route') || types.includes('street_address')) {
+                            street = component.long_name;
+                        }
+                    });
+
+                    // Ubicación: País + Departamento
+                    locationInput.value = `${country}${department ? ', ' + department : ''}`;
+
+                    // Dirección: calle + zona + etc
+                    // Si el resultado tiene un formato (por ejemplo, línea completa de dirección), lo usamos
+                    addressInput.value = results[0].formatted_address;
+
+                } else {
+                    locationInput.value = '';
+                    addressInput.value = '';
+                }
+            } else {
+                console.error('Geocoder failed due to: ' + status);
+            }
+        });
+    }
+
+    initMap();
+});
+
+</script>

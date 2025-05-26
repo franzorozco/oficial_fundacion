@@ -5,6 +5,7 @@
  */
 
 namespace App\Models;
+
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -93,10 +94,18 @@ class User extends Authenticatable
 		return $this->hasMany(DonationRequest::class, 'user_in_charge_id');
 	}
 
+	// Relación para obtener las donaciones hechas por este usuario (donador)
+	public function donationsMade()
+	{
+		return $this->hasMany(Donation::class, 'user_id');
+	}
+
+	// Relación para obtener las donaciones que recibió este usuario
 	public function donations()
 	{
 		return $this->hasMany(Donation::class, 'received_by_id');
 	}
+
 
 	public function donations_cashes()
 	{
@@ -172,4 +181,16 @@ class User extends Authenticatable
 	{
 		return $this->hasMany(VolunteerVerification::class, 'user_resp_id');
 	}
+
+
+	public function tareasAsignadas()
+	{
+		return $this->hasMany(TaskAssignment::class)->whereNotNull('task_id');
+	}
+
+	public function distribucionesAsignadas()
+	{
+		return $this->hasMany(TaskAssignment::class)->whereNotNull('donation_request_id');
+	}
+
 }

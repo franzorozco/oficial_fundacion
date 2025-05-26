@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Campaigns')
+@section('title', 'Campañas')
 
 @section('content_header')
-    <h1>{{ __('Campaigns') }}</h1>
+    <h1>{{ __('Campañas') }}</h1>
 @endsection
 
 @section('content')
@@ -11,7 +11,7 @@
         <div class="card-header">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
                 <span id="card_title" class="h5 m-0">
-                    {{ __('Campaigns') }}
+                    {{ __('Campañas') }}
                 </span>
 
                 <form action="{{ route('campaigns.index') }}" method="GET" class="d-flex flex-wrap gap-2" role="search">
@@ -19,11 +19,11 @@
                     <button class="btn btn-outline-primary btn-sm" type="submit">
                         <i class="fa fa-search"></i> Buscar
                     </button>
-                </form>
+                </form> 
 
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route('campaigns.create') }}" class="btn btn-outline-success btn-sm">
-                        <i class="fa fa-plus"></i> {{ __('Create New') }}
+                        <i class="fa fa-plus"></i> Crear Nueva
                     </a>
                     <a href="{{ route('campaigns.pdf.all', ['search' => request('search')]) }}" class="btn btn-outline-info btn-sm">
                         <i class="fa fa-file-pdf"></i> Descargar PDF
@@ -31,7 +31,6 @@
                     <a href="{{ route('campaigns.trashed') }}" class="btn btn-outline-darck btn-sm">
                         <i class="fa fa-trash-restore"></i> Ver Eliminadas
                     </a>
-
                 </div>
             </div>
         </div>
@@ -48,14 +47,12 @@
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Creator</th>
-                            <th>Name</th>
-                            <th>Eventos</th>
-                            <th>Description</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Start Hour</th>
-                            <th>End Hour</th>
+                            <th>Creador</th>
+                            <th>Nombre</th>
+                            <th>Eventos registrados</th>
+                            <th>Descripción</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -69,8 +66,6 @@
                                 <td>{{ $campaign->description }}</td>
                                 <td>{{ $campaign->start_date }}</td>
                                 <td>{{ $campaign->end_date }}</td>
-                                <td>{{ $campaign->start_hour }}</td>
-                                <td>{{ $campaign->end_hour }}</td>
                                 <td>
                                     <div class="d-flex flex-wrap gap-1">
                                         <a class="btn btn-outline-primary btn-sm" href="{{ route('campaigns.show', $campaign->id) }}">

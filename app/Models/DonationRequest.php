@@ -85,4 +85,10 @@ class DonationRequest extends Model
     {
         return $this->belongsTo(User::class, 'user_in_charge_id'); // Agregado el campo de encargado
     }
+
+    public function taskAssignments()
+    {
+        return $this->hasMany(TaskAssignment::class, 'donation_request_id');
+    }
+
 }

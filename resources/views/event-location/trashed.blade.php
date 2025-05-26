@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Ubicaciones de Eventos')
+@section('title', 'Ubicaciones Eliminadas')
 
 @section('content_header')
-    <h1>{{ __('Ubicaciones de Eventos') }}</h1>
+    <h1>{{ __('Ubicaciones de Eventos Eliminadas') }}</h1>
 @stop
 
 @section('content')
@@ -13,27 +13,13 @@
                 <div class="card">
                     <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span id="card_title">{{ __('Ubicaciones de Eventos') }}</span>
+                            <span id="card_title">{{ __('Ubicaciones Eliminadas') }}</span>
                             <div class="float-right">
-                                <a href="{{ route('event-locations.create') }}" class="btn btn-outline-primary btn-sm">
-                                    {{ __('Crear Nueva') }}
-                                </a>
-                                <a href="{{ route('event-locations.trashed') }}" class="btn btn-outline-dark btn-sm">
-                                    <i class="fa fa-trash-alt"></i> {{ __('Ver Eliminadas') }}
+                                <a href="{{ route('event-locations.index') }}" class="btn btn-outline-secondary btn-sm">
+                                    {{ __('Volver a la Lista') }}
                                 </a>
                             </div>
                         </div>
-
-                        {{-- Buscador --}}
-                        <form method="GET" action="{{ route('event-locations.index') }}" class="mt-3">
-                            <div class="input-group">
-                                <input type="text" name="search" class="form-control" placeholder="Buscar por nombre, dirección o ID del evento"
-                                    value="{{ request()->query('search') }}">
-                                <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary" type="submit">Buscar</button>
-                                </div>
-                            </div>
-                        </form>
                     </div>
 
                     @if ($message = Session::get('success'))
@@ -45,7 +31,7 @@
                     <div class="card-body bg-white">
                         <div class="table-responsive">
                             <table class="table table-striped table-hover">
-                                <thead class="thead">
+                                <thead>
                                     <tr>
                                         <th>No</th>
                                         <th>ID del Evento</th>
@@ -66,18 +52,19 @@
                                             <td>{{ $eventLocation->latitud }}</td>
                                             <td>{{ $eventLocation->longitud }}</td>
                                             <td>
-                                                <form action="{{ route('event-locations.destroy', $eventLocation->id) }}" method="POST">
-                                                    <a href="{{ route('event-locations.show', $eventLocation->id) }}" class="btn btn-outline-primary btn-sm">
-                                                        <i class="fa fa-fw fa-eye"></i> {{ __('Ver') }}
-                                                    </a>
-                                                    <a href="{{ route('event-locations.edit', $eventLocation->id) }}" class="btn btn-outline-success btn-sm">
-                                                        <i class="fa fa-fw fa-edit"></i> {{ __('Editar') }}
-                                                    </a>
+                                                <form action="{{ route('event-locations.forceDelete', $eventLocation->id) }}" method="POST" style="display: inline-block;">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-outline-danger btn-sm"
-                                                        onclick="event.preventDefault(); confirm('¿Estás seguro de que deseas eliminar?') ? this.closest('form').submit() : false;">
-                                                        <i class="fa fa-fw fa-trash"></i> {{ __('Eliminar') }}
+                                                        onclick="return confirm('¿Estás seguro de que deseas eliminar permanentemente?')">
+                                                        <i class="fa fa-fw fa-trash"></i> Eliminar Definitivamente
+                                                    </button>
+                                                </form>
+
+                                                <form action="{{ route('event-locations.restore', $eventLocation->id) }}" method="POST" style="display: inline-block;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-outline-success btn-sm">
+                                                        <i class="fa fa-fw fa-undo"></i> Restaurar
                                                     </button>
                                                 </form>
                                             </td>
@@ -88,7 +75,7 @@
                         </div>
                     </div>
 
-                    {!! $eventLocations->withQueryString()->links() !!}
+                    {!! $eventLocations->links() !!}
                 </div>
             </div>
         </div>

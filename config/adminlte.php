@@ -334,6 +334,18 @@ return [
         ],
 
         [
+            'text' => 'Donantes',
+            'url'  => 'donantes',
+            'icon' => 'fas fa-user-plus',
+            'label' => 'Madre',
+        ],
+        [
+            'text' => 'Voluntarios',
+            'url'  => 'volunteers',
+            'icon' => 'fas fa-user-friends',
+            'label' => 'Madre',
+        ],
+        [
             'text' => 'Roles de sistema',
             'url'  => 'roles',
             'icon' => 'fas fa-user-shield',

@@ -112,4 +112,10 @@ class Donation extends Model
     {
         return $this->hasMany(DonationRequest::class);
     }
+
+    public function articulosDonados()
+    {
+        return $this->hasMany(ArticuloDonado::class); // o el modelo correcto
+    }
+
 }

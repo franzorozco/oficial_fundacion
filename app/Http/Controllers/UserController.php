@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -13,33 +14,80 @@ use FPDF;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): View
     {
-        $query = User::query(); // Iniciar la consulta de usuarios
+        $query = User::query();
 
-        // Si hay un término de búsqueda
         if ($request->has('search') && $request->input('search') != '') {
             $search = $request->input('search');
-            // Filtrar por nombre, correo, teléfono o dirección (puedes añadir más campos si es necesario)
-            $query->where('name', 'like', "%$search%")
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
                 ->orWhere('email', 'like', "%$search%")
                 ->orWhere('phone', 'like', "%$search%")
                 ->orWhere('address', 'like', "%$search%");
+            });
         }
 
-        // Paginar los resultados
-        $users = $query->paginate();
+        if ($request->filled('role')) {
+            $query->whereHas('roles', function ($q) use ($request) {
+                $q->where('id', $request->input('role'));
+            });
+        }
 
-        return view('user.index', compact('users'))
+        if ($request->filled('email_domain')) {
+            $query->where('email', 'like', '%' . $request->input('email_domain'));
+        }
+
+        if ($request->filled('start_date')) {
+            $query->where('created_at', '>=', $request->input('start_date'));
+        }
+        if ($request->filled('end_date')) {
+            $query->where('created_at', '<=', $request->input('end_date'));
+        }
+        if ($request->filled('city')) {
+            $query->where('address', $request->input('city'));
+        }
+
+
+        // Filtro por actividad de inicio de sesión
+        \Log::info('Filtro login_activity_value:', ['valor' => $request->input('login_activity_value')]);
+
+        if ($request->filled('login_activity_value')) {
+            $loginFilter = $request->input('login_activity_value');
+
+            if ($loginFilter === 'top_10') {
+                $topUsersData = DB::table('system_logs')
+                    ->select('user_id', DB::raw('COUNT(*) as total_sessions'))
+                    ->where('action', 'Inicio de sesión')
+                    ->groupBy('user_id')
+                    ->orderByDesc('total_sessions')
+                    ->limit(10)
+                    ->get();
+
+                $topUserIds = $topUsersData->pluck('user_id')->toArray();
+                $query->whereIn('id', $topUserIds)
+                    ->orderByRaw("FIELD(id, " . implode(',', $topUserIds) . ")");
+            } elseif ($loginFilter === 'none') {
+                $usersWithLogins = DB::table('system_logs')
+                    ->where('action', 'Inicio de sesión')
+                    ->distinct()
+                    ->pluck('user_id')
+                    ->toArray();
+
+                $query->whereNotIn('id', $usersWithLogins);
+            }
+        }
+
+
+        $users = $query->paginate()->withQueryString();
+        $roles = Role::all();
+        $emailDomains = User::selectRaw('SUBSTRING_INDEX(email, "@", -1) as domain')->distinct()->pluck('domain');
+        $cityList = User::select('address')->whereNotNull('address')->distinct()->pluck('address');
+
+        return view('user.index', compact('users', 'roles', 'emailDomains', 'cityList'))
             ->with('i', ($request->input('page', 1) - 1) * $users->perPage());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): View
     {
         $user = new User();
@@ -47,29 +95,30 @@ class UserController extends Controller
         return view('user.create', compact('user'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(UserRequest $request): RedirectResponse
     {
-        // Cifrar la contraseña antes de almacenarla
         $validated = $request->validated();
-        $validated['password'] = bcrypt($validated['password']); // Cifrar la contraseña
-
-        // Crear el usuario
+        $validated['password'] = bcrypt($validated['password']);
+        
+        // Crea usuario con los campos que tiene User
         $user = User::create($validated);
-
-        // Asignar los roles "user" y "donor"
         $user->assignRole('user');
         $user->assignRole('donor');
+
+        // Ahora crea o actualiza perfil con la info adicional
+        $user->profile()->create([
+            'address' => $validated['address'],
+            'location' => $validated['location'] ?? null,
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
+            // Otros campos de profile que quieras guardar
+        ]);
 
         return Redirect::route('users.index')
             ->with('success', 'User created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
+
     public function show($id)
     {
         $user = User::find($id);
@@ -80,14 +129,9 @@ class UserController extends Controller
         return view('user.show', compact('user'));
     }
 
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id): View
     {
         $user = User::find($id);
-
         return view('user.edit', compact('user'));
     }
 
@@ -95,17 +139,13 @@ class UserController extends Controller
     {
         $user = User::find($id);
         $roles = Role::all(); // Obtener todos los roles disponibles
-
         return view('user.editRol', compact('user', 'roles'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, User $user): RedirectResponse
     {
-        // Validación general
-        $request->validate([
+        // Validar datos recibidos (puedes ajustar reglas según necesidad)
+        $validatedData = $request->validate([
             'roles' => 'sometimes|array',
             'roles.*' => 'exists:roles,id',
             'bio' => 'nullable|string|max:255',
@@ -121,35 +161,49 @@ class UserController extends Controller
             'physical_condition' => 'nullable|string|max:255',
             'preferred_tasks' => 'nullable|string|max:255',
             'languages_spoken' => 'nullable|string|max:255',
-            'password' => 'nullable|string|min:8|confirmed', // Nueva contraseña opcional
+            'password' => 'nullable|string|min:8|confirmed', // confirmación con password_confirmation
+            // Puedes añadir otras validaciones que necesites para otros campos de User
         ]);
 
-        // Actualizar la contraseña si se proporciona
-        if ($request->filled('password')) {
-            $user->password = bcrypt($request->input('password')); // Cifrar la nueva contraseña
+        // Actualizar password solo si viene y está lleno
+        if (!empty($validatedData['password'])) {
+            $user->password = bcrypt($validatedData['password']);
         }
 
-        // Solo sincronizar roles si vienen en el request
-        if ($request->has('roles')) {
-            $user->roles()->sync($request->roles);
+        // Actualizar roles si vienen en el request
+        if (isset($validatedData['roles'])) {
+            $user->roles()->sync($validatedData['roles']);
         }
 
-        // Actualizar el perfil si existe
-        if ($user->profile) {
-            $user->profile->update($request->only([
-                'bio', 'document_number', 'birthdate', 'skills', 'interests',
-                'availability_days', 'availability_hours', 'location',
-                'transport_available', 'experience_level', 'physical_condition',
-                'preferred_tasks', 'languages_spoken'
-            ]));
-        }
-
-        // Actualizar datos del usuario, excluyendo roles y campos del perfil
-        $user->update($request->except([
-            'roles', 'bio', 'document_number', 'birthdate', 'skills', 'interests',
+        // Actualizar datos del perfil si existe, o crear si no existe
+        $profileData = collect($validatedData)->only([
+            'bio', 'document_number', 'birthdate', 'skills', 'interests',
             'availability_days', 'availability_hours', 'location', 'transport_available',
             'experience_level', 'physical_condition', 'preferred_tasks', 'languages_spoken'
-        ]));
+        ])->toArray();
+
+        if (!empty($profileData)) {
+            if ($user->profile) {
+                $user->profile->update($profileData);
+            } else {
+                // Crear perfil si no existe
+                $user->profile()->create($profileData);
+            }
+        }
+
+        // Actualizar datos del usuario (excluyendo campos del perfil, roles y password)
+        // Puedes añadir aquí otros campos que permita actualizar directamente
+        $userData = collect($validatedData)
+            ->except([
+                'roles', 'bio', 'document_number', 'birthdate', 'skills', 'interests',
+                'availability_days', 'availability_hours', 'location', 'transport_available',
+                'experience_level', 'physical_condition', 'preferred_tasks', 'languages_spoken', 'password', 'password_confirmation'
+            ])
+            ->toArray();
+
+        if (!empty($userData)) {
+            $user->update($userData);
+        }
 
         return Redirect::route('users.index')
             ->with('success', 'User updated successfully!');
@@ -158,18 +212,13 @@ class UserController extends Controller
     public function destroy($id): RedirectResponse
     {
         User::find($id)->delete();
-
         return Redirect::route('users.index')
             ->with('success', 'User deleted successfully');
     }
-
-
-
     
     public function trashed(Request $request): View
     {
         $query = User::onlyTrashed(); // Solo usuarios eliminados
-
         if ($request->has('search') && $request->input('search') != '') {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -179,21 +228,15 @@ class UserController extends Controller
                 ->orWhere('address', 'like', "%$search%");
             });
         }
-
         $users = $query->paginate();
-
         return view('user.trashed', compact('users'))
             ->with('i', ($request->input('page', 1) - 1) * $users->perPage());
     }
-
-
-        
 
     public function restore($id): RedirectResponse
     {
         $user = User::onlyTrashed()->findOrFail($id);
         $user->restore();
-
         return redirect()->route('users.trashed')->with('success', 'User restored successfully.');
     }
 
@@ -201,46 +244,54 @@ class UserController extends Controller
     {
         $user = User::onlyTrashed()->findOrFail($id);
         $user->forceDelete();
-
         return redirect()->route('users.trashed')->with('success', 'User permanently deleted.');
     }
 
-
     public function generatePDF(Request $request)
     {
-        // Comienza la consulta con todos los usuarios (incluyendo los eliminados, si aplica)
-        $query = User::withTrashed()->with('profile');
-    
-        // Verifica si se ha aplicado un filtro de búsqueda
+        $query = User::withTrashed()->with('profile', 'roles');
+
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%$search%")
-                  ->orWhere('email', 'like', "%$search%")
-                  ->orWhere('phone', 'like', "%$search%")
-                  ->orWhere('address', 'like', "%$search%");
+                ->orWhere('email', 'like', "%$search%")
+                ->orWhere('phone', 'like', "%$search%")
+                ->orWhere('address', 'like', "%$search%");
             });
         }
-    
-        // Ejecuta la consulta para obtener los usuarios filtrados o todos
+
+        if ($request->filled('role')) {
+            $query->whereHas('roles', function ($q) use ($request) {
+                $q->where('id', $request->input('role'));
+            });
+        }
+
+        if ($request->filled('email_domain')) {
+            $query->where('email', 'like', '%' . $request->input('email_domain'));
+        }
+
+        if ($request->filled('start_date')) {
+            $query->where('created_at', '>=', $request->input('start_date'));
+        }
+
+        if ($request->filled('end_date')) {
+            $query->where('created_at', '<=', $request->input('end_date'));
+        }
+        if ($request->filled('city')) {
+            $query->where('address', $request->input('city'));
+        }
+
         $users = $query->get();
-    
-        // Crear el PDF
         $pdf = new Fpdf();
         $pdf->SetTitle('Detalle de Usuarios');
         $pdf->SetFont('Arial', '', 10);
-    
-        // Iterar sobre los usuarios y agregar la información al PDF
         foreach ($users as $user) {
             $pdf->AddPage();
-    
             $pdf->SetFont('Arial', 'B', 14);
             $pdf->Cell(0, 10, 'Datos del Usuario', 0, 1, 'C');
             $pdf->Ln(2);
-    
             $pdf->SetFont('Arial', '', 10);
-    
-            // Datos básicos del usuario
             $pdf->Cell(50, 7, 'ID:', 0, 0); $pdf->Cell(0, 7, $user->id, 0, 1);
             $pdf->Cell(50, 7, 'Nombre:', 0, 0); $pdf->Cell(0, 7, $user->name, 0, 1);
             $pdf->Cell(50, 7, 'Correo:', 0, 0); $pdf->Cell(0, 7, $user->email, 0, 1);
@@ -251,15 +302,11 @@ class UserController extends Controller
             $pdf->Cell(50, 7, 'Fecha de actualización:', 0, 0); $pdf->Cell(0, 7, $user->updated_at, 0, 1);
             $pdf->Cell(50, 7, 'Eliminado:', 0, 0); $pdf->Cell(0, 7, $user->deleted_at ?? 'No', 0, 1);
             $pdf->Ln(5);
-    
-            // Datos del perfil si existe
             if ($user->profile) {
                 $profile = $user->profile;
-    
                 $pdf->SetFont('Arial', 'B', 12);
                 $pdf->Cell(0, 10, 'Perfil del Usuario', 0, 1);
                 $pdf->SetFont('Arial', '', 10);
-    
                 $pdf->Cell(50, 7, 'Bio:', 0, 0); $pdf->MultiCell(0, 7, $profile->bio ?? '-');
                 $pdf->Cell(50, 7, 'Documento:', 0, 0); $pdf->Cell(0, 7, $profile->document_number ?? '-', 0, 1);
                 $pdf->Cell(50, 7, 'Fecha de nacimiento:', 0, 0); $pdf->Cell(0, 7, $profile->birthdate ?? '-', 0, 1);
@@ -276,15 +323,9 @@ class UserController extends Controller
             } else {
                 $pdf->Cell(0, 10, 'Sin perfil asociado.', 0, 1);
             }
-    
             $pdf->Ln(10);
         }
-    
-        // Devolver el PDF generado para su descarga
         $pdf->Output('D', 'detalle_usuarios.pdf');
         exit;
     }
-    
-
-
 }
