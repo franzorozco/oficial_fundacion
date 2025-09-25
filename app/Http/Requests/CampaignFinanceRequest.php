@@ -30,8 +30,20 @@ class CampaignFinanceRequest extends FormRequest
             'income' => 'nullable|numeric|min:0', // Ingresos deben ser numéricos y mayores o iguales a 0
             'expenses' => 'nullable|numeric|min:0', // Gastos deben ser numéricos y mayores o iguales a 0
             'net_balance' => 'nullable|numeric|min:0', // Balance neto debe ser numérico y mayor o igual a 0
+            'financial_account_id_1' => 'nullable|exists:financial_accounts,id',
+            'fund_amount' => ['nullable', 'numeric', 'min:0', function ($attribute, $value, $fail) {
+                $accountId = $this->input('financial_account_id_1');
+                if ($accountId && is_numeric($value)) {
+                    $account = \App\Models\FinancialAccount::whereNull('deleted_at')->find($accountId);
+                    if ($account && $value > $account->balance) {
+                        $fail('El monto supera el saldo disponible en la cuenta.');
+                    }
+                }
+            }],
         ];
     }
+    
+
 
     /**
      * Get the custom messages for validation errors.

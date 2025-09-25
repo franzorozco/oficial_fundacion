@@ -17,15 +17,19 @@
         <div class="card-header">
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
                 <div>
+                    @can('external-donors.crear')
                     <a href="{{ route('external-donors.create') }}" class="btn btn-outline-success btn-sm me-2 mb-2">
                         <i class="fa fa-plus"></i> {{ __('Nuevo Donador') }}
                     </a>
+                    @endcan
+                    @can('external-donors.exportar_pdf')
                     <a href="{{ route('external-donors.pdf', request()->query()) }}" class="btn btn-outline-danger btn-sm mb-2">
                         <i class="fa fa-file-pdf"></i> {{ __('Generar Reporte PDF') }}
                     </a>
+                    @endcan
                 </div>
             </div>
-
+            @can('external-donors.filtrar')
             <form method="GET" action="{{ route('external-donors.index') }}">
                 <div class="row g-2">
                     <div class="col-md-3">
@@ -44,13 +48,21 @@
                         <a href="{{ route('external-donors.index') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-eraser"></i> {{ __('Limpiar') }}
                         </a>
+                        @can('external-donors.ver_eliminados')
                         <a href="{{ route('external-donors.trashed') }}" class="btn btn-outline-dark">
                             <i class="fa fa-trash-restore"></i> {{ __('Ver Eliminados') }}
                         </a>
+                        @endcan
 
                     </div>
                 </div>
             </form>
+            @endcan
+            @can('external-donors.ver_eliminados')
+            <a href="{{ route('external-donors.trashed') }}" class="btn btn-outline-dark">
+                <i class="fa fa-trash-restore"></i> {{ __('Ver Eliminados') }}
+            </a>
+            @endcan
         </div>
 
         <div class="card-body bg-white">
@@ -80,17 +92,23 @@
                                 <td>{{ $externalDonor->address }}</td>
                                 <td>
                                     <form action="{{ route('external-donors.destroy', $externalDonor->id) }}" method="POST" class="d-inline">
+                                        @can('external-donors.ver')
                                         <a class="btn btn-outline-primary btn-sm" href="{{ route('external-donors.show', $externalDonor->id) }}">
                                             <i class="fa fa-eye"></i>
                                         </a>
+                                        @endcan
+                                        @can('external-donors.editar')
                                         <a class="btn btn-outline-success btn-sm" href="{{ route('external-donors.edit', $externalDonor->id) }}">
                                             <i class="fa fa-edit"></i>
                                         </a>
+                                        @endcan
                                         @csrf
                                         @method('DELETE')
+                                        @can('external-donors.eliminar')
                                         <button type="submit" class="btn btn-outline-danger btn-sm" onclick="event.preventDefault(); confirm('¿Estás seguro de que deseas eliminar este donador?') ? this.closest('form').submit() : false;">
                                             <i class="fa fa-trash"></i>
                                         </button>
+                                        @endcan
                                     </form>
                                 </td>
                             </tr>

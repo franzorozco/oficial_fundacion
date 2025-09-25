@@ -193,4 +193,12 @@ class User extends Authenticatable
 		return $this->hasMany(TaskAssignment::class)->whereNotNull('donation_request_id');
 	}
 
+	public function receivedDonations()
+	{
+		return $this->hasMany(Donation::class, 'received_by_id');
+	}
+	public function volunteerVerifications() {
+        return $this->hasMany(VolunteerVerification::class);
+    }
+
 }

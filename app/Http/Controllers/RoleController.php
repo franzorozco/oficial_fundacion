@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role; // Modelo local con SoftDeletes
-use Spatie\Permission\Models\Role as SpatieRole; // Modelo de Spatie solo para crear roles
+use App\Models\Role;
+use Spatie\Permission\Models\Role as SpatieRole;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -13,9 +13,7 @@ use App\Http\Requests\RoleRequest;
 
 class RoleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index(Request $request): View
     {
         $roles = Role::whereNull('deleted_at')->paginate();
@@ -24,21 +22,21 @@ class RoleController extends Controller
             ->with('i', ($request->input('page', 1) - 1) * $roles->perPage());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): View
     {
-        $role = new Role();
         $permissions = Permission::all();
+        $groupedPermissions = $permissions->groupBy(function ($perm) {
+            return explode('.', $perm->name)[0]; // users.ver → users
+        });
+        $role = new Role();
         $rolePermissions = [];
 
-        return view('role.create', compact('role', 'permissions', 'rolePermissions'));
+        return view('role.create', compact('role', 'groupedPermissions', 'rolePermissions'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+
+
+
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
@@ -46,14 +44,15 @@ class RoleController extends Controller
             'permission' => 'required|array'
         ]);
 
-        // Crear usando modelo de Spatie
         $role = SpatieRole::create([
             'name' => $request->name,
             'guard_name' => 'web'
         ]);
+        if (strtolower($request->name) === 'administrador') {
+            return back()->with('error', 'Ya existe un rol protegido con ese nombre.');
+        }
 
         if ($role && $role->id) {
-            // Convertir IDs a nombres antes de sincronizar
             $permissionNames = Permission::whereIn('id', $request->permission)->pluck('name');
             $role->syncPermissions($permissionNames);
         } else {
@@ -63,60 +62,61 @@ class RoleController extends Controller
         return redirect()->route('roles.index')->with('success', 'Rol creado con éxito.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Role $role): View
     {
         return view('role.show', compact('role'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Role $role): View
     {
         $permissions = Permission::all();
+        $groupedPermissions = $permissions->groupBy(function ($perm) {
+            return explode('.', $perm->name)[0];
+        });
         $rolePermissions = $role->permissions->pluck('id')->toArray();
 
-        return view('role.edit', compact('role', 'permissions', 'rolePermissions'));
+        return view('role.edit', compact('role', 'groupedPermissions', 'rolePermissions'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(RoleRequest $request, Role $role): RedirectResponse
     {
-        $validated = $request->validated();
+        if ($role->name === 'Administrador' && $request->name !== 'Administrador') {
+            return Redirect::route('roles.index')
+                ->with('error', 'No puedes cambiar el nombre del rol Administrador.');
+        }
 
-        $role->update([
-            'name' => $validated['name'],
-        ]);
-
-        // Convertir IDs a nombres antes de sincronizar
         $permissions = $request->input('permission', []);
-        $permissionNames = Permission::whereIn('id', $permissions)->pluck('name');
+        $permissionNames = Permission::whereIn('id', $permissions)->pluck('name')->toArray();
+
+        if ($role->name === 'Administrador') {
+            // Asegurar que estos permisos siempre estén presentes
+            $required = ['roles.verlista', 'roles.editar'];
+            foreach ($required as $requiredPermission) {
+                if (!in_array($requiredPermission, $permissionNames)) {
+                    return Redirect::route('roles.index')
+                        ->with('error', 'No puedes quitar permisos críticos del rol Administrador.');
+                }
+            }
+        }
+
+        $role->update(['name' => $request->name]);
         $role->syncPermissions($permissionNames);
 
         return Redirect::route('roles.index')
             ->with('success', 'Rol actualizado exitosamente.');
     }
 
-    /**
-     * Remove the specified resource from storage (soft delete).
-     */
     public function destroy(Role $role): RedirectResponse
     {
-        $user = auth()->user();
+        if ($role->name === 'Administrador') {
+            return Redirect::route('roles.index')
+                ->with('error', 'El rol Administrador no puede ser eliminado.');
+        }
 
+        $user = auth()->user();
         if ($role->id === $user->roles->first()->id) {
             return Redirect::route('roles.index')
                 ->with('error', 'No puedes eliminar tu propio rol.');
-        }
-
-        if (in_array($role->name, ['donor', 'volunteer', 'admin'])) {
-            return Redirect::route('roles.index')
-                ->with('error', 'Este rol no puede ser eliminado.');
         }
 
         $role->delete();
@@ -125,9 +125,6 @@ class RoleController extends Controller
             ->with('success', 'Rol eliminado exitosamente.');
     }
 
-    /**
-     * Show a list of trashed (soft deleted) roles.
-     */
     public function trashed(): View
     {
         $roles = Role::onlyTrashed()->paginate(10);
@@ -135,9 +132,6 @@ class RoleController extends Controller
         return view('role.trashed', compact('roles'));
     }
 
-    /**
-     * Restore a trashed role.
-     */
     public function restore($id): RedirectResponse
     {
         $role = Role::onlyTrashed()->findOrFail($id);

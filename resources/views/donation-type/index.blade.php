@@ -13,16 +13,18 @@
                 <div class="card">
                     <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
+                            
                             <span id="card_title">
                                 {{ __('Tipos de Donación') }}
                             </span>
-
+                            
+                            @can('donation-types.crear')
                             <div class="float-right">
                                 <a href="{{ route('donation-types.create') }}" class="btn btn-outline-primary btn-sm float-right" data-placement="left" ">
                                     {{ __('Crear Nuevo') }}
                                 </a>
                             </div>
-                            
+                            @endcan
                         </div>
                         <div class="p-3">
                             <form action="{{ route('donation-types.index') }}" method="GET">
@@ -62,17 +64,23 @@
                                             <td>{{ $donationType->description }}</td>
                                             <td>
                                                 <form action="{{ route('donation-types.destroy', $donationType->id) }}" method="POST">
+                                                    @can('donation-types.ver')
                                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('donation-types.show', $donationType->id) }}">
                                                         <i class="fa fa-fw fa-eye"></i> {{ __('Mostrar') }}
                                                     </a>
+                                                    @endcan
+                                                    @can('donation-types.editar')
                                                     <a class="btn btn-sm btn-outline-success" href="{{ route('donation-types.edit', $donationType->id) }}">
                                                         <i class="fa fa-fw fa-edit"></i> {{ __('Editar') }}
                                                     </a>
+                                                    @endcan
                                                     @csrf
+                                                    @can('donation-types.eliminar')
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-outline-danger btn-sm" onclick="event.preventDefault(); confirm('¿Está seguro de eliminar?') ? this.closest('form').submit() : false;">
                                                         <i class="fa fa-fw fa-trash"></i> {{ __('Eliminar') }}
                                                     </button>
+                                                    @endcan
                                                 </form>
                                             </td>
                                         </tr>

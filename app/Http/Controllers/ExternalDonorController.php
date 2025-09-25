@@ -43,6 +43,24 @@ class ExternalDonorController extends Controller
             ->with('i', ($request->input('page', 1) - 1) * $externalDonors->perPage());
     }
 
+    public function storeAjax(Request $request)
+    {
+        $validated = $request->validate([
+            'names' => 'required|string|max:100',
+            'paternal_surname' => 'nullable|string|max:100',
+            'maternal_surname' => 'nullable|string|max:100',
+            'email' => 'required|email|unique:external_donor,email',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+        ]);
+
+        $donor = ExternalDonor::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'donor' => $donor,
+        ]);
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -103,6 +121,16 @@ class ExternalDonorController extends Controller
         return Redirect::route('external-donors.index')
             ->with('success', 'ExternalDonor deleted successfully');
     }
+
+
+    public function search(Request $request)
+    {
+        $query = $request->input('q');
+        return ExternalDonor::where('names', 'LIKE', "%{$query}%")
+            ->select('id', 'names')
+            ->get();
+    }
+
 
     public function generatePDF(Request $request)
     {

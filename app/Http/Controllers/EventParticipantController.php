@@ -80,8 +80,7 @@ class EventParticipantController extends Controller
 
         EventParticipant::create($data);
 
-        return Redirect::route('events.show', $data['event_id'])
-            ->with('success', 'Participante agregado correctamente.');
+        return back()->with('success', 'Participante agregado correctamente.');
     }
 
     /**
@@ -98,20 +97,20 @@ class EventParticipantController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit(EventParticipant $eventParticipant): View
-{
-    $events = Event::pluck('name', 'id');
-    $users = User::pluck('name', 'id');
-    $campaigns = Campaign::pluck('name', 'id');  // Obtener las campañas
-    $eventLocations = \App\Models\EventLocation::where('event_id', $eventParticipant->event_id)->pluck('location_name', 'id');
+    {
+        $events = Event::pluck('name', 'id');
+        $users = User::pluck('name', 'id');
+        $campaigns = Campaign::pluck('name', 'id');  // Obtener las campañas
+        $eventLocations = \App\Models\EventLocation::where('event_id', $eventParticipant->event_id)->pluck('location_name', 'id');
 
-    return view('event-participant.edit', [
-        'eventParticipant' => $eventParticipant,
-        'events' => $events,
-        'users' => $users,
-        'campaigns' => $campaigns,
-        'eventLocations' => $eventLocations,  // Pasar las ubicaciones a la vista
-    ]);
-}
+        return view('event-participant.edit', [
+            'eventParticipant' => $eventParticipant,
+            'events' => $events,
+            'users' => $users,
+            'campaigns' => $campaigns,
+            'eventLocations' => $eventLocations,  // Pasar las ubicaciones a la vista
+        ]);
+    }
 
 
     /**
@@ -121,8 +120,7 @@ class EventParticipantController extends Controller
     {
         $eventParticipant->update($request->validated());
 
-        return Redirect::route('event-participants.index')
-            ->with('success', 'Participante actualizado correctamente.');
+        return back()->with('success', 'Participante actualizado correctamente.');
     }
 
     /**
@@ -132,8 +130,7 @@ class EventParticipantController extends Controller
     {
         EventParticipant::findOrFail($id)->delete();
 
-        return Redirect::route('event-participants.index')
-            ->with('success', 'Participante eliminado correctamente.');
+        return back()->with('success', 'Participante eliminado correctamente.');
     }
 
     public function getEventsByCampaign($campaignId)
@@ -146,6 +143,22 @@ class EventParticipantController extends Controller
     {
         $locations = EventLocation::where('event_id', $eventId)->pluck('name', 'id');
         return response()->json(['locations' => $locations]);
+    }
+
+    public function restore($id)
+    {
+        $participant = EventParticipant::withTrashed()->findOrFail($id);
+        $participant->restore();
+
+        return back()->with('success', 'Participante restaurado exitosamente.');
+    }
+
+    public function forceDelete($id)
+    {
+        $participant = EventParticipant::withTrashed()->findOrFail($id);
+        $participant->forceDelete();
+
+        return back()->with('success', 'Participante eliminado permanentemente.');
     }
 
 

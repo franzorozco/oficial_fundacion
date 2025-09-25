@@ -25,8 +25,12 @@ class CampaignRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'show_cam' => 'nullable|boolean',
+            'observations' => 'nullable|string',
+            'foto' => 'nullable|image', 
         ];
     }
+
 
     /**
      * Mensajes personalizados (opcional).

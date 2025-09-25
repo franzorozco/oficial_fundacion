@@ -47,4 +47,12 @@ class FinancialAccount extends Model
 	{
 		return $this->hasMany(Transaction::class, 'account_id');
 	}
+
+
+	public function campaignFinances()
+	{
+		return $this->hasMany(CampaignFinance::class, 'financial_account_id');
+	}
+
+
 }

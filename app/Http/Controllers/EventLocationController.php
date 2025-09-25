@@ -6,9 +6,8 @@ use App\Models\EventLocation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\EventLocationRequest;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
-
+use App\Models\Event; // Asegúrate de importar el modelo Event
 class EventLocationController extends Controller
 {
     /**
@@ -17,43 +16,44 @@ class EventLocationController extends Controller
     public function index(Request $request): View
     {
         $search = $request->input('search');
+        $eventId = $request->input('event_id');
+        $startFrom = $request->input('start_from');
+        $startTo = $request->input('start_to');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
 
-        $eventLocations = EventLocation::when($search, function ($query, $search) {
-            return $query->where('location_name', 'LIKE', "%{$search}%")
-                        ->orWhere('address', 'LIKE', "%{$search}%")
-                        ->orWhere('event_id', 'LIKE', "%{$search}%");
-        })->paginate();
+        $eventLocations = EventLocation::query()
+            ->when($search, function ($query, $search) {
+                return $query->where('location_name', 'LIKE', "%{$search}%")
+                    ->orWhere('address', 'LIKE', "%{$search}%")
+                    ->orWhere('event_id', 'LIKE', "%{$search}%");
+            })
+            ->when($eventId, fn($query) => $query->where('event_id', $eventId))
+            ->when($startFrom, fn($query) => $query->where('start_hour', '>=', $startFrom))
+            ->when($startTo, fn($query) => $query->where('start_hour', '<=', $startTo))
+            ->when($dateFrom, fn($query) => $query->whereDate('start_hour', '>=', $dateFrom))
+            ->when($dateTo, fn($query) => $query->whereDate('start_hour', '<=', $dateTo))
+            ->paginate()
+            ->appends($request->query());
 
         return view('event-location.index', compact('eventLocations'))
             ->with('i', ($request->input('page', 1) - 1) * $eventLocations->perPage());
     }
 
-
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): View
     {
         $eventLocation = new EventLocation();
-
-        return view('event-location.create', compact('eventLocation'));
+        $events = Event::all(); // Asegúrate de importar el modelo Event
+        return view('event-location.create', compact('eventLocation', 'events'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(EventLocationRequest $request): RedirectResponse
     {
         EventLocation::create($request->validated());
 
-        return Redirect::route('event-locations.index')
-            ->with('success', 'EventLocation created successfully.');
+        return back()->with('success', 'EventLocation created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id): View
     {
         $eventLocation = EventLocation::find($id);
@@ -61,33 +61,28 @@ class EventLocationController extends Controller
         return view('event-location.show', compact('eventLocation'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id): View
+    public function edit($id)
     {
-        $eventLocation = EventLocation::find($id);
+        $eventLocation = EventLocation::findOrFail($id);
 
-        return view('event-location.edit', compact('eventLocation'));
+        // Obtén todos los eventos (puedes aplicar filtros o paginación si quieres)
+        $events = Event::all();
+
+        return view('event-location.edit', compact('eventLocation', 'events'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(EventLocationRequest $request, EventLocation $eventLocation): RedirectResponse
     {
         $eventLocation->update($request->validated());
 
-        return Redirect::route('event-locations.index')
-            ->with('success', 'EventLocation updated successfully');
+        return back()->with('success', 'EventLocation updated successfully');
     }
 
     public function destroy($id): RedirectResponse
     {
         EventLocation::find($id)->delete();
 
-        return Redirect::route('event-locations.index')
-            ->with('success', 'EventLocation deleted successfully');
+        return back()->with('success', 'EventLocation deleted successfully');
     }
 
     public function trashed(Request $request): View
@@ -97,21 +92,20 @@ class EventLocationController extends Controller
             ->with('i', ($request->input('page', 1) - 1) * $eventLocations->perPage());
     }
 
-    public function restore($id): RedirectResponse
+    public function restore($id)
     {
-        $eventLocation = EventLocation::onlyTrashed()->findOrFail($id);
-        $eventLocation->restore();
+        $location = EventLocation::withTrashed()->findOrFail($id);
+        $location->restore();
 
-        return redirect()->route('event-locations.trashed')
-            ->with('success', 'Ubicación restaurada exitosamente.');
+        return back()->with('success', 'Ubicación restaurada con éxito.');
     }
 
-    public function forceDelete($id): RedirectResponse
+    public function forceDelete($id)
     {
-        $eventLocation = EventLocation::onlyTrashed()->findOrFail($id);
-        $eventLocation->forceDelete();
+        $location = EventLocation::withTrashed()->findOrFail($id);
+        $location->forceDelete();
 
-        return redirect()->route('event-locations.trashed')
-            ->with('success', 'Ubicación eliminada permanentemente.');
+        return back()->with('success', 'Ubicación eliminada permanentemente.');
     }
+
 }

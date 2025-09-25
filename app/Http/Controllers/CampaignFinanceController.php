@@ -13,30 +13,34 @@ use App\Models\User; // Asegúrate de tener esta línea al inicio del archivo
 use FPDF;
 class CampaignFinanceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): View
     {
         $search = $request->input('search');
+        $incomeMin = $request->input('income_min');
+        $incomeMax = $request->input('income_max');
+        $expensesMin = $request->input('expenses_min');
+        $expensesMax = $request->input('expenses_max');
+        $balanceMin = $request->input('balance_min');
+        $balanceMax = $request->input('balance_max');
 
         $campaignFinances = CampaignFinance::with(['campaign', 'user'])
-            ->when($search, function ($query, $search) {
-                $query->whereHas('campaign', function ($q) use ($search) {
-                    $q->where('name', 'LIKE', "%{$search}%");
-                })->orWhereHas('user', function ($q) use ($search) {
-                    $q->where('name', 'LIKE', "%{$search}%");
-                });
+            ->when($search, function ($query) use ($search) {
+                $query->whereHas('campaign', fn($q) => $q->where('name', 'LIKE', "%{$search}%"))
+                    ->orWhereHas('user', fn($q) => $q->where('name', 'LIKE', "%{$search}%"));
             })
+            ->when($incomeMin, fn($q) => $q->where('income', '>=', $incomeMin))
+            ->when($incomeMax, fn($q) => $q->where('income', '<=', $incomeMax))
+            ->when($expensesMin, fn($q) => $q->where('expenses', '>=', $expensesMin))
+            ->when($expensesMax, fn($q) => $q->where('expenses', '<=', $expensesMax))
+            ->when($balanceMin, fn($q) => $q->where('net_balance', '>=', $balanceMin))
+            ->when($balanceMax, fn($q) => $q->where('net_balance', '<=', $balanceMax))
             ->paginate(10);
 
         return view('campaign-finance.index', compact('campaignFinances'))
             ->with('i', ($request->input('page', 1) - 1) * $campaignFinances->perPage());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+
     public function create(): View
     {
         $campaignFinance = new CampaignFinance();
@@ -46,9 +50,6 @@ class CampaignFinanceController extends Controller
         return view('campaign-finance.create', compact('campaignFinance', 'campaigns', 'users'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(CampaignFinanceRequest $request): RedirectResponse
     {
         CampaignFinance::create($request->validated());
@@ -57,31 +58,25 @@ class CampaignFinanceController extends Controller
             ->with('success', 'CampaignFinance created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id): View
     {
         $campaignFinance = CampaignFinance::find($id);
+        $campaignFinance = \App\Models\CampaignFinance::where('campaign_id', $campaign->id)->first();
+        $selectedAccountId = $campaignFinance?->financial_account_id;
 
-        return view('campaign-finance.show', compact('campaignFinance'));
+        return view('campaign-finance.show', compact('campaignFinance', 'selectedAccountId'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id): View
     {
         $campaignFinance = CampaignFinance::find($id);
-        $campaigns = Campaign::all(); // Obtener todas las campañas
-        $users = User::all(); // Obtener todos los usuarios (gerentes)
+        $campaigns = Campaign::all();
+        $users = User::all(); 
 
         return view('campaign-finance.edit', compact('campaignFinance', 'campaigns', 'users'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+
     public function update(CampaignFinanceRequest $request, CampaignFinance $campaignFinance): RedirectResponse
     {
         $campaignFinance->update($request->validated());
@@ -102,7 +97,6 @@ class CampaignFinanceController extends Controller
     {
         $query = CampaignFinance::query();
     
-        // Aplica filtros
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->whereHas('campaign', function ($q) use ($search) {
@@ -114,13 +108,11 @@ class CampaignFinanceController extends Controller
     
         $finances = $query->get();
     
-        // Generar PDF con FPDF
         $pdf = new FPDF();
         $pdf->AddPage();
         $pdf->SetFont('Arial', 'B', 12);
         $pdf->Cell(0, 10, 'Reporte de Finanzas de Campaña', 0, 1, 'C');
     
-        // Encabezados
         $pdf->SetFont('Arial', 'B', 10);
         $pdf->Cell(10, 10, 'No', 1);
         $pdf->Cell(50, 10, 'Campaña', 1);

@@ -60,7 +60,6 @@
                                     <strong>Supporting Documents:</strong>
                                     {{ $donationRequestDescription->supporting_documents }}
                                 </div>
-
                     </div>
                 </div>
             </div>

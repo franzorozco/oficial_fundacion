@@ -53,6 +53,7 @@ class Campaign extends Model
 		'description',
 		'start_date',
 		'end_date',
+		'observations',
 	];
 
 	public function user()

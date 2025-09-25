@@ -49,28 +49,33 @@ class EventController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(EventRequest $request): RedirectResponse
-    {
+    {   
         Event::create($request->validated());
 
-        return Redirect::route('events.index')
-            ->with('success', 'Event created successfully.');
+        return redirect()->back()->with('success', 'Evento creado exitosamente.');
     }
+
 
     /**
      * Display the specified resource.
      */
     public function show($id)
     {
-        // Cargar el evento con las relaciones necesarias
-        $event = Event::with('eventParticipants', 'eventLocations')->findOrFail($id);
+        $event = Event::with([
+            'eventParticipants',
+            'eventLocations',
+            'eventLocationsTrashed' => function ($query) {
+                $query->onlyTrashed();
+            }
+        ])->findOrFail($id);
 
-        // Obtener usuarios que no están registrados como participantes en este evento
         $users = User::whereDoesntHave('eventParticipants', function ($query) use ($id) {
             $query->where('event_id', $id);
         })->get();
 
         return view('event.show', compact('event', 'users'));
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -91,9 +96,9 @@ class EventController extends Controller
     {
         $event->update($request->validated());
 
-        return Redirect::route('events.index')
-            ->with('success', 'Event updated successfully');
+        return redirect()->back()->with('success', 'Evento actualizado exitosamente.');
     }
+
 
     /**
      * Remove the specified resource from storage.
@@ -102,9 +107,9 @@ class EventController extends Controller
     {
         Event::findOrFail($id)->delete();
 
-        return Redirect::route('events.index')
-            ->with('success', 'Event deleted successfully');
+        return redirect()->back()->with('success', 'Evento eliminado exitosamente.');
     }
+
     public function trashed(Request $request): View
     {
         $events = Event::onlyTrashed() // Solo los eventos eliminados (soft deleted)
@@ -118,19 +123,20 @@ class EventController extends Controller
     public function restore($id): RedirectResponse
     {
         $event = Event::withTrashed()->findOrFail($id);
-        $event->restore(); // Restaurar el evento
+        $event->restore();
 
-        return Redirect::route('events.trashed')
-            ->with('success', 'Evento restaurado exitosamente.');
+        return redirect()->back()->with('success', 'Evento restaurado exitosamente.');
     }
+
 
     public function forceDelete($id): RedirectResponse
     {
         $event = Event::withTrashed()->findOrFail($id);
-        $event->forceDelete(); // Eliminar permanentemente el evento
+        $event->forceDelete();
 
-        return Redirect::route('events.trashed')
-            ->with('success', 'Evento eliminado permanentemente.');
+        return redirect()->back()->with('success', 'Evento eliminado permanentemente.');
     }
+
+
 
 }

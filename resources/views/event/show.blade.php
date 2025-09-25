@@ -39,6 +39,10 @@
             <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalNuevaUbicacion">
                 + Nueva Ubicación
             </button>
+            <!-- Correcto para Bootstrap 5 -->
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#modalUbicacionesAnteriores">
+                <i class="fas fa-history"></i> Ubicaciones Anteriores
+            </button>
         </div>
 
         <div class="row">
@@ -74,11 +78,16 @@
 
     {{-- Participantes --}}
     <div class="mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <h4 class="mb-0">Participantes del Evento</h4>
-            <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalAgregarParticipante">
-                + Agregar Participante
-            </button>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalAgregarParticipante">
+                    + Agregar Participante
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#modalParticipantesEliminados">
+                    <i class="fas fa-user-slash"></i> Eliminados
+                </button>
+            </div>
         </div>
 
         @forelse($event->eventParticipants as $participant)
@@ -88,18 +97,19 @@
                     ? asset('storage/' . $user->profile_photo)
                     : asset('storage/users/user_default.jpg');
             @endphp
+
             <div class="card mb-3 shadow-sm">
-                <div class="card-body d-flex align-items-center justify-content-between flex-column flex-md-row gap-3">
-                    <div class="d-flex align-items-center">
-                        <img src="{{ $profilePhoto }}" alt="Foto de {{ $user->name }}" class="rounded-circle shadow-sm me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                <div class="card-body d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="{{ $profilePhoto }}" alt="Foto de {{ $user->name }}" class="rounded-circle shadow" style="width: 80px; height: 80px; object-fit: cover;">
                         <div>
-                            <h5 class="card-title mb-1">{{ $user->name ?? 'Sin nombre' }}</h5>
-                            <p class="mb-0">
-                                <strong>Email:</strong> {{ $user->email ?? 'No disponible' }}<br>
-                                <strong>Registro:</strong> {{ $participant->registration_date }}<br>
-                                <strong>Estado:</strong> {{ ucfirst($participant->status) }}<br>
-                                <strong>Observaciones:</strong> {{ $participant->observations ?? 'Ninguna' }}
-                            </p>
+                            <h5 class="mb-1">{{ $user->name ?? 'Sin nombre' }}</h5>
+                            <div class="text-muted small">
+                                <div><strong>Email:</strong> {{ $user->email ?? 'No disponible' }}</div>
+                                <div><strong>Registro:</strong> {{ $participant->registration_date }}</div>
+                                <div><strong>Estado:</strong> {{ ucfirst($participant->status) }}</div>
+                                <div><strong>Observaciones:</strong> {{ $participant->observations ?? 'Ninguna' }}</div>
+                            </div>
                         </div>
                     </div>
                     <div class="d-flex gap-2">
@@ -115,10 +125,7 @@
         @empty
             <p class="text-muted">No hay participantes registrados en este evento.</p>
         @endforelse
- 
-
-
-
+    </div>
 
 
     <!-- Modal Nueva Ubicación -->
@@ -172,6 +179,46 @@
         </div>
     </div>
 
+    <!-- Modal ubicaciones eliminadas-->
+    <div class="modal fade" id="modalUbicacionesAnteriores" tabindex="-1" aria-labelledby="modalUbicacionesAnterioresLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-secondary text-white">
+                    <h5 class="modal-title" id="modalUbicacionesAnterioresLabel">Ubicaciones Eliminadas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    @forelse($event->eventLocationsTrashed as $location)
+                        <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ $location->location_name }}</h5>
+                            <p class="card-text">
+                            <strong>Dirección:</strong> {{ $location->address ?? 'No especificada' }}<br>
+                            <strong>Latitud:</strong> {{ $location->latitud ?? 'N/A' }}<br>
+                            <strong>Longitud:</strong> {{ $location->longitud ?? 'N/A' }}
+                            </p>
+                            <div class="d-flex gap-2">
+                            <form action="{{ route('event-locations.restore', $location->id) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+                                <button class="btn btn-success btn-sm" type="submit">Restaurar</button>
+                            </form>
+                            <form action="{{ route('event-locations.force-delete', $location->id) }}" method="POST" onsubmit="return confirm('¿Eliminar permanentemente esta ubicación?')">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-danger btn-sm" type="submit">Eliminar Definitivamente</button>
+                            </form>
+                            </div>
+                        </div>
+                        </div>
+                    @empty
+                        <p class="text-muted">No hay ubicaciones eliminadas.</p>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Agregar Participante -->
     <div class="modal fade" id="modalAgregarParticipante" tabindex="-1" aria-labelledby="modalAgregarParticipanteLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -212,6 +259,58 @@
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal Participantes Eliminados -->
+    <div class="modal fade" id="modalParticipantesEliminados" tabindex="-1" aria-labelledby="modalParticipantesEliminadosLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-secondary text-white">
+                    <h5 class="modal-title" id="modalParticipantesEliminadosLabel">Participantes Eliminados</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    @forelse($event->eventParticipants()->onlyTrashed()->get() as $deletedParticipant)
+                        @php
+                            $user = $deletedParticipant->user;
+                            $profilePhoto = $user->profile_photo
+                                ? asset('storage/' . $user->profile_photo)
+                                : asset('storage/users/user_default.jpg');
+                        @endphp
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body d-flex align-items-center justify-content-between flex-column flex-md-row gap-3">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ $profilePhoto }}" alt="Foto de {{ $user->name }}" class="rounded-circle shadow-sm me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                                    <div>
+                                        <h5 class="card-title mb-1">{{ $user->name }}</h5>
+                                        <p class="mb-0">
+                                            <strong>Email:</strong> {{ $user->email }}<br>
+                                            <strong>Registro:</strong> {{ $deletedParticipant->registration_date }}<br>
+                                            <strong>Estado:</strong> {{ ucfirst($deletedParticipant->status) }}<br>
+                                            <strong>Observaciones:</strong> {{ $deletedParticipant->observations ?? 'Ninguna' }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <form action="{{ route('event-participants.restore', $deletedParticipant->id) }}" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button class="btn btn-outline-success btn-sm" type="submit">Restaurar</button>
+                                    </form>
+                                    <form action="{{ route('event-participants.forceDelete', $deletedParticipant->id) }}" method="POST" onsubmit="return confirm('¿Eliminar permanentemente este participante?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-outline-danger btn-sm" type="submit">Eliminar Permanente</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-muted">No hay participantes eliminados.</p>
+                    @endforelse
+                </div>
+            </div>
         </div>
     </div>
 

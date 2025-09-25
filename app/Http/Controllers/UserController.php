@@ -48,8 +48,6 @@ class UserController extends Controller
             $query->where('address', $request->input('city'));
         }
 
-
-        // Filtro por actividad de inicio de sesión
         \Log::info('Filtro login_activity_value:', ['valor' => $request->input('login_activity_value')]);
 
         if ($request->filled('login_activity_value')) {
@@ -91,7 +89,6 @@ class UserController extends Controller
     public function create(): View
     {
         $user = new User();
-
         return view('user.create', compact('user'));
     }
 
@@ -100,18 +97,14 @@ class UserController extends Controller
         $validated = $request->validated();
         $validated['password'] = bcrypt($validated['password']);
         
-        // Crea usuario con los campos que tiene User
         $user = User::create($validated);
         $user->assignRole('user');
         $user->assignRole('donor');
-
-        // Ahora crea o actualiza perfil con la info adicional
         $user->profile()->create([
             'address' => $validated['address'],
             'location' => $validated['location'] ?? null,
             'latitude' => $validated['latitude'] ?? null,
             'longitude' => $validated['longitude'] ?? null,
-            // Otros campos de profile que quieras guardar
         ]);
 
         return Redirect::route('users.index')
@@ -144,7 +137,6 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        // Validar datos recibidos (puedes ajustar reglas según necesidad)
         $validatedData = $request->validate([
             'roles' => 'sometimes|array',
             'roles.*' => 'exists:roles,id',
@@ -161,21 +153,17 @@ class UserController extends Controller
             'physical_condition' => 'nullable|string|max:255',
             'preferred_tasks' => 'nullable|string|max:255',
             'languages_spoken' => 'nullable|string|max:255',
-            'password' => 'nullable|string|min:8|confirmed', // confirmación con password_confirmation
-            // Puedes añadir otras validaciones que necesites para otros campos de User
+            'password' => 'nullable|string|min:8|confirmed', 
         ]);
 
-        // Actualizar password solo si viene y está lleno
         if (!empty($validatedData['password'])) {
             $user->password = bcrypt($validatedData['password']);
         }
 
-        // Actualizar roles si vienen en el request
         if (isset($validatedData['roles'])) {
             $user->roles()->sync($validatedData['roles']);
         }
 
-        // Actualizar datos del perfil si existe, o crear si no existe
         $profileData = collect($validatedData)->only([
             'bio', 'document_number', 'birthdate', 'skills', 'interests',
             'availability_days', 'availability_hours', 'location', 'transport_available',
@@ -186,13 +174,10 @@ class UserController extends Controller
             if ($user->profile) {
                 $user->profile->update($profileData);
             } else {
-                // Crear perfil si no existe
                 $user->profile()->create($profileData);
             }
         }
 
-        // Actualizar datos del usuario (excluyendo campos del perfil, roles y password)
-        // Puedes añadir aquí otros campos que permita actualizar directamente
         $userData = collect($validatedData)
             ->except([
                 'roles', 'bio', 'document_number', 'birthdate', 'skills', 'interests',
@@ -218,7 +203,7 @@ class UserController extends Controller
     
     public function trashed(Request $request): View
     {
-        $query = User::onlyTrashed(); // Solo usuarios eliminados
+        $query = User::onlyTrashed();
         if ($request->has('search') && $request->input('search') != '') {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -251,81 +236,255 @@ class UserController extends Controller
     {
         $query = User::withTrashed()->with('profile', 'roles');
 
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%$search%")
-                ->orWhere('email', 'like', "%$search%")
-                ->orWhere('phone', 'like', "%$search%")
-                ->orWhere('address', 'like', "%$search%");
-            });
-        }
-
-        if ($request->filled('role')) {
-            $query->whereHas('roles', function ($q) use ($request) {
-                $q->where('id', $request->input('role'));
-            });
-        }
-
-        if ($request->filled('email_domain')) {
-            $query->where('email', 'like', '%' . $request->input('email_domain'));
-        }
-
-        if ($request->filled('start_date')) {
-            $query->where('created_at', '>=', $request->input('start_date'));
-        }
-
-        if ($request->filled('end_date')) {
-            $query->where('created_at', '<=', $request->input('end_date'));
-        }
-        if ($request->filled('city')) {
-            $query->where('address', $request->input('city'));
-        }
-
-        $users = $query->get();
-        $pdf = new Fpdf();
-        $pdf->SetTitle('Detalle de Usuarios');
-        $pdf->SetFont('Arial', '', 10);
-        foreach ($users as $user) {
-            $pdf->AddPage();
-            $pdf->SetFont('Arial', 'B', 14);
-            $pdf->Cell(0, 10, 'Datos del Usuario', 0, 1, 'C');
-            $pdf->Ln(2);
-            $pdf->SetFont('Arial', '', 10);
-            $pdf->Cell(50, 7, 'ID:', 0, 0); $pdf->Cell(0, 7, $user->id, 0, 1);
-            $pdf->Cell(50, 7, 'Nombre:', 0, 0); $pdf->Cell(0, 7, $user->name, 0, 1);
-            $pdf->Cell(50, 7, 'Correo:', 0, 0); $pdf->Cell(0, 7, $user->email, 0, 1);
-            $pdf->Cell(50, 7, 'Telefono:', 0, 0); $pdf->Cell(0, 7, $user->phone ?? '-', 0, 1);
-            $pdf->Cell(50, 7, 'Direccion:', 0, 0); $pdf->Cell(0, 7, $user->address ?? '-', 0, 1);
-            $pdf->Cell(50, 7, 'Email verificado:', 0, 0); $pdf->Cell(0, 7, $user->email_verified_at ?? '-', 0, 1);
-            $pdf->Cell(50, 7, 'Fecha de creación:', 0, 0); $pdf->Cell(0, 7, $user->created_at, 0, 1);
-            $pdf->Cell(50, 7, 'Fecha de actualización:', 0, 0); $pdf->Cell(0, 7, $user->updated_at, 0, 1);
-            $pdf->Cell(50, 7, 'Eliminado:', 0, 0); $pdf->Cell(0, 7, $user->deleted_at ?? 'No', 0, 1);
-            $pdf->Ln(5);
-            if ($user->profile) {
-                $profile = $user->profile;
-                $pdf->SetFont('Arial', 'B', 12);
-                $pdf->Cell(0, 10, 'Perfil del Usuario', 0, 1);
-                $pdf->SetFont('Arial', '', 10);
-                $pdf->Cell(50, 7, 'Bio:', 0, 0); $pdf->MultiCell(0, 7, $profile->bio ?? '-');
-                $pdf->Cell(50, 7, 'Documento:', 0, 0); $pdf->Cell(0, 7, $profile->document_number ?? '-', 0, 1);
-                $pdf->Cell(50, 7, 'Fecha de nacimiento:', 0, 0); $pdf->Cell(0, 7, $profile->birthdate ?? '-', 0, 1);
-                $pdf->Cell(50, 7, 'Habilidades:', 0, 0); $pdf->MultiCell(0, 7, $profile->skills ?? '-');
-                $pdf->Cell(50, 7, 'Intereses:', 0, 0); $pdf->MultiCell(0, 7, $profile->interests ?? '-');
-                $pdf->Cell(50, 7, 'Disponibilidad (días):', 0, 0); $pdf->Cell(0, 7, $profile->availability_days ?? '-', 0, 1);
-                $pdf->Cell(50, 7, 'Disponibilidad (horas):', 0, 0); $pdf->Cell(0, 7, $profile->availability_hours ?? '-', 0, 1);
-                $pdf->Cell(50, 7, 'Ubicación:', 0, 0); $pdf->Cell(0, 7, $profile->location ?? '-', 0, 1);
-                $pdf->Cell(50, 7, '¿Transporte disponible?:', 0, 0); $pdf->Cell(0, 7, $profile->transport_available ? 'Sí' : 'No', 0, 1);
-                $pdf->Cell(50, 7, 'Nivel de experiencia:', 0, 0); $pdf->Cell(0, 7, ucfirst($profile->experience_level), 0, 1);
-                $pdf->Cell(50, 7, 'Condición física:', 0, 0); $pdf->Cell(0, 7, ucfirst($profile->physical_condition), 0, 1);
-                $pdf->Cell(50, 7, 'Tareas preferidas:', 0, 0); $pdf->MultiCell(0, 7, $profile->preferred_tasks ?? '-');
-                $pdf->Cell(50, 7, 'Idiomas:', 0, 0); $pdf->Cell(0, 7, $profile->languages_spoken ?? '-', 0, 1);
-            } else {
-                $pdf->Cell(0, 10, 'Sin perfil asociado.', 0, 1);
-            }
-            $pdf->Ln(10);
-        }
-        $pdf->Output('D', 'detalle_usuarios.pdf');
-        exit;
+    if ($request->filled('search')) {
+        $search = $request->input('search');
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%$search%")
+            ->orWhere('email', 'like', "%$search%")
+            ->orWhere('phone', 'like', "%$search%")
+            ->orWhere('address', 'like', "%$search%");
+        });
     }
+
+    if ($request->filled('role')) {
+        $query->whereHas('roles', function ($q) use ($request) {
+            $q->where('id', $request->input('role'));
+        });
+    }
+
+    if ($request->filled('email_domain')) {
+        $query->where('email', 'like', '%' . $request->input('email_domain'));
+    }
+
+    if ($request->filled('start_date')) {
+        $query->where('created_at', '>=', $request->input('start_date'));
+    }
+
+    if ($request->filled('end_date')) {
+        $query->where('created_at', '<=', $request->input('end_date'));
+    }
+    if ($request->filled('city')) {
+        $query->where('address', $request->input('city'));
+    }
+
+    $users = $query->get();
+
+    $pdf = new Fpdf('L', 'mm', 'A4'); // Hoja horizontal
+    $pdf->SetTitle('Listado de Usuarios');
+    $pdf->AddPage();
+    $pdf->SetFont('Arial', 'B', 12);
+
+    // Cabecera de tabla
+    $pdf->Cell(10, 10, 'N°', 1, 0, 'C');
+    $pdf->Cell(50, 10, 'Nombre', 1, 0, 'C');
+    $pdf->Cell(60, 10, 'Correo electrónico', 1, 0, 'C');
+    $pdf->Cell(30, 10, 'Celular', 1, 0, 'C');
+    $pdf->Cell(35, 10, 'Ciudad', 1, 0, 'C');
+    $pdf->Cell(30, 10, 'N° Documento', 1, 0, 'C');
+    $pdf->Cell(45, 10, 'Rol(es)', 1, 0, 'C');
+    $pdf->Cell(35, 10, 'Fecha registro', 1, 1, 'C');
+
+    $pdf->SetFont('Arial', '', 10);
+    $i = 1;
+    foreach ($users as $user) {
+        $pdf->Cell(10, 8, $i++, 1, 0, 'C');
+        $pdf->Cell(50, 8, utf8_decode($user->name), 1, 0);
+        $pdf->Cell(60, 8, utf8_decode($user->email), 1, 0);
+        $pdf->Cell(30, 8, $user->phone ?? '-', 1, 0);
+        $pdf->Cell(35, 8, utf8_decode($user->address ?? 'N/A'), 1, 0);
+        $pdf->Cell(30, 8, $user->profile->document_number ?? 'N/A', 1, 0);
+        $pdf->Cell(45, 8, utf8_decode($user->roles->pluck('name')->implode(', ') ?: 'Sin rol'), 1, 0);
+        $pdf->Cell(35, 8, $user->created_at ? $user->created_at->format('d/m/Y') : 'N/A', 1, 1);
+    }
+
+    $pdf->Output('D', 'listado_usuarios.pdf');
+    exit;
+}
+
+
+
+public function printFullInfo($id)
+{
+    $user = User::withTrashed()
+        ->with(['profile', 'eventParticipants.event', 'eventParticipants.eventLocation', 'volunteerVerifications', 'roles'])
+        ->findOrFail($id);
+
+    $pdf = new Fpdf('L', 'mm', 'A4');
+    $pdf->AddPage();
+
+    // Título
+    $pdf->SetFont('Arial', 'B', 16);
+    $pdf->Cell(0, 10, "Información Completa del Usuario: {$user->name}", 0, 1, 'C');
+    $pdf->Ln(5);
+
+    // Datos básicos usuario
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->Cell(60, 7, 'ID:', 0, 0);
+    $pdf->SetFont('Arial', '', 12);
+    $pdf->Cell(0, 7, $user->id, 0, 1);
+
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->Cell(60, 7, 'Nombre:', 0, 0);
+    $pdf->SetFont('Arial', '', 12);
+    $pdf->Cell(0, 7, $user->name, 0, 1);
+
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->Cell(60, 7, 'Correo electrónico:', 0, 0);
+    $pdf->SetFont('Arial', '', 12);
+    $pdf->Cell(0, 7, $user->email, 0, 1);
+
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->Cell(60, 7, 'Teléfono:', 0, 0);
+    $pdf->SetFont('Arial', '', 12);
+    $pdf->Cell(0, 7, $user->phone ?? '-', 0, 1);
+
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->Cell(60, 7, 'Dirección:', 0, 0);
+    $pdf->SetFont('Arial', '', 12);
+    $pdf->Cell(0, 7, $user->address ?? '-', 0, 1);
+
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->Cell(60, 7, 'Correo verificado:', 0, 0);
+    $pdf->SetFont('Arial', '', 12);
+    $pdf->Cell(0, 7, $user->email_verified_at ? 'Sí' : 'No', 0, 1);
+
+    $pdf->Ln(10);
+
+    // Perfil
+    $pdf->SetFont('Arial', 'B', 14);
+    $pdf->Cell(0, 10, "Perfil", 0, 1);
+
+    if ($user->profile) {
+        $profile = $user->profile;
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Número de documento:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(0, 7, $profile->document_number ?? '-', 0, 1);
+
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Biografía:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->MultiCell(0, 7, $profile->bio ?? '-', 0, 1);
+
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Fecha de nacimiento:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(0, 7, $profile->birthdate ? $profile->birthdate->format('d/m/Y') : '-', 0, 1);
+
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Habilidades:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->MultiCell(0, 7, $profile->skills ?? '-', 0, 1);
+
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Intereses:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->MultiCell(0, 7, $profile->interests ?? '-', 0, 1);
+
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Días disponibles:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(0, 7, $profile->availability_days ?? '-', 0, 1);
+
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Horas disponibles:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(0, 7, $profile->availability_hours ?? '-', 0, 1);
+
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Ubicación:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(0, 7, $profile->location ?? '-', 0, 1);
+
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Transporte disponible:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(0, 7, $profile->transport_available ? 'Sí' : 'No', 0, 1);
+
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Nivel de experiencia:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(0, 7, ucfirst($profile->experience_level), 0, 1);
+
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Condición física:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(0, 7, ucfirst($profile->physical_condition), 0, 1);
+
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Tareas preferidas:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->MultiCell(0, 7, $profile->preferred_tasks ?? '-', 0, 1);
+
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Idiomas:', 0, 0);
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(0, 7, $profile->languages_spoken ?? '-', 0, 1);
+
+    } else {
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(0, 7, 'No hay perfil asociado.', 0, 1);
+    }
+
+    $pdf->Ln(10);
+
+    // Eventos donde participa
+    $pdf->SetFont('Arial', 'B', 14);
+    $pdf->Cell(0, 10, "Eventos donde participa", 0, 1);
+
+    if ($user->eventParticipants && $user->eventParticipants->count() > 0) {
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Evento', 1);
+        $pdf->Cell(60, 7, 'Ubicación', 1);
+        $pdf->Cell(40, 7, 'Estado', 1);
+        $pdf->Cell(40, 7, 'Fecha registro', 1);
+        $pdf->Ln();
+
+        $pdf->SetFont('Arial', '', 12);
+        foreach ($user->eventParticipants as $participant) {
+            $pdf->Cell(60, 7, $participant->event->name ?? 'N/A', 1);
+            $pdf->Cell(60, 7, $participant->eventLocation->name ?? 'N/A', 1);
+            $pdf->Cell(40, 7, ucfirst($participant->status), 1);
+            $pdf->Cell(40, 7, $participant->registration_date ? $participant->registration_date->format('d/m/Y') : '-', 1);
+            $pdf->Ln();
+        }
+    } else {
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(0, 7, 'No participa en eventos.', 0, 1);
+    }
+
+    $pdf->Ln(10);
+
+    // Verificaciones voluntario
+    $pdf->SetFont('Arial', 'B', 14);
+    $pdf->Cell(0, 10, "Verificaciones de voluntario", 0, 1);
+
+    if ($user->volunteerVerifications && $user->volunteerVerifications->count() > 0) {
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(60, 7, 'Documento', 1);
+        $pdf->Cell(80, 7, 'Nombre documento', 1);
+        $pdf->Cell(40, 7, 'Estado', 1);
+        $pdf->Cell(50, 7, 'Comentario', 1);
+        $pdf->Ln();
+
+        $pdf->SetFont('Arial', '', 12);
+        foreach ($user->volunteerVerifications as $verif) {
+            $pdf->Cell(60, 7, $verif->document_type ?? '-', 1);
+            $pdf->Cell(80, 7, $verif->name_document ?? '-', 1);
+            $pdf->Cell(40, 7, ucfirst($verif->status), 1);
+            $pdf->Cell(50, 7, $verif->coment ?? '-', 1);
+            $pdf->Ln();
+        }
+    } else {
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(0, 7, 'No hay verificaciones.', 0, 1);
+    }
+
+    $pdf->Output('I', "usuario_{$user->id}_completo.pdf");
+    exit;
+}
+
+
+
+
 }

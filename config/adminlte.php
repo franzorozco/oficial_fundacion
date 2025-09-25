@@ -196,7 +196,7 @@ return [
     'classes_content_wrapper' => '',
     'classes_content_header' => '',
     'classes_content' => '',
-    'classes_sidebar' => 'sidebar-dark-primary elevation-4',
+    'classes_sidebar' => 'sidebar-light-primary elevation-4',
     'classes_sidebar_nav' => '',
     'classes_topnav' => 'navbar-white navbar-light',
     'classes_topnav_nav' => 'navbar-expand',
@@ -238,7 +238,7 @@ return [
 
     'right_sidebar' => false,
     'right_sidebar_icon' => 'fas fa-cogs',
-    'right_sidebar_theme' => 'dark',
+    'right_sidebar_theme' => 'light',
     'right_sidebar_slide' => true,
     'right_sidebar_push' => true,
     'right_sidebar_scrollbar_theme' => 'os-theme-light',
@@ -320,164 +320,223 @@ return [
             'url' => 'admin/blog',
             'can' => 'manage-blog',
         ],
-     
+
+       // === Módulo: Módulo de usuarios y perfiles (color: azul) ===
+[
+    'text' => 'Usuarios',
+    'url'  => 'users',
+    'icon' => 'fas fa-users',
+    'can' => 'users.verlista',
+    'label' => 'USU',
+    'label_color' => 'primary',
+],
+[
+    'text' => 'Voluntarios',
+    'url'  => 'volunteers',
+    'icon' => 'fas fa-user-friends',
+    'can' => 'volunteers.verlista',
+    'label' => 'USU',
+    'label_color' => 'primary',
+],
+[
+    'text' => 'Verificaciones de Voluntarios',
+    'url'  => 'volunteer-verifications',
+    'icon' => 'fas fa-check-circle',
+    'can' => 'volunteer-verifications.verlista',
+    'label' => 'USU',
+    'label_color' => 'primary',
+],
+
+// === Módulo: Roles y permisos (color: naranja) ===
+[
+    'text' => 'Roles de sistema',
+    'url'  => 'roles',
+    'icon' => 'fas fa-user-shield',
+    'can' => 'roles.verlista',
+    'label' => 'ROL',
+    'label_color' => 'warning',
+],
+
+// === Módulo: Campañas y eventos (color: verde) ===
+[
+    'text' => 'Campañas',
+    'url'  => 'campaigns',
+    'icon' => 'fas fa-bullhorn',
+    'can' => 'campaigns.verlista',
+    'label' => 'CMP',
+    'label_color' => 'success',
+],
+[
+    'text' => 'Eventos',
+    'url'  => 'events',
+    'icon' => 'fas fa-calendar-alt',
+    'can' => 'events.verlista',
+    'label' => 'CMP',
+    'label_color' => 'success',
+],
+[
+    'text' => 'Ubicaciones de Eventos',
+    'url'  => 'event-locations',
+    'icon' => 'fas fa-map-marker-alt',
+    'can' => 'event-locations.verlista',
+    'label' => 'CMP',
+    'label_color' => 'success',
+],
+[
+    'text' => 'Participantes de Eventos',
+    'url'  => 'event-participants',
+    'icon' => 'fas fa-users',
+    'can' => 'event-participants.verlista',
+    'label' => 'CMP',
+    'label_color' => 'success',
+],
+[
+    'text' => 'Asignaciones de Personal',
+    'url'  => 'staff-assignments',
+    'icon' => 'fas fa-user-cog',
+    'can' => 'staff-assignments.verlista',
+    'label' => 'CMP',
+    'label_color' => 'success',
+],
+[
+    'text' => 'Finanzas de Campañas',
+    'url'  => 'campaign-finances',
+    'icon' => 'fas fa-wallet',
+    'can' => 'campaign-finances.verlista',
+    'label' => 'CMP',
+    'label_color' => 'success',
+],
+
+// === Módulo: Donaciones (color: rojo) ===
+[
+    'text' => 'Donaciones',
+    'url'  => 'donations',
+    'icon' => 'fas fa-box',
+    'can' => 'donations.verlista',
+    'label' => 'DON',
+    'label_color' => 'danger',
+],
+[
+    'text' => 'Donaciones Entrantes',
+    'url'  => 'donations-incoming',
+    'icon' => 'fas fa-box-open',
+    'can' => 'donations-incoming.verlista',
+    'label' => 'DON',
+    'label_color' => 'danger',
+],
+[
+    'text' => 'Artículos de Donación',
+    'url'  => 'donation-items',
+    'icon' => 'fas fa-gift',
+    'can' => 'donation-items.verlista',
+    'label' => 'DON',
+    'label_color' => 'danger',
+],
+[
+    'text' => 'Tipos de Donación',
+    'url'  => 'donation-types',
+    'icon' => 'fas fa-cogs',
+    'can' => 'donation-types.verlista',
+    'label' => 'DON',
+    'label_color' => 'danger',
+],
+[
+    'text' => 'Donantes',
+    'url'  => 'donantes',
+    'icon' => 'fas fa-user-plus',
+    'can' => 'donantes.verlista',
+    'label' => 'DON',
+    'label_color' => 'danger',
+],
+[
+    'text' => 'Donantes Externos',
+    'url'  => 'external-donors',
+    'icon' => 'fas fa-handshake',
+    'can' => 'external-donors.verlista',
+    'label' => 'DON',
+    'label_color' => 'danger',
+],
+[
+    'text' => 'Solicitudes de Donación',
+    'url'  => 'donation-requests',
+    'icon' => 'fas fa-hand-holding-heart',
+    'can' => 'donation-requests.verlista',
+    'label' => 'DON',
+    'label_color' => 'danger',
+],
+[
+    'text' => 'Descripciones de Solicitudes',
+    'url'  => 'donation-request-descriptions',
+    'icon' => 'fas fa-list-alt',
+    'can' => 'donation-request-descriptions.verlista',
+    'label' => 'DON',
+    'label_color' => 'danger',
+],
+
+// === Módulo: Tareas (color: cian) ===
+[
+    'text' => 'Tareas',
+    'url'  => 'tasks',
+    'icon' => 'fas fa-tasks',
+    'can'  => 'tasks.verlista',
+    'label' => 'TAR',
+    'label_color' => 'info',
+],
+[
+    'text' => 'Asignaciones de Tareas',
+    'url'  => 'task-assignments',
+    'icon' => 'fas fa-user-tag',
+    'can' => 'task-assignments.verlista',
+    'label' => 'TAR',
+    'label_color' => 'info',
+],
+
+// === Módulo: Evaluación (color: indigo) ===
+[
+    'text' => 'Criterios de Evaluación',
+    'url'  => 'evaluation-criteria',
+    'icon' => 'fas fa-chart-line',
+    'can' => 'evaluation-criteria.verlista',
+    'label' => 'EVA',
+    'label_color' => 'indigo',
+],
+[
+    'text' => 'Indicadores de Impacto',
+    'url'  => 'impact-indicators',
+    'icon' => 'fas fa-lightbulb',
+    'can' => 'impact-indicators.verlista',
+    'label' => 'EVA',
+    'label_color' => 'indigo',
+],
+[
+    'text' => 'Acciones Recomendadas',
+    'url'  => 'agent-actions',
+    'icon' => 'fas fa-robot',
+    'can' => 'agent-actions.verlista',
+    'label' => 'EVA',
+    'label_color' => 'indigo',
+],
+
+// === Módulo: Finanzas (color: gris oscuro) ===
+[
+    'text' => 'Cuentas Financieras',
+    'url'  => 'financial-accounts',
+    'icon' => 'fas fa-university',
+    'can' => 'financial-accounts.verlista',
+    'label' => 'FIN',
+    'label_color' => 'dark',
+],
+[
+    'text' => 'Transacciones',
+    'url'  => 'transactions',
+    'icon' => 'fas fa-exchange-alt',
+    'can' => 'transactions.verlista',
+    'label' => 'FIN',
+    'label_color' => 'dark',
+],
 
 
 
-
-        [
-            'text' => 'Usuarios',
-            'url'  => 'users',
-            'icon' => 'fas fa-users',
-            'can' => 'users.home',
-            'label' => 'Madre',
-        ],
-
-        [
-            'text' => 'Donantes',
-            'url'  => 'donantes',
-            'icon' => 'fas fa-user-plus',
-            'label' => 'Madre',
-        ],
-        [
-            'text' => 'Voluntarios',
-            'url'  => 'volunteers',
-            'icon' => 'fas fa-user-friends',
-            'label' => 'Madre',
-        ],
-        [
-            'text' => 'Roles de sistema',
-            'url'  => 'roles',
-            'icon' => 'fas fa-user-shield',
-            'label' => 'Madre',
-        ],
-        
-        [
-            'text' => 'Donaciones',
-            'url'  => 'donations',
-            'icon' => 'fas fa-box',
-            'can' => 'donations.home',
-            'label' => 'Madre',
-        ],
-        
-        [
-            'text' => 'Campañas',
-            'url'  => 'campaigns',
-            'icon' => 'fas fa-bullhorn',
-            'can' => 'campaigns.home',
-            'label' => 'Madre',
-        ],
-        
-        [
-            'text' => 'Finanzas de Campañas',
-            'url'  => 'campaign-finances',
-            'icon' => 'fas fa-wallet',
-            'can' => 'campaign-finances.home',
-            'label' => 'Madre',
-        ],
-        
-        [
-            'text' => 'Donaciones en Efectivo',
-            'url'  => 'donations-cashes',
-            'icon' => 'fas fa-money-bill-wave',
-            'can' => 'donations-cashes.home',
-            'label' => 'Madre',
-        ],
-        
-        [
-            'text' => 'Artículos de Donación',
-            'url'  => 'donation-items',
-            'icon' => 'fas fa-gift',
-            'can' => 'donation-items.home',
-        ],
-        
-        [
-            'text' => 'Solicitudes de Donación',
-            'url'  => 'donation-requests',
-            'icon' => 'fas fa-hand-holding-heart',
-            'can' => 'donation-requests.home',
-            'label' => 'Madre',
-        ],
-        
-        [
-            'text' => 'Descripciones de Solicitudes',
-            'url'  => 'donation-request-descriptions',
-            'icon' => 'fas fa-list-alt',
-            'can' => 'donation-request-descriptions.home',
-        ],
-        
-        [
-            'text' => 'Tipos de Donación',
-            'url'  => 'donation-types',
-            'icon' => 'fas fa-cogs',
-            'can' => 'donation-types.home',
-        ],
-        
-        [
-            'text' => 'Eventos',
-            'url'  => 'events',
-            'icon' => 'fas fa-calendar-alt',
-            'can' => 'events.home',
-        ],
-        
-        [
-            'text' => 'Ubicaciones de Eventos',
-            'url'  => 'event-locations',
-            'icon' => 'fas fa-map-marker-alt',
-            'can' => 'event-locations.home',
-        ],
-        
-        [
-            'text' => 'Participantes de Eventos',
-            'url'  => 'event-participants',
-            'icon' => 'fas fa-users',
-            'can' => 'event-participants.home',
-        ],
-        
-        [
-            'text' => 'Donantes Externos',
-            'url'  => 'external-donors',
-            'icon' => 'fas fa-handshake',
-            'can' => 'external-donors.home',
-            'label' => 'Madre',
-        ],
-        
-        [
-            'text' => 'Cuentas Financieras',
-            'url'  => 'financial-accounts',
-            'icon' => 'fas fa-university',
-            'can' => 'financial-accounts.home',
-            'label' => 'Madre',
-        ],
-        
-        [
-            'text' => 'Notificaciones',
-            'url'  => 'notifications',
-            'icon' => 'fas fa-bell',
-            'can' => 'notifications.home',
-        ],
-        
-        [
-            'text' => 'Perfiles',
-            'url'  => 'profiles',
-            'icon' => 'fas fa-user',
-            'can' => 'profiles.home',
-        ],
-        
-        [
-            'text' => 'Transacciones',
-            'url'  => 'transactions',
-            'icon' => 'fas fa-exchange-alt',
-            'can' => 'transactions.home',
-        ],
-        
-        [
-            'text' => 'Verificaciones de Voluntarios',
-            'url'  => 'volunteer-verifications',
-            'icon' => 'fas fa-check-circle',
-            'can' => 'volunteer-verifications.home',
-            'label' => 'Madre',
-        ],
         
 
 

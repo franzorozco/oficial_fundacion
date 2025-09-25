@@ -1,86 +1,137 @@
-<div class="row padding-1 p-1">
-    <div class="col-md-12">
-        
-        <div class="form-group mb-2 mb20">
-            <label for="external_donor_id" class="form-label">{{ __('External Donor') }}</label>
-            <select name="external_donor_id" class="form-control @error('external_donor_id') is-invalid @enderror" id="external_donor_id">
-                <option value="" disabled selected>{{ __('Select External Donor') }}</option>
+    <div class="row g-3 p-3">
+        <div class="col-md-6">
+            <label for="external_donor_id" class="form-label fw-semibold">{{ __('Donante Externo') }}</label>
+            <select name="external_donor_id" id="external_donor_id" class="form-select @error('external_donor_id') is-invalid @enderror">
+                <option value=""  >{{ __('Selecciona un donante externo') }}</option>
                 @foreach($externalDonors as $externalDonor)
                     <option value="{{ $externalDonor->id }}" {{ old('external_donor_id', $donation?->external_donor_id) == $externalDonor->id ? 'selected' : '' }}>
                         {{ $externalDonor->names }}
                     </option>
                 @endforeach
             </select>
-            {!! $errors->first('external_donor_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            @error('external_donor_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
 
-        <div class="form-group mb-2 mb20">
-            <label for="user_id" class="form-label">{{ __('User') }}</label>
-            <select name="user_id" class="form-control @error('user_id') is-invalid @enderror" id="user_id">
-                <option value="" disabled selected>{{ __('Select User') }}</option>
+        <div class="col-md-6">
+            <label for="user_id" class="form-label fw-semibold">{{ __('Usuario Responsable') }}</label>
+            <select name="user_id" id="user_id" class="form-select @error('user_id') is-invalid @enderror">
+                <option value=""  >{{ __('Selecciona un usuario') }}</option>
                 @foreach($users as $user)
                     <option value="{{ $user->id }}" {{ old('user_id', $donation?->user_id) == $user->id ? 'selected' : '' }}>
                         {{ $user->name }}
                     </option>
                 @endforeach
             </select>
-            {!! $errors->first('user_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            @error('user_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
 
-        <div class="form-group mb-2 mb20">
-            <label for="received_by_id" class="form-label">{{ __('Received By') }}</label>
-            <select name="received_by_id" class="form-control @error('received_by_id') is-invalid @enderror" id="received_by_id">
-                <option value="" disabled selected>{{ __('Select Receiver') }}</option>
+        <div class="col-md-6">
+            <label for="received_by_id" class="form-label fw-semibold">{{ __('Recibido por') }}</label>
+            <select name="received_by_id" id="received_by_id" class="form-select @error('received_by_id') is-invalid @enderror">
+                <option value=""  >{{ __('Selecciona un receptor') }}</option>
                 @foreach($receivers as $receiver)
                     <option value="{{ $receiver->id }}" {{ old('received_by_id', $donation?->received_by_id) == $receiver->id ? 'selected' : '' }}>
                         {{ $receiver->name }}
                     </option>
                 @endforeach
             </select>
-            {!! $errors->first('received_by_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            @error('received_by_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
 
-        <div class="form-group mb-2 mb20">
-            <label for="status_id" class="form-label">{{ __('Status') }}</label>
-            <select name="status_id" class="form-control @error('status_id') is-invalid @enderror" id="status_id">
-                <option value="" disabled selected>{{ __('Select Status') }}</option>
+        <div class="col-md-6">
+            <label for="status_id" class="form-label fw-semibold">{{ __('Estado') }}</label>
+            <select name="status_id" id="status_id" class="form-select @error('status_id') is-invalid @enderror">
+                <option value=""  >{{ __('Selecciona el estado') }}</option>
                 @foreach($statuses as $status)
-                    <option value="{{ $status->id }}" {{ old('status_id', $donation?->status_id) == $status->id ? 'selected' : '' }}>
+                    <option value="{{ $status->id }}" 
+                        {{ old('status_id', $donation?->status_id ?? 2) == $status->id ? 'selected' : '' }}>
                         {{ $status->name }}
                     </option>
+
                 @endforeach
             </select>
-            {!! $errors->first('status_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            @error('status_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
 
-        <div class="form-group mb-2 mb20">
-            <label for="during_campaign_id" class="form-label">{{ __('Campaign') }}</label>
-            <select name="during_campaign_id" class="form-control @error('during_campaign_id') is-invalid @enderror" id="during_campaign_id">
-                <option value="" disabled selected>{{ __('Select Campaign') }}</option>
+        <div class="col-md-6">
+            <label for="during_campaign_id" class="form-label fw-semibold">{{ __('Campaña') }}</label>
+            <select name="during_campaign_id" id="during_campaign_id" class="form-select @error('during_campaign_id') is-invalid @enderror">
+                <option value=""    >{{ __('Selecciona la campaña') }}</option>
                 @foreach($campaigns as $campaign)
                     <option value="{{ $campaign->id }}" {{ old('during_campaign_id', $donation?->during_campaign_id) == $campaign->id ? 'selected' : '' }}>
                         {{ $campaign->name }}
                     </option>
                 @endforeach
             </select>
-            {!! $errors->first('during_campaign_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            @error('during_campaign_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
 
-        <div class="form-group mb-2 mb20">
-            <label for="donation_date" class="form-label">{{ __('Donation Date') }}</label>
-            <input type="text" name="donation_date" class="form-control @error('donation_date') is-invalid @enderror" value="{{ old('donation_date', $donation?->donation_date) }}" id="donation_date" placeholder="Donation Date">
-            {!! $errors->first('donation_date', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        {{-- Fecha con botón para fecha/hora actual --}}
+        <div class="col-md-6">
+            <label for="donation_date" class="form-label fw-semibold">{{ __('Fecha de Donación') }}</label>
+            <div class="input-group">
+                <input type="datetime-local" name="donation_date" id="donation_date"
+                    value="{{ old('donation_date', $donation?->donation_date ? date('Y-m-d\TH:i', strtotime($donation->donation_date)) : '') }}"
+                    class="form-control @error('donation_date') is-invalid @enderror">
+                <button class="btn btn-outline-secondary" type="button" onclick="setCurrentDateTime()">Ahora</button>
+            </div>
+            @error('donation_date')
+                <div class="invalid-feedback d-block">{{ $message }}</div>
+            @enderror
         </div>
 
-        <div class="form-group mb-2 mb20">
-            <label for="notes" class="form-label">{{ __('Notes') }}</label>
-            <input type="text" name="notes" class="form-control @error('notes') is-invalid @enderror" value="{{ old('notes', $donation?->notes) }}" id="notes" placeholder="Notes">
-            {!! $errors->first('notes', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        <div class="col-md-12">
+            <label for="notes" class="form-label fw-semibold">{{ __('Notas') }}</label>
+            <textarea name="notes" id="notes" rows="3" class="form-control @error('notes') is-invalid @enderror" placeholder="Notas adicionales">{{ old('notes', $donation?->notes) }}</textarea>
+            @error('notes')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
-
     </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const externalDonor = document.getElementById('external_donor_id');
+    const userDonor = document.getElementById('user_id');
 
-    <div class="col-md-12 mt20 mt-2">
-        <button type="submit" class="btn btn-primary">{{ __('Submit') }}</button>
-    </div>
-</div>
+    function toggleDonorFields() {
+        if (externalDonor.value) {
+            userDonor.disabled = true;
+        } else {
+            userDonor.disabled = false;
+        }
+
+        if (userDonor.value) {
+            externalDonor.disabled = true;
+        } else {
+            externalDonor.disabled = false;
+        }
+    }
+
+    externalDonor.addEventListener('change', toggleDonorFields);
+    userDonor.addEventListener('change', toggleDonorFields);
+
+    toggleDonorFields();
+});
+
+function setCurrentDateTime() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const formatted = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+    document.getElementById('donation_date').value = formatted;
+}
+</script>

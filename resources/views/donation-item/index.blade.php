@@ -13,6 +13,7 @@
                 <span id="card_title">{{ __('Donation Items') }}</span>
                 <!-- Formulario de búsqueda estilizado -->
                 <div class="card-body pt-3 pb-0">
+                    @can('donation-items.buscar')
                     <form method="GET" action="{{ route('donation-items.index') }}">
                         <div class="input-group mb-3">
                             <input 
@@ -27,11 +28,13 @@
                             </button>
                         </div>
                     </form>
+                    @endcan
                 </div>
-
+                @can('donation-items.crear')
                 <a href="{{ route('donation-items.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus-circle"></i> {{ __('Create New') }}
                 </a>
+                @endcan
             </div>
         </div>
 
@@ -57,33 +60,39 @@
                         </tr>
                     </thead>
                     <tbody>
-    @foreach ($donationItems as $donationItem)
-        <tr>
-            <td>{{ ++$i }}</td>
-            <td>{{ $donationItem->donation->id ?? 'N/A' }}</td>
-            <td>{{ $donationItem->donation_type->name ?? 'N/A' }}</td>
-            <td>{{ $donationItem->item_name }}</td>
-            <td>{{ $donationItem->quantity }}</td>
-            <td>{{ $donationItem->unit }}</td>
-            <td>{{ $donationItem->description }}</td>
-            <td>
-                <form action="{{ route('donation-items.destroy', $donationItem->id) }}" method="POST">
-                    <a class="btn btn-sm btn-primary" href="{{ route('donation-items.show', $donationItem->id) }}">
-                        <i class="fa fa-fw fa-eye"></i> {{ __('Show') }}
-                    </a>
-                    <a class="btn btn-sm btn-success" href="{{ route('donation-items.edit', $donationItem->id) }}">
-                        <i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}
-                    </a>
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;">
-                        <i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}
-                    </button>
-                </form>
-            </td>
-        </tr>
-    @endforeach
-</tbody>
+                        @foreach ($donationItems as $donationItem)
+                            <tr>
+                                <td>{{ ++$i }}</td>
+                                <td>{{ $donationItem->donation->referencia ?? 'N/A' }}</td>
+                                <td>{{ $donationItem->donation_type->name ?? 'N/A' }}</td>
+                                <td>{{ $donationItem->item_name }}</td>
+                                <td>{{ $donationItem->quantity }}</td>
+                                <td>{{ $donationItem->unit }}</td>
+                                <td>{{ $donationItem->description }}</td>
+                                <td>
+                                    <form action="{{ route('donation-items.destroy', $donationItem->id) }}" method="POST">
+                                        @can('donation-items.ver')
+                                        <a class="btn btn-sm btn-primary" href="{{ route('donation-items.show', $donationItem->id) }}">
+                                            <i class="fa fa-fw fa-eye"></i> {{ __('Show') }}
+                                        </a>
+                                        @endcan
+                                        @can('donation-items.editar')
+                                        <a class="btn btn-sm btn-success" href="{{ route('donation-items.edit', $donationItem->id) }}">
+                                            <i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}
+                                        </a>
+                                        @endcan
+                                        @csrf
+                                        @method('DELETE')
+                                        @can('donation-items.eliminar')
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;">
+                                            <i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}
+                                        </button>
+                                        @endcan
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
 
                 </table>
             </div>

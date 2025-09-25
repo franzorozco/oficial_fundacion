@@ -2,18 +2,41 @@
 <div class="row p-1">
     <div class="col-md-12">
         {{-- ID de solicitud de donación (mejor un selector) --}}
+        
+        @php
+            $donationRequestIdFromUrl = request('donation_request_id');
+        @endphp
+
         <div class="form-group mb-2">
             <label for="donation_request_id">Solicitud de Donación</label>
-            <select name="donation_request_id" class="form-control @error('donation_request_id') is-invalid @enderror" id="donation_request_id">
-                <option value="">Seleccione una Solicitud</option>
-                @foreach($donationRequests as $request)
-                    <option value="{{ $request->id }}" {{ old('donation_request_id', $donationRequestDescription?->donation_request_id) == $request->id ? 'selected' : '' }}>
-                        {{ $request->title ?? 'Solicitud #' . $request->id }}
-                    </option>
-                @endforeach
-            </select>
+
+            @if($donationRequestIdFromUrl)
+                {{-- Campo oculto para enviar el valor al backend --}}
+                <input type="hidden" name="donation_request_id" value="{{ $donationRequestIdFromUrl }}">
+
+                {{-- Selector deshabilitado solo para mostrar el nombre --}}
+                <select class="form-control" disabled>
+                    @foreach($donationRequests as $request)
+                        @if($request->id == $donationRequestIdFromUrl)
+                            <option selected>{{ $request->referencia ?? 'Solicitud #' . $request->id }}</option>
+                        @endif
+                    @endforeach
+                </select>
+            @else
+                {{-- Selector normal si no se recibe por URL --}}
+                <select name="donation_request_id" class="form-control @error('donation_request_id') is-invalid @enderror" id="donation_request_id">
+                    <option value="">Seleccione una Solicitud</option>
+                    @foreach($donationRequests as $request)
+                        <option value="{{ $request->id }}" {{ old('donation_request_id', $donationRequestDescription?->donation_request_id) == $request->id ? 'selected' : '' }}>
+                            {{ $request->title ?? 'Solicitud #' . $request->id }}
+                        </option>
+                    @endforeach
+                </select>
+            @endif
+
             {!! $errors->first('donation_request_id', '<div class="invalid-feedback"><strong>:message</strong></div>') !!}
         </div>
+
 
         {{-- Campos de texto --}}
         <div class="form-group mb-2">

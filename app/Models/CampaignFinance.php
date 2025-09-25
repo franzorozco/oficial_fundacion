@@ -5,6 +5,7 @@
  */
 
 namespace App\Models;
+use App\Models\CampaignFinance;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -42,12 +43,9 @@ class CampaignFinance extends Model
 	];
 
 	protected $fillable = [
-		'campaign_id',
-		'manager_id',
-		'income',
-		'expenses',
-		'net_balance'
-	];
+    'campaign_id', 'manager_id', 'financial_account_id',
+    'income', 'expenses', 'net_balance'
+];
 
 	public function user()
 	{
@@ -58,4 +56,10 @@ class CampaignFinance extends Model
 	{
 		return $this->belongsTo(Campaign::class);
 	}
+
+	// App\Models\CampaignFinance.php
+
+
+
+
 }

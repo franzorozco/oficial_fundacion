@@ -60,4 +60,11 @@ class DonationRequestDescription extends Model
 	{
 		return $this->belongsTo(DonationRequest::class);
 	}
+
+	public function donationRequest()
+	{
+		return $this->belongsTo(DonationRequest::class);
+	}
+
+
 }

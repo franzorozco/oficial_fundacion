@@ -3,7 +3,7 @@
 @section('title', 'Usuarios')
 
 @section('content_header')
-    <h1>Usuarios</h1>
+    <h1>Voluntarios</h1>
 @stop
 
 @section('content')
@@ -181,17 +181,23 @@
             </form>
 
             <div class="float-right d-flex gap-2 flex-wrap">
+                @can('volunteers.crear')
                 <a href="{{ route('volunteers.create') }}" class="btn btn-outline-primary btn-sm" style="white-space: nowrap;">
                     Crear nuevo
                 </a>
+                @endcan
+                @can('volunteers.verEliminados')
                 <a href="{{ route('volunteers.trashed') }}" class="btn btn-outline-danger btn-sm" style="white-space: nowrap;">
                     Ver volunteers eliminados
                 </a>
+                @endcan
+                @can('volunteers.regenerarPDF')
                 <a href="{{ route('volunteers.pdf', request()->only([
                     'search', 'role', 'email_domain', 'start_date', 'end_date', 'city', 'login_activity_value'
                 ])) }}" class="btn btn-outline-success btn-sm" style="white-space: nowrap;">
                     Regenerar PDF
                 </a>
+                @endcan     
             </div>
         </div>
 
@@ -226,14 +232,20 @@
                                 <td>{{ $user->distribuciones_realizadas ?? 0 }}</td>
                                 <td>
                                     <form action="{{ route('volunteers.destroy', $user->id) }}" method="POST">
+                                        @can('volunteers.ver')
                                         <a class="btn btn-sm btn-outline-primary" href="{{ route('volunteers.show', $user->id) }}"><i class="fa fa-fw fa-eye"></i> Ver</a>
+                                        @endcan
+                                        @can('volunteers.editar')
                                         <a class="btn btn-sm btn-outline-success" href="{{ route('volunteers.edit', $user->id) }}"><i class="fa fa-fw fa-edit"></i> Editar</a>
+                                        @endcan
                                         @csrf
                                         @method('DELETE')
+                                        @can('volunteers.eliminar')
                                         <button type="submit" class="btn btn-outline-danger btn-sm"
                                             onclick="event.preventDefault(); confirm('¿Estás seguro de eliminar?') ? this.closest('form').submit() : false;">
                                             <i class="fa fa-fw fa-trash"></i> Eliminar
                                         </button>
+                                        @endcan
                                     </form>
                                 </td>
                             </tr>

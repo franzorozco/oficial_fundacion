@@ -39,7 +39,6 @@ class Event extends Model
      */
     protected $fillable = ['campaign_id', 'creator_id', 'name', 'description', 'event_date'];
 
-
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -73,7 +72,14 @@ class Event extends Model
         return $this->hasMany(\App\Models\EventParticipant::class, 'event_id', 'id');
         
     }
-    
+    // En Event.php
+    public function participants() {
+        return $this->hasMany(EventParticipant::class);
+    }
+
+    public function locations() {
+        return $this->hasMany(EventLocation::class);
+    }
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
@@ -81,5 +87,12 @@ class Event extends Model
     {
         return $this->hasMany(\App\Models\StaffAssignment::class, 'id', 'event_id');
     }
+
+    public function eventLocationsTrashed()
+    {
+        return $this->hasMany(EventLocation::class)->onlyTrashed();
+    }
+
+
     
 }

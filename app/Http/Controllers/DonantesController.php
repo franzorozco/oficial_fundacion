@@ -255,6 +255,7 @@ class DonantesController extends Controller
             $pdf->Ln(5);
             $pdf->Ln(10);
         }
+        
         $pdf->Output('D', 'detalle_usuarios.pdf');
         exit;
     }

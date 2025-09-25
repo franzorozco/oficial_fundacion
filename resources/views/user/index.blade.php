@@ -18,7 +18,7 @@
                 <span id="card_title" style="flex: 1 1 auto;">Usuarios</span>
 
                 <form method="GET" action="{{ route('users.index') }}" id="filterForm" class="d-flex flex-wrap gap-2 align-items-center" style="flex: 3 1 600px;">
-                    <!-- Barra de búsqueda visible siempre -->
+                    <!-- Barra de búsqueda -->
                     <input type="text" name="search" class="form-control" placeholder="Buscar usuarios"
                         value="{{ request('search') }}" style="width: 250px; min-width: 180px;">
 
@@ -33,7 +33,6 @@
 
                     <!-- Panel de filtros oculto -->
                     <div id="extraFilters" style="width: 100%; margin-top: 10px; display: none; gap: 10px; flex-wrap: wrap; border: 1px solid #ccc; padding: 10px; border-radius: 5px; background: #f9f9f9;">
-                        <!-- Aquí van tus filtros -->
                         <select name="role" class="form-select" style="width: 180px;">
                             <option value="">Todos los roles</option>
                             @foreach ($roles as $role)
@@ -51,7 +50,7 @@
                                 </option>
                             @endforeach
                         </select>
-
+                        
                         <input type="datetime-local" name="start_date" class="form-control" value="{{ request('start_date') }}" style="width: 220px;">
                         <input type="datetime-local" name="end_date" class="form-control" value="{{ request('end_date') }}" style="width: 220px;">
 
@@ -86,19 +85,23 @@
                 </form>
 
                 <div class="float-right" style="display: flex; gap: 5px; flex-wrap: wrap;">
-                    @can('users.create')
+                    @can('users.crear')
                     <a href="{{ route('users.create') }}" class="btn btn-outline-primary btn-sm" style="white-space: nowrap;">
                         Crear nuevo
                     </a>
                     @endcan
+                    @can('users.verEliminados')
                     <a href="{{ route('users.trashed') }}" class="btn btn-outline-danger btn-sm" style="white-space: nowrap;">
                         Ver usuarios eliminados
                     </a>
+                    @endcan
+                    @can('users.regenerarPDF')
                     <a href="{{ route('users.pdf', request()->only([
                         'search', 'role', 'email_domain', 'start_date', 'end_date', 'city', 'login_activity_value'
                     ])) }}" class="btn btn-outline-success btn-sm" style="white-space: nowrap;">
                         Regenerar PDF
                     </a>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -138,19 +141,30 @@
                                 <td>{{ $user->created_at ? $user->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                 <td>
                                     <form action="{{ route('users.destroy', $user->id) }}" method="POST">
-                                        @can('users.view')
-                                        <a class="btn btn-sm btn-outline-primary" href="{{ route('users.show', $user->id) }}"><i class="fa fa-fw fa-eye"></i> Ver</a>
+                                        @can('users.ver')
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ route('users.show', $user->id) }}">
+                                            <i class="fa fa-fw fa-eye"></i> Ver
+                                        </a>
                                         @endcan
-                                        @can('users.edit')
-                                        <a class="btn btn-sm btn-outline-success" href="{{ route('users.edit', $user->id) }}"><i class="fa fa-fw fa-edit"></i> Editar</a>
+                                        @can('users.editar')
+                                        <a class="btn btn-sm btn-outline-success" href="{{ route('users.edit', $user->id) }}">
+                                            <i class="fa fa-fw fa-edit"></i> Editar
+                                        </a>
                                         @endcan
-                                        @can('users.editRol')
-                                        <a class="btn btn-sm btn-outline-warning" href="{{ route('users.editRol', $user->id) }}"><i class="fa fa-fw fa-user-tag"></i> Rol</a>
+                                        @can('users.editarRol')
+                                        <a class="btn btn-sm btn-outline-warning" href="{{ route('users.editRol', $user->id) }}">
+                                            <i class="fa fa-fw fa-user-tag"></i> Rol
+                                        </a>
+                                        @endcan
+                                        @can('users.imprimir')
+                                        <a class="btn btn-sm btn-outline-info" href="{{ route('users.printFullInfo', $user->id) }}" target="_blank">
+                                            <i class="fa fa-fw fa-print"></i> Imprimir Info
+                                        </a>
                                         @endcan
 
                                         @csrf
                                         @method('DELETE')
-                                        @can('users.delete')
+                                        @can('users.eliminar')
                                         <button type="submit" class="btn btn-outline-danger btn-sm"
                                             onclick="event.preventDefault(); confirm('¿Estás seguro de eliminar?') ? this.closest('form').submit() : false;">
                                             <i class="fa fa-fw fa-trash"></i> Eliminar
@@ -158,6 +172,7 @@
                                         @endcan
                                     </form>
                                 </td>
+
                             </tr>
                         @endforeach
                     </tbody>
@@ -165,14 +180,12 @@
             </div>
         </div>
     </div>
-
     {!! $users->withQueryString()->links() !!}
 @stop
 
 @section('js')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Manejo de botones para actividad de login
         const loginButtons = document.querySelectorAll('.login-btn');
         const loginInput = document.getElementById('login_activity');
         const hiddenInput = document.getElementById('login_activity_value');
@@ -187,7 +200,6 @@
             });
         });
 
-        // Toggle del panel de filtros extra
         const toggleBtn = document.getElementById('toggleFiltersBtn');
         const extraFilters = document.getElementById('extraFilters');
 

@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use App\Http\Requests\VolunteerVerificationRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
+use App\Models\User;
 use FPDF;
 
 class VolunteerVerificationController extends Controller
@@ -17,7 +20,7 @@ class VolunteerVerificationController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = VolunteerVerification::query();
+        $query = VolunteerVerification::whereIn('status', ['pendiente', 'reconsideracion']);
 
         // Filtrado por los parámetros de búsqueda
         if ($request->has('search') && $request->input('search') !== '') {
@@ -36,6 +39,7 @@ class VolunteerVerificationController extends Controller
         return view('volunteer-verification.index', compact('volunteerVerifications'))
             ->with('i', ($request->input('page', 1) - 1) * $volunteerVerifications->perPage());
     }
+
 
 
     /**
@@ -97,6 +101,82 @@ class VolunteerVerificationController extends Controller
         return Redirect::route('volunteer-verifications.index')
             ->with('success', 'VolunteerVerification deleted successfully');
     }
+
+    public function approve(Request $request, $id): RedirectResponse
+    {
+        $request->validate(['coment' => 'required|string|max:255']);
+
+        $verification = VolunteerVerification::findOrFail($id);
+        $verification->status = 'aprobado';
+        $verification->user_resp_id = Auth::id();
+        $verification->coment = $request->coment;
+        $verification->save();
+
+        // Asignar el rol de "Voluntario" al usuario verificado
+        $user = $verification->user;
+        if ($user && !$user->hasRole('Voluntario')) {
+            $user->assignRole('Voluntario');
+        }
+
+        return redirect()->route('volunteer-verifications.index')->with('success', 'Solicitud aprobada y rol asignado.');
+    }
+
+    // Rechazar
+    public function reject(Request $request, $id): RedirectResponse
+    {
+        $request->validate(['coment' => 'required|string|max:255']);
+
+        $verification = VolunteerVerification::findOrFail($id);
+        $verification->status = 'rechazado';
+        $verification->user_resp_id = Auth::id();
+        $verification->coment = $request->coment;
+        $verification->save();
+
+        // Remover el rol "Voluntario" si lo tiene
+        $user = $verification->user;
+        if ($user && $user->hasRole('Voluntario')) {
+            $user->removeRole('Voluntario');
+        }
+
+        return redirect()->route('volunteer-verifications.index')->with('success', 'Solicitud rechazada y rol removido si era necesario.');
+    }
+
+    public function misDecisiones(Request $request)
+    {
+        $search = $request->input('search');
+
+        $query = VolunteerVerification::with(['user', 'userResp'])
+            ->where('user_resp_id', auth()->id())
+            ->whereIn('status', ['Aprobado', 'Rechazado']);
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($q2) use ($search) {
+                    $q2->where('name', 'LIKE', "%$search%");
+                })->orWhere('name_document', 'LIKE', "%$search%");
+            });
+        }
+        $volunteerVerifications = $query->paginate(10);
+
+        return view('volunteer-verification.mis-decisiones', compact('volunteerVerifications'))
+                ->with('i', (request()->input('page', 1) - 1) * 10);
+    }
+
+    public function reconsiderar($id)
+    {
+        $verification = VolunteerVerification::findOrFail($id);
+
+        // Solo permitir si el estado actual es aprobado o rechazado
+        if (in_array($verification->status, ['aprobado', 'rechazado'])) {
+            $verification->status = 'reconsideracion';
+            $verification->save();
+
+            return redirect()->back()->with('success', 'La verificación ha sido marcada como "en reconsideración".');
+        }
+
+        return redirect()->back()->with('error', 'No se puede reconsiderar este estado.');
+    }
+
+
 
     public function generatePdf(Request $request)
     {

@@ -9,6 +9,11 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\FinancialAccount;
+use App\Models\Campaign;
+use App\Models\Event;
+use App\Models\EventLocation;
+use App\Models\User;
 
 /**
  * Class Transaction
@@ -42,7 +47,9 @@ class Transaction extends Model
 		'amount' => 'float',
 		'related_campaign_id' => 'int',
 		'related_payment_id' => 'int',
-		'transaction_date' => 'datetime',
+		'transaction_date' => 'datetime:Y-m-d',
+		'transaction_time' => 'datetime:H:i:s',
+
 		'created_by' => 'int'
 	];
 
@@ -52,11 +59,28 @@ class Transaction extends Model
 		'amount',
 		'description',
 		'related_campaign_id',
-		'related_payment_id',
+		'related_event_id',
+		'related_event_location_id',
 		'transaction_date',
+		'transaction_time',
 		'created_by'
 	];
 
+	public function rules(): array
+    {
+        return [
+            'account_id' => ['required', 'exists:financial_accounts,id'],
+            'type' => ['required', 'in:ingreso,gasto'],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'description' => ['nullable', 'string'],
+            'related_campaign_id' => ['nullable', 'exists:campaigns,id'],
+            'related_event_id' => ['nullable', 'exists:events,id'],
+            'related_event_location_id' => ['nullable', 'exists:event_locations,id'],
+            'transaction_date' => ['required', 'date'],
+            'transaction_time' => ['required', 'date_format:H:i'],
+        ];
+    }
+	
 	public function financial_account()
 	{
 		return $this->belongsTo(FinancialAccount::class, 'account_id');
@@ -67,6 +91,14 @@ class Transaction extends Model
 		return $this->belongsTo(Campaign::class, 'related_campaign_id');
 	}
 
+	public function event()
+	{
+		return $this->belongsTo(Event::class, 'related_event_id');
+	}
+	public function event_location()
+	{
+		return $this->belongsTo(EventLocation::class, 'related_event_location_id');
+	}
 	public function user()
 	{
 		return $this->belongsTo(User::class, 'created_by');

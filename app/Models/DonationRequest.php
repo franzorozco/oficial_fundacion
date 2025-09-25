@@ -46,13 +46,16 @@ class DonationRequest extends Model
     ];
 
     protected $fillable = [
-        'applicant_user_id',  // Corregido el nombre del campo
+        'applicant_user__id',
         'user_in_charge_id',
         'donation_id',
         'request_date',
         'notes',
+        'observacions',
         'state',
+        'referencia', // incluir este campo
     ];
+
 
     /**
      * Relación con el usuario solicitante (applicant_user_id)
@@ -70,17 +73,28 @@ class DonationRequest extends Model
         return $this->belongsTo(Donation::class);
     }
 
+
+    // DonationRequest.php
+    public function description()
+    {
+        return $this->hasOne(DonationRequestDescription::class);
+    }
+
+
+
     /**
      * Relación con las descripciones de la solicitud de donación
      */
-    public function donation_request_descriptions()
+    public function DonationRequestDescription()
     {
         return $this->hasMany(DonationRequestDescription::class);
     }
 
-    /**
-     * Relación con el usuario encargado (user_in_charge_id)
-     */
+    public function applicantUser()
+    {
+        return $this->belongsTo(User::class, 'applicant_user__id');
+    }
+
     public function userInCharge()
     {
         return $this->belongsTo(User::class, 'user_in_charge_id'); // Agregado el campo de encargado

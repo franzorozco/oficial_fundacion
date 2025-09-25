@@ -16,6 +16,7 @@
                         Descripciones de Solicitudes de Donación
                     </span>
                     <div class="d-flex align-items-center">
+                        @can('donation-request-descriptions.buscar')
                         <form method="GET" action="{{ route('donation-request-descriptions.index') }}" class="me-2">
                             <div class="input-group">
                                 <input 
@@ -30,13 +31,17 @@
                                 </button>
                             </div>
                         </form>
+                        @endcan
+                        @can('donation-request-descriptions.crear')
                         <a href="{{ route('donation-request-descriptions.create') }}" class="btn btn-outline-success">
                             <i class="fas fa-plus"></i> Nuevo Registro
                         </a>
+                        @endcan
+                        @can('donation-request-descriptions.ver_eliminados')
                         <a href="{{ route('donation-request-descriptions.deleted') }}" class="btn btn-outline-danger ms-2">
                             <i class="fas fa-trash-alt"></i> Ver Eliminados
                         </a>
-
+                        @endcan
                     </div>
                 </div>
 
@@ -69,7 +74,7 @@
                                 @foreach ($donationRequestDescriptions as $donationRequestDescription)
                                     <tr>
                                         <td>{{ ++$i }}</td>
-                                        <td>{{ $donationRequestDescription->donation_request_id }}</td>
+                                        <td>{{ $donationRequestDescription->donationRequest->referencia }}</td>
                                         <td>{{ $donationRequestDescription->recipient_name }}</td>
                                         <td>{{ $donationRequestDescription->recipient_address }}</td>
                                         <td>{{ $donationRequestDescription->recipient_contact }}</td>
@@ -80,12 +85,17 @@
                                         <td>{{ $donationRequestDescription->extra_instructions }}</td>
                                         <td>{{ $donationRequestDescription->supporting_documents }}</td>
                                         <td class="d-flex">
+                                            @can('donation-request-descriptions.ver')
                                             <a class="btn btn-outline-primary btn-sm me-1" href="{{ route('donation-request-descriptions.show', $donationRequestDescription->id) }}">
                                                 <i class="fa fa-eye"></i> Ver
                                             </a>
+                                            @endcan
+                                            @can('donation-request-descriptions.editar')
                                             <a class="btn btn-outline-success btn-sm me-1" href="{{ route('donation-request-descriptions.edit', $donationRequestDescription->id) }}">
                                                 <i class="fa fa-edit"></i> Editar
                                             </a>
+                                            @endcan
+                                            @can('donation-request-descriptions.eliminar')
                                             <form action="{{ route('donation-request-descriptions.destroy', $donationRequestDescription->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este registro?');">
                                                 @csrf
                                                 @method('DELETE')
@@ -93,6 +103,7 @@
                                                     <i class="fa fa-trash"></i> Eliminar
                                                 </button>
                                             </form>
+                                            @endcan
                                         </td>
                                     </tr>
                                 @endforeach

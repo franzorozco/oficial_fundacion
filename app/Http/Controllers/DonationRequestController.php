@@ -12,75 +12,92 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use App\Models\User;
 use App\Models\Donation;
+use Illuminate\Support\Facades\Auth;
+
 
 class DonationRequestController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): View
     {
-        $donationRequests = DonationRequest::paginate();
+        $query = DonationRequest::with(['applicantUser', 'userInCharge', 'donation']);
 
-        return view('donation-request.index', compact('donationRequests'))
+        if ($request->filled('search')) {
+            $query->whereHas('applicantUser', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->filled('state')) {
+            $query->where('state', $request->state);
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('request_date', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('request_date', '<=', $request->to_date);
+        }
+
+        if ($request->filled('user_in_charge_id')) {
+            $query->where('user_in_charge_id', $request->user_in_charge_id);
+        }
+
+        $donationRequests = $query->paginate()->appends($request->query());
+
+        $users = User::select('id', 'name')->get();
+
+        return view('donation-request.index', compact('donationRequests', 'users'))
             ->with('i', ($request->input('page', 1) - 1) * $donationRequests->perPage());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    // DonationRequestController.php
 
     public function create()
     {
-        $users = User::all(); // o aplica filtros si es necesario
-        $donations = Donation::all(); // si usas esta variable también
-        $donationRequest = new DonationRequest(); // para mantener compatibilidad con el old()
+        $users = User::all();
+        $donations = Donation::all();
+        $donationRequest = new DonationRequest();
 
         return view('donation-request.create', compact('users', 'donations', 'donationRequest'));
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(DonationRequestRequest $request): RedirectResponse
     {
-        DonationRequest::create($request->validated());
+        $data = $request->validated();
 
-        return Redirect::route('donation-requests.index')
-            ->with('success', 'DonationRequest created successfully.');
+        if (!empty($data['request_date'])) {
+            $data['request_date'] = \Carbon\Carbon::parse($data['request_date'])->format('Y-m-d');
+        }
+
+        $donationRequest = DonationRequest::create($data);
+
+        $donationRequest->referencia = 'REF-SOL-' . $donationRequest->id;
+        $donationRequest->save();
+
+        return redirect()->to(route('donation-request-descriptions.create', [
+            'donation_request_id' => $donationRequest->id
+        ]));
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id): View
     {
-        $donationRequest = DonationRequest::find($id);
+        $donationRequest = DonationRequest::with(['applicantUser', 'userInCharge', 'donation', 'description'])->findOrFail($id);
 
         return view('donation-request.show', compact('donationRequest'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id): View
     {
         $donationRequest = DonationRequest::find($id);
-        $users = User::all(); // Obtener todos los usuarios
-        $donations = Donation::all(); // Obtener todas las donaciones
+        $users = User::all();
+        $donations = Donation::all();
     
         return view('donation-request.edit', compact('donationRequest', 'users', 'donations'));
     }
     
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(DonationRequestRequest $request, DonationRequest $donationRequest): RedirectResponse
     {
-        // Actualiza la solicitud de donación con los datos validados
         $donationRequest->update([
             'applicant_user__id' => $request->input('applicant_user__id'),
             'user_in_charge_id' => $request->input('user_in_charge_id'),
@@ -89,8 +106,6 @@ class DonationRequestController extends Controller
             'notes' => $request->input('notes'),
             'state' => $request->input('state'),
         ]);
-        
-        
         
         return Redirect::route('donation-requests.index')
             ->with('success', 'DonationRequest updated successfully');
@@ -108,6 +123,34 @@ class DonationRequestController extends Controller
             ->with('success', 'DonationRequest deleted successfully');
     }
 
+
+    public function accept(Request $request, $id)
+    {
+        $donationRequest = DonationRequest::findOrFail($id);
+        $donationRequest->state = 'aceptado';
+        $donationRequest->user_in_charge_id = Auth::id();
+        $donationRequest->observations = $request->input('observations');
+        $donationRequest->save();
+
+        return redirect()->route('donation-requests.show', $id)
+            ->with('success', 'La solicitud ha sido aceptada.');
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $donationRequest = DonationRequest::findOrFail($id);
+        $donationRequest->state = 'rechazado';
+        $donationRequest->user_in_charge_id = Auth::id();
+        $donationRequest->observations = $request->input('observations');
+        $donationRequest->save();
+
+        return redirect()->route('donation-requests.show', $id)
+            ->with('error', 'La solicitud ha sido rechazada.');
+    }
+
+
+
+
     public function exportPdf(Request $request)
     {
         $query = DonationRequest::query();
@@ -123,7 +166,6 @@ class DonationRequestController extends Controller
                 );
         }
 
-        // Asegura que las relaciones necesarias estén disponibles
         $donationRequests = $query->with(['user', 'userInCharge', 'donation'])->get();
 
         $pdf = new Fpdf();
@@ -131,7 +173,6 @@ class DonationRequestController extends Controller
         $pdf->SetFont('Arial', 'B', 12);
         $pdf->Cell(0, 10, utf8_decode('Reporte de Solicitudes de Donación'), 0, 1, 'C');
 
-        // Encabezados de tabla
         $pdf->SetFont('Arial', 'B', 10);
         $pdf->Cell(10, 8, 'No', 1);
         $pdf->Cell(40, 8, 'Solicitante', 1);

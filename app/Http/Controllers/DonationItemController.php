@@ -93,7 +93,24 @@ class DonationItemController extends Controller
     {
         DonationItem::find($id)->delete();
 
-        return Redirect::route('donation-items.index')
-            ->with('success', 'DonationItem deleted successfully');
+        return back()->with('success', 'DonationItem deleted successfully');
     }
+
+    public function restore($id)
+    {
+        $item = DonationItem::withTrashed()->findOrFail($id);
+        $item->restore();
+
+        return back()->with('success', 'Ítem restaurado correctamente.');
+    }
+
+    public function forceDelete($id)
+    {
+        $item = DonationItem::withTrashed()->findOrFail($id);
+        $item->forceDelete();
+
+        return redirect()->back()->with('success', 'Ítem eliminado permanentemente.');
+    }
+
+
 }

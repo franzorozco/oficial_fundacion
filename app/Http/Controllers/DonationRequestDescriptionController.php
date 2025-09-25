@@ -27,17 +27,20 @@ class DonationRequestDescriptionController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
+    public function create()
     {
-        $donationRequestDescription = new DonationRequestDescription();
+        $donationRequests = DonationRequest::all();
+        $donationRequestDescription = null;  // Agrega esta línea para evitar el error
 
-        return view('donation-request-description.create', compact('donationRequestDescription'));
+        return view('donation-request-description.create', compact('donationRequests', 'donationRequestDescription'));
     }
+
+
 
     /**
      * Store a newly created resource in storage.
      */
-   public function store(DonationRequestDescriptionRequest $request): RedirectResponse
+    public function store(DonationRequestDescriptionRequest $request): RedirectResponse
     {
         $data = $request->validated();
 
@@ -50,9 +53,16 @@ class DonationRequestDescriptionController extends Controller
 
         DonationRequestDescription::create($data);
 
+        // Verifica si se recibió el parámetro donation_request_id
+        if ($request->has('donation_request_id')) {
+            return Redirect::to('/donation-requests')
+                ->with('success', 'Registro creado exitosamente.');
+        }
+
         return Redirect::route('donation-request-descriptions.index')
             ->with('success', 'Registro creado exitosamente.');
     }
+
 
     /**
      * Display the specified resource.

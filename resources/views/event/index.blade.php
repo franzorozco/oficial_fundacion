@@ -16,14 +16,18 @@
                             <span id="card_title">
                                 {{ __('Eventos') }}
                             </span>
-
+                        
                             <div class="float-right">
+                                @can('events.crear')
                                 <a href="{{ route('events.create') }}" class="btn btn-outline-primary btn-sm" data-placement="left">
                                     {{ __('Crear Nuevo') }}
                                 </a>
+                                @endcan
+                                @can('events.verEliminados')
                                 <a href="{{ route('events.trashed') }}" class="btn btn-outline-dark btn-sm" data-placement="left">
                                     <i class="fa fa-trash"></i> {{ __('Ver Eliminados') }}
                                 </a>
+                                @endcan
                             </div>
                         </div>
                     </div>
@@ -36,13 +40,14 @@
                     <!-- Barra de búsqueda y filtros -->
                     <div class="card-body pt-0">
                         <form method="GET" action="{{ route('events.index') }}" class="mb-4">
+                            
                             <div class="row align-items-end">
+                                @can('events.buscar')
                                 <div class="col-md-4">
                                     <label for="name" class="form-label">{{ __('Nombre del Evento') }}</label>
                                     <input type="text" name="name" id="name" class="form-control"
                                            value="{{ request('name') }}" placeholder="Buscar por nombre...">
                                 </div>
-
                                 <div class="col-md-4">
                                     <label for="campaign_id" class="form-label">{{ __('Campaña') }}</label>
                                     <select name="campaign_id" id="campaign_id" class="form-control">
@@ -54,7 +59,8 @@
                                         @endforeach
                                     </select>
                                 </div>
-
+                                @endcan
+                                @can('events.filtrar')
                                 <div class="col-md-4">
                                     <button type="submit" class="btn btn-outline-primary">
                                         <i class="fa fa-search"></i> {{ __('Filtrar') }}
@@ -63,6 +69,7 @@
                                         <i class="fa fa-times"></i> {{ __('Limpiar') }}
                                     </a>
                                 </div>
+                                @endcan
                             </div>
                         </form>
                     </div>
@@ -92,18 +99,24 @@
                                             <td>{{ $event->event_date }}</td>
                                             <td>
                                                 <form action="{{ route('events.destroy', $event->id) }}" method="POST">
+                                                    @can('events.ver')
                                                     <a class="btn btn-outline-primary btn-sm" href="{{ route('events.show', $event->id) }}">
                                                         <i class="fa fa-fw fa-eye"></i> {{ __('Mostrar') }}
                                                     </a>
+                                                    @endcan
+                                                    @can('events.editar')
                                                     <a class="btn btn-outline-success btn-sm" href="{{ route('events.edit', $event->id) }}">
                                                         <i class="fa fa-fw fa-edit"></i> {{ __('Editar') }}
                                                     </a>
+                                                    @endcan
                                                     @csrf
                                                     @method('DELETE')
+                                                    @can('events.eliminar')
                                                     <button type="submit" class="btn btn-outline-danger btn-sm"
                                                             onclick="event.preventDefault(); confirm('¿Estás seguro de eliminar?') ? this.closest('form').submit() : false;">
                                                         <i class="fa fa-fw fa-trash"></i> {{ __('Eliminar') }}
                                                     </button>
+                                                    @endcan
                                                 </form>
                                             </td>
                                         </tr>
