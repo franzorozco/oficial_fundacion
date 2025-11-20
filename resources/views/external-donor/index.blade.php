@@ -7,116 +7,143 @@
 @endsection
 
 @section('content')
-    @if ($message = Session::get('success'))
-        <div class="alert alert-success m-4">
-            <p>{{ $message }}</p>
-        </div>
-    @endif
 
-    <div class="card">
-        <div class="card-header">
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                <div>
-                    @can('external-donors.crear')
-                    <a href="{{ route('external-donors.create') }}" class="btn btn-outline-success btn-sm me-2 mb-2">
-                        <i class="fa fa-plus"></i> {{ __('Nuevo Donador') }}
-                    </a>
-                    @endcan
-                    @can('external-donors.exportar_pdf')
-                    <a href="{{ route('external-donors.pdf', request()->query()) }}" class="btn btn-outline-danger btn-sm mb-2">
-                        <i class="fa fa-file-pdf"></i> {{ __('Generar Reporte PDF') }}
-                    </a>
-                    @endcan
-                </div>
-            </div>
-            @can('external-donors.filtrar')
-            <form method="GET" action="{{ route('external-donors.index') }}">
-                <div class="row g-2">
-                    <div class="col-md-3">
-                        <input type="text" name="search" class="form-control" placeholder="Buscar por nombre o correo" value="{{ request('search') }}">
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" name="paternal" class="form-control" placeholder="Apellido paterno" value="{{ request('paternal') }}">
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" name="maternal" class="form-control" placeholder="Apellido materno" value="{{ request('maternal') }}">
-                    </div>
-                    <div class="col-md-3 d-flex justify-content-end">
-                        <button type="submit" class="btn btn-outline-primary me-2">
-                            <i class="fas fa-filter"></i> {{ __('Filtrar') }}
-                        </button>
-                        <a href="{{ route('external-donors.index') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-eraser"></i> {{ __('Limpiar') }}
-                        </a>
-                        @can('external-donors.ver_eliminados')
-                        <a href="{{ route('external-donors.trashed') }}" class="btn btn-outline-dark">
-                            <i class="fa fa-trash-restore"></i> {{ __('Ver Eliminados') }}
-                        </a>
-                        @endcan
+@if ($message = Session::get('success'))
+    <div class="alert alert-success m-3">
+        <p class="mb-0">{{ $message }}</p>
+    </div>
+@endif
 
-                    </div>
-                </div>
-            </form>
+<div class="card">
+
+    <!-- HEADER: TÍTULO + BOTONES -->
+    <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+
+        <span id="card_title" class="h5 m-0">{{ __('Donadores Externos') }}</span>
+
+        <div class="d-flex flex-wrap gap-2">
+            @can('external-donors.crear')
+            <a href="{{ route('external-donors.create') }}" class="btn btn-outline-success btn-sm">
+                <i class="fa fa-plus"></i> Nuevo Donador
+            </a>
             @endcan
+
+            @can('external-donors.exportar_pdf')
+            <a href="{{ route('external-donors.pdf', request()->query()) }}" class="btn btn-outline-danger btn-sm">
+                <i class="fa fa-file-pdf"></i> Generar Reporte PDF
+            </a>
+            @endcan
+
+            @can('external-donors.filtrar')
+            <button class="btn btn-outline-secondary btn-sm" type="button" data-toggle="collapse"
+                    data-target="#filtrosCollapse" aria-expanded="false" aria-controls="filtrosCollapse">
+                <i class="fa fa-sliders-h"></i> Filtros
+            </button>
+            @endcan
+
             @can('external-donors.ver_eliminados')
-            <a href="{{ route('external-donors.trashed') }}" class="btn btn-outline-dark">
-                <i class="fa fa-trash-restore"></i> {{ __('Ver Eliminados') }}
+            <a href="{{ route('external-donors.trashed') }}" class="btn btn-outline-dark btn-sm">
+                <i class="fa fa-trash-restore"></i> Ver Eliminados
             </a>
             @endcan
         </div>
+    </div>
 
-        <div class="card-body bg-white">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead>
+    <!-- FILTROS COLAPSABLES -->
+    @can('external-donors.filtrar')
+    <div class="collapse mt-3" id="filtrosCollapse">
+        <form method="GET" action="{{ route('external-donors.index') }}">
+            <div class="row g-3">
+
+                <div class="col-md-3">
+                    <input type="text" name="search" class="form-control" placeholder="Buscar por nombre o correo" value="{{ request('search') }}">
+                </div>
+
+                <div class="col-md-3">
+                    <input type="text" name="paternal" class="form-control" placeholder="Apellido paterno" value="{{ request('paternal') }}">
+                </div>
+
+                <div class="col-md-3">
+                    <input type="text" name="maternal" class="form-control" placeholder="Apellido materno" value="{{ request('maternal') }}">
+                </div>
+
+                <div class="col-md-3 d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                    <a href="{{ route('external-donors.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-eraser"></i> Limpiar
+                    </a>
+                </div>
+
+            </div>
+        </form>
+    </div>
+    @endcan
+
+    <!-- TABLA -->
+    <div class="card-body bg-white mt-3">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nombres</th>
+                        <th>Apellido Paterno</th>
+                        <th>Apellido Materno</th>
+                        <th>Correo Electrónico</th>
+                        <th>Teléfono</th>
+                        <th>Dirección</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($externalDonors as $externalDonor)
                         <tr>
-                            <th>No</th>
-                            <th>Nombres</th>
-                            <th>Apellido Paterno</th>
-                            <th>Apellido Materno</th>
-                            <th>Correo Electrónico</th>
-                            <th>Teléfono</th>
-                            <th>Dirección</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($externalDonors as $externalDonor)
-                            <tr>
-                                <td>{{ ++$i }}</td>
-                                <td>{{ $externalDonor->names }}</td>
-                                <td>{{ $externalDonor->paternal_surname }}</td>
-                                <td>{{ $externalDonor->maternal_surname }}</td>
-                                <td>{{ $externalDonor->email }}</td>
-                                <td>{{ $externalDonor->phone }}</td>
-                                <td>{{ $externalDonor->address }}</td>
-                                <td>
-                                    <form action="{{ route('external-donors.destroy', $externalDonor->id) }}" method="POST" class="d-inline">
-                                        @can('external-donors.ver')
-                                        <a class="btn btn-outline-primary btn-sm" href="{{ route('external-donors.show', $externalDonor->id) }}">
-                                            <i class="fa fa-eye"></i>
-                                        </a>
-                                        @endcan
-                                        @can('external-donors.editar')
-                                        <a class="btn btn-outline-success btn-sm" href="{{ route('external-donors.edit', $externalDonor->id) }}">
-                                            <i class="fa fa-edit"></i>
-                                        </a>
-                                        @endcan
+                            <td>{{ ++$i }}</td>
+                            <td>{{ $externalDonor->names }}</td>
+                            <td>{{ $externalDonor->paternal_surname }}</td>
+                            <td>{{ $externalDonor->maternal_surname }}</td>
+                            <td>{{ $externalDonor->email }}</td>
+                            <td>{{ $externalDonor->phone }}</td>
+                            <td>{{ $externalDonor->address }}</td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @can('external-donors.ver')
+                                    <a class="btn btn-outline-primary btn-sm" href="{{ route('external-donors.show', $externalDonor->id) }}">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+                                    @endcan
+
+                                    @can('external-donors.editar')
+                                    <a class="btn btn-outline-success btn-sm" href="{{ route('external-donors.edit', $externalDonor->id) }}">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    @endcan
+
+                                    @can('external-donors.eliminar')
+                                    <form action="{{ route('external-donors.destroy', $externalDonor->id) }}" method="POST" class="d-inline"
+                                          onsubmit="return confirm('¿Estás seguro de que deseas eliminar este donador?');">
                                         @csrf
                                         @method('DELETE')
-                                        @can('external-donors.eliminar')
-                                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="event.preventDefault(); confirm('¿Estás seguro de que deseas eliminar este donador?') ? this.closest('form').submit() : false;">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
                                             <i class="fa fa-trash"></i>
                                         </button>
-                                        @endcan
                                     </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table> 
-            </div>
+                                    @endcan
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PAGINACIÓN -->
+        <div class="mt-3">
             {!! $externalDonors->withQueryString()->links() !!}
         </div>
     </div>
+
+</div>
 @endsection

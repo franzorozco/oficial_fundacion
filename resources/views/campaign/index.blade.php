@@ -9,109 +9,164 @@
 @section('content')
     <div class="card">
         <div class="card-header">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
-                <!-- Título -->
-                <span id="card_title" class="h5 m-0">
-                    {{ __('Campañas') }}
-                </span>
 
-                <!-- Formulario de búsqueda y filtros -->
-                <form action="{{ route('campaigns.index') }}" method="GET" class="d-flex flex-column flex-md-row gap-3 flex-wrap w-100" role="search">
-                    <!-- Búsqueda -->
-                    @can('campaigns.buscar')
-                    <div class="form-group">
-                        <label for="search">Buscar campañas:</label>
-                        <input type="text" name="search" id="search" class="form-control" placeholder="Buscar..." value="{{ request('search') }}">
-                    </div>
-                    @endcan
-                    <!-- Filtros agrupados en columnas -->
-                    <div class="d-flex flex-wrap gap-3">
-                        <!-- Estado -->
-                        <div class="form-group">
-                            <label><strong>Estado de la campaña</strong></label><br>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="filters[]" value="activa" id="filtro_activa" {{ in_array('activa', request('filters', [])) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="filtro_activa">Campañas activas</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="filters[]" value="inactiva" id="filtro_inactiva" {{ in_array('inactiva', request('filters', [])) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="filtro_inactiva">Campañas inactivas</label>
-                            </div>
-                        </div>
-                        <!-- Eventos asociados -->
-                        <div class="form-group">
-                            <label><strong>Eventos asociados</strong></label><br>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="filters[]" value="con_eventos" id="filtro_con_eventos" {{ in_array('con_eventos', request('filters', [])) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="filtro_con_eventos">Con eventos</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="filters[]" value="sin_eventos" id="filtro_sin_eventos" {{ in_array('sin_eventos', request('filters', [])) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="filtro_sin_eventos">Sin eventos</label>
-                            </div>
-                        </div>
-                       <!-- Participación -->
-                        <div class="form-group">
-                            <label><strong>Rango de participantes</strong></label><br>
-                            <div class="d-flex gap-2">
-                                <div>
-                                    <label for="min_participantes" class="form-label">Mínimo</label>
-                                    <input type="number" name="min_participantes" id="min_participantes" class="form-control" min="0" value="{{ request('min_participantes') }}">
-                                </div>
-                                <div>
-                                    <label for="max_participantes" class="form-label">Máximo</label>
-                                    <input type="number" name="max_participantes" id="max_participantes" class="form-control" min="0" value="{{ request('max_participantes') }}">
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Otros -->
-                        <div class="form-group">
-                            <label><strong>Otros criterios</strong></label><br>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="filters[]" value="mayor_eventos" id="filtro_mayor_eventos" {{ in_array('mayor_eventos', request('filters', [])) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="filtro_mayor_eventos">Con más eventos</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="filters[]" value="multi_ubicacion" id="filtro_multi_ubicacion" {{ in_array('multi_ubicacion', request('filters', [])) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="filtro_multi_ubicacion">Eventos multisedes</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="filters[]" value="eventos_largos" id="filtro_eventos_largos" {{ in_array('eventos_largos', request('filters', [])) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="filtro_eventos_largos">Eventos más largos</label>
-                            </div>
-                        </div>
-                    </div>
-                    @can('campaigns.filtrar')
-                    <!-- Botón aplicar -->
-                    <div class="align-self-end">
-                        <button class="btn btn-outline-primary" type="submit">
-                            <i class="fa fa-filter"></i> Aplicar filtros
-                        </button>
-                    </div>
-                    @endcan
-                </form>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 w-100">
 
-                <!-- Botones de acciones -->
-                <div class="d-flex flex-wrap gap-2">
-                    @can('campaigns.crear')
-                    <a href="{{ route('campaigns.create') }}" class="btn btn-outline-success btn-sm">
-                        <i class="fa fa-plus"></i> Crear Nueva
-                    </a>
-                    @endcan
-                    @php
-                        $pdfParams = request()->only(['search', 'filters', 'min_participantes', 'max_participantes']);
-                    @endphp
-                    @can('campaigns.regenerarPDF')
-                    <a href="{{ route('campaigns.pdf.all', $pdfParams) }}" class="btn btn-outline-info btn-sm">
-                        <i class="fa fa-file-pdf"></i> Descargar PDF
-                    </a>
-                    @endcan
-                    @can('campaigns.verEliminadas')
-                    <a href="{{ route('campaigns.trashed') }}" class="btn btn-outline-dark btn-sm">
-                        <i class="fa fa-trash-restore"></i> Ver Eliminadas
-                    </a>
-                    @endcan
+        <!-- TÍTULO -->
+        <span id="card_title" class="h5 m-0">
+            {{ __('Campañas') }}
+        </span>
+
+        <!-- BOTONES DE ACCIONES -->
+        <div class="d-flex flex-wrap gap-2">
+            @can('campaigns.crear')
+            <a href="{{ route('campaigns.create') }}" class="btn btn-outline-success btn-sm">
+                <i class="fa fa-plus"></i> Crear Nueva
+            </a>
+            @endcan
+
+            @php
+                $pdfParams = request()->only(['search', 'filters', 'min_participantes', 'max_participantes']);
+            @endphp
+
+            @can('campaigns.regenerarPDF')
+            <a href="{{ route('campaigns.pdf.all', $pdfParams) }}" class="btn btn-outline-info btn-sm">
+                <i class="fa fa-file-pdf"></i> PDF
+            </a>
+            @endcan
+
+            @can('campaigns.verEliminadas')
+            <a href="{{ route('campaigns.trashed') }}" class="btn btn-outline-dark btn-sm">
+                <i class="fa fa-trash-restore"></i> Eliminadas
+            </a>
+            @endcan
+
+            <!-- BOTÓN MOSTRAR/OCULTAR FILTROS -->
+            <button class="btn btn-outline-secondary btn-sm" type="button" data-toggle="collapse"
+                data-target="#filtrosCollapse" aria-expanded="false" aria-controls="filtrosCollapse">
+                <i class="fa fa-sliders-h"></i> Filtros
+            </button>
+        </div>
+    </div>
+
+    <!-- BLOQUE DE FILTROS -->
+    <div class="collapse mt-3" id="filtrosCollapse">
+
+        <form action="{{ route('campaigns.index') }}" method="GET" class="w-100" role="search">
+
+            <div class="row g-3">
+
+                <!-- BÚSQUEDA -->
+                <div class="col-12">
+                    <div class="card card-body p-3 shadow-sm">
+                        <h6 class="mb-3"><i class="fa fa-search"></i> Búsqueda</h6>
+
+                        @can('campaigns.buscar')
+                        <input type="text" name="search" id="search" class="form-control"
+                            placeholder="Buscar campañas..." value="{{ request('search') }}">
+                        @endcan
+                    </div>
                 </div>
+
+                <!-- ESTADOS -->
+                <div class="col-md-3 col-sm-6">
+                    <div class="card card-body p-3 shadow-sm">
+                        <h6 class="mb-2"><i class="fa fa-flag"></i> Estado</h6>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="filters[]" value="activa"
+                                id="filtro_activa"
+                                {{ in_array('activa', request('filters', [])) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="filtro_activa">Activas</label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="filters[]" value="inactiva"
+                                id="filtro_inactiva"
+                                {{ in_array('inactiva', request('filters', [])) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="filtro_inactiva">Inactivas</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EVENTOS -->
+                <div class="col-md-3 col-sm-6">
+                    <div class="card card-body p-3 shadow-sm">
+                        <h6 class="mb-2"><i class="fa fa-calendar"></i> Eventos asociados</h6>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="filters[]" value="con_eventos"
+                                id="filtro_con_eventos"
+                                {{ in_array('con_eventos', request('filters', [])) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="filtro_con_eventos">Con eventos</label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="filters[]" value="sin_eventos"
+                                id="filtro_sin_eventos"
+                                {{ in_array('sin_eventos', request('filters', [])) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="filtro_sin_eventos">Sin eventos</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PARTICIPANTES -->
+                <div class="col-md-3 col-sm-6">
+                    <div class="card card-body p-3 shadow-sm">
+                        <h6 class="mb-2"><i class="fa fa-users"></i> Participantes</h6>
+
+                        <label class="form-label">Mínimo</label>
+                        <input type="number" name="min_participantes" class="form-control mb-2" min="0"
+                            value="{{ request('min_participantes') }}">
+
+                        <label class="form-label">Máximo</label>
+                        <input type="number" name="max_participantes" class="form-control" min="0"
+                            value="{{ request('max_participantes') }}">
+                    </div>
+                </div>
+
+                <!-- OTROS CRITERIOS -->
+                <div class="col-md-3 col-sm-6">
+                    <div class="card card-body p-3 shadow-sm">
+                        <h6 class="mb-2"><i class="fa fa-list"></i> Otros criterios</h6>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="filters[]" value="mayor_eventos"
+                                id="filtro_mayor_eventos"
+                                {{ in_array('mayor_eventos', request('filters', [])) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="filtro_mayor_eventos">Más eventos</label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="filters[]" value="multi_ubicacion"
+                                id="filtro_multi_ubicacion"
+                                {{ in_array('multi_ubicacion', request('filters', [])) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="filtro_multi_ubicacion">Multisedes</label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="filters[]" value="eventos_largos"
+                                id="filtro_eventos_largos"
+                                {{ in_array('eventos_largos', request('filters', [])) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="filtro_eventos_largos">Eventos largos</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTÓN APLICAR -->
+            <div class="mt-4 text-end">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fa fa-filter"></i> Aplicar filtros
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+    </form>
+</div>
             </div>
 
         </div>

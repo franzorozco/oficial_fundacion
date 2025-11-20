@@ -12,67 +12,98 @@
             <div class="col-sm-12">
                 <div class="card">
                     <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span id="card_title">
-                                {{ __('Eventos') }}
-                            </span>
-                        
-                            <div class="float-right">
-                                @can('events.crear')
-                                <a href="{{ route('events.create') }}" class="btn btn-outline-primary btn-sm" data-placement="left">
-                                    {{ __('Crear Nuevo') }}
-                                </a>
-                                @endcan
-                                @can('events.verEliminados')
-                                <a href="{{ route('events.trashed') }}" class="btn btn-outline-dark btn-sm" data-placement="left">
-                                    <i class="fa fa-trash"></i> {{ __('Ver Eliminados') }}
-                                </a>
-                                @endcan
-                            </div>
-                        </div>
-                    </div>
-                    @if ($message = Session::get('success'))
-                        <div class="alert alert-success m-4">
-                            <p>{{ $message }}</p>
-                        </div>
-                    @endif
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 w-100">
 
-                    <!-- Barra de búsqueda y filtros -->
-                    <div class="card-body pt-0">
-                        <form method="GET" action="{{ route('events.index') }}" class="mb-4">
-                            
-                            <div class="row align-items-end">
-                                @can('events.buscar')
-                                <div class="col-md-4">
-                                    <label for="name" class="form-label">{{ __('Nombre del Evento') }}</label>
-                                    <input type="text" name="name" id="name" class="form-control"
-                                           value="{{ request('name') }}" placeholder="Buscar por nombre...">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="campaign_id" class="form-label">{{ __('Campaña') }}</label>
-                                    <select name="campaign_id" id="campaign_id" class="form-control">
-                                        <option value="">{{ __('Todas las Campañas') }}</option>
-                                        @foreach(App\Models\Campaign::all() as $campaign)
-                                            <option value="{{ $campaign->id }}" {{ request('campaign_id') == $campaign->id ? 'selected' : '' }}>
-                                                {{ $campaign->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                @endcan
-                                @can('events.filtrar')
-                                <div class="col-md-4">
-                                    <button type="submit" class="btn btn-outline-primary">
-                                        <i class="fa fa-search"></i> {{ __('Filtrar') }}
-                                    </button>
-                                    <a href="{{ route('events.index') }}" class="btn btn-outline-secondary">
-                                        <i class="fa fa-times"></i> {{ __('Limpiar') }}
-                                    </a>
-                                </div>
-                                @endcan
-                            </div>
-                        </form>
+        <!-- TÍTULO -->
+        <span id="card_title" class="h5 m-0">
+            {{ __('Eventos') }}
+        </span>
+
+        <!-- BOTONES DE ACCIONES -->
+        <div class="d-flex flex-wrap gap-2">
+
+            @can('events.crear')
+            <a href="{{ route('events.create') }}" class="btn btn-outline-success btn-sm">
+                <i class="fa fa-plus"></i> Crear Nuevo
+            </a>
+            @endcan
+
+            @can('events.verEliminados')
+            <a href="{{ route('events.trashed') }}" class="btn btn-outline-dark btn-sm">
+                <i class="fa fa-trash-restore"></i> Eliminados
+            </a>
+            @endcan
+
+            <!-- BOTÓN FILTROS -->
+            <button class="btn btn-outline-secondary btn-sm" type="button" data-toggle="collapse"
+                data-target="#filtrosCollapse" aria-expanded="false" aria-controls="filtrosCollapse">
+                <i class="fa fa-sliders-h"></i> Filtros
+            </button>
+        </div>
+    </div>
+
+    <!-- MENSAJE -->
+    @if($message = Session::get('success'))
+        <div class="alert alert-success mt-3">
+            <p class="mb-0">{{ $message }}</p>
+        </div>
+    @endif
+
+    <!-- FILTROS -->
+    <div class="collapse mt-3" id="filtrosCollapse">
+
+        <form method="GET" action="{{ route('events.index') }}" class="w-100">
+
+            <div class="row g-3">
+
+                <!-- BÚSQUEDA POR NOMBRE -->
+                @can('events.buscar')
+                <div class="col-md-4">
+                    <div class="card card-body p-3 shadow-sm">
+                        <h6 class="mb-3"><i class="fa fa-search"></i> Nombre del Evento</h6>
+                        <input type="text" name="name" id="name" class="form-control"
+                               value="{{ request('name') }}" placeholder="Buscar por nombre...">
                     </div>
+                </div>
+
+                <!-- FILTRO CAMPAÑA -->
+                <div class="col-md-4">
+                    <div class="card card-body p-3 shadow-sm">
+                        <h6 class="mb-3"><i class="fa fa-bullhorn"></i> Campaña</h6>
+                        <select name="campaign_id" id="campaign_id" class="form-control">
+                            <option value="">Todas las campañas</option>
+                            @foreach(App\Models\Campaign::all() as $campaign)
+                                <option value="{{ $campaign->id }}"
+                                    {{ request('campaign_id') == $campaign->id ? 'selected' : '' }}>
+                                    {{ $campaign->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                @endcan
+
+                <!-- BOTONES FILTRAR -->
+                @can('events.filtrar')
+                <div class="col-md-4">
+                    <div class="card card-body p-3 shadow-sm h-100 d-flex align-items-start justify-content-center flex-column">
+                        <h6 class="mb-3"><i class="fa fa-filter"></i> Acciones</h6>
+                        <button type="submit" class="btn btn-primary mb-2">
+                            <i class="fa fa-search"></i> Aplicar Filtros
+                        </button>
+                        <a href="{{ route('events.index') }}" class="btn btn-outline-secondary">
+                            <i class="fa fa-times"></i> Limpiar
+                        </a>
+                    </div>
+                </div>
+                @endcan
+
+            </div>
+
+        </form>
+    </div>
+</div>
+
 
                     <div class="card-body bg-white">
                         <div class="table-responsive">
@@ -98,27 +129,34 @@
                                             <td>{{ $event->description }}</td>
                                             <td>{{ $event->event_date }}</td>
                                             <td>
-                                                <form action="{{ route('events.destroy', $event->id) }}" method="POST">
-                                                    @can('events.ver')
-                                                    <a class="btn btn-outline-primary btn-sm" href="{{ route('events.show', $event->id) }}">
-                                                        <i class="fa fa-fw fa-eye"></i> {{ __('Mostrar') }}
-                                                    </a>
-                                                    @endcan
-                                                    @can('events.editar')
-                                                    <a class="btn btn-outline-success btn-sm" href="{{ route('events.edit', $event->id) }}">
-                                                        <i class="fa fa-fw fa-edit"></i> {{ __('Editar') }}
-                                                    </a>
-                                                    @endcan
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    @can('events.eliminar')
-                                                    <button type="submit" class="btn btn-outline-danger btn-sm"
-                                                            onclick="event.preventDefault(); confirm('¿Estás seguro de eliminar?') ? this.closest('form').submit() : false;">
-                                                        <i class="fa fa-fw fa-trash"></i> {{ __('Eliminar') }}
-                                                    </button>
-                                                    @endcan
-                                                </form>
-                                            </td>
+    <div class="d-flex flex-wrap gap-1">
+
+        @can('events.ver')
+        <a class="btn btn-outline-primary btn-sm" href="{{ route('events.show', $event->id) }}">
+            <i class="fa fa-eye"></i>
+        </a>
+        @endcan
+
+        @can('events.editar')
+        <a class="btn btn-outline-success btn-sm" href="{{ route('events.edit', $event->id) }}">
+            <i class="fa fa-edit"></i>
+        </a>
+        @endcan
+
+        @can('events.eliminar')
+        <form action="{{ route('events.destroy', $event->id) }}" method="POST"
+              onsubmit="return confirm('¿Estás seguro de eliminar?');">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i class="fa fa-trash"></i>
+            </button>
+        </form>
+        @endcan
+
+    </div>
+</td>
+
                                         </tr>
                                     @endforeach
                                 </tbody>
