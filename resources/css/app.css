@@ -127,3 +127,13 @@
     background-color: rgba(255, 255, 255, 0.9);
     transform: scale(1.7);
 }
+
+
+/* Arreglar visibilidad de checkbox */
+input[type="checkbox"] {
+    appearance: auto;
+    accent-color: #cf1d86; /* tu color rosa */
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}

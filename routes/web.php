@@ -28,6 +28,7 @@ use App\Http\Controllers\DonationRequestDescriptionController;
 use App\Http\Controllers\TaskAssignmentController;
 use App\Http\Controllers\info\DonacionesInfoController;
 use App\Http\Controllers\Forms\DonationFormController;
+use App\Http\Controllers\Auth\TwoFactorController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -248,3 +249,7 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
 
 
 //pagias de la web
+
+
+Route::get('/verify-2fa', [TwoFactorController::class, 'index'])->name('2fa.verify');
+Route::post('/verify-2fa', [TwoFactorController::class, 'verify'])->name('2fa.check');

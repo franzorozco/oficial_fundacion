@@ -14,6 +14,19 @@ CREATE TABLE `users` (
     `deleted_at` TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE `trusted_devices` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `ip_address` VARCHAR(255) NOT NULL,
+  `trusted` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `trusted_devices_user_id_foreign` 
+    FOREIGN KEY (`user_id`) 
+    REFERENCES `users` (`id`) 
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ROLES UTILIZANDO SPATIE LARAVEL-PERMISSIONS
 CREATE TABLE `model_has_permissions` (
@@ -398,8 +411,6 @@ CREATE TABLE transactions (
     FOREIGN KEY (related_campaign_id) REFERENCES campaigns(id),
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
-
-
 
 -- Donaciones monetarias realizadas por usuarios
 CREATE TABLE donations_cash (
