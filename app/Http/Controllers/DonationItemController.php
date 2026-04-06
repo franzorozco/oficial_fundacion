@@ -76,6 +76,9 @@ class DonationItemController extends Controller
         $donationItem = DonationItem::find($id);
         $types = DonationType::all();
 
+        // Guardar la página previa (la de detalle de donación)
+        session(['before_previous_url' => url()->previous()]);
+
         return view('donation-item.edit', compact('donationItem', 'types'));
     }
 
@@ -86,7 +89,13 @@ class DonationItemController extends Controller
     {
         $donationItem->update($request->validated());
 
-        return back()->with('success', 'DonationItem updated successfully');
+        // Obtener la URL anterior (edit)
+        $previous = url()->previous();
+
+        // Guardar una URL anterior en sesión si no existe
+        $beforePrevious = session()->get('before_previous_url', route('donations-incoming.index'));
+
+        return redirect($beforePrevious)->with('success', 'Ítem actualizado correctamente.');
     }
 
     public function destroy($id): RedirectResponse

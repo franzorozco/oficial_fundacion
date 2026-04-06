@@ -1,0 +1,114 @@
+/* CONTENEDOR DE FILTROS (GENÉRICO) */
+.filters-box {
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+}
+
+/* TITULOS */
+.filters-box h6,
+.filters-box .form-label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #6b7280;
+}
+
+/* INPUTS */
+.filters-box .form-control,
+.filters-box .form-select {
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    transition: all 0.2s ease;
+}
+
+.filters-box .form-control:focus,
+.filters-box .form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+}
+
+/* SCROLL BOX */
+.scroll-box {
+    max-height: 140px;
+    overflow-y: auto;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+/* SCROLL */
+.scroll-box::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scroll-box::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+/* CHIPS (REUTILIZABLE 🔥) */
+.chip {
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 13px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    transition: all 0.2s ease;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* HOVER */
+.chip:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+/* CHECKBOX BUTTONS */
+.btn-check:checked + .chip {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+}
+
+/* VARIANTES */
+.btn-check:checked + .chip-success {
+    background: #10b981;
+    border-color: #10b981;
+}
+
+.btn-check:checked + .chip-secondary {
+    background: #64748b;
+    border-color: #64748b;
+}
+
+/* GRID DE CHIPS */
+.chip-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+}
+
+.chip-group label {
+    width: 100%;
+    text-align: center;
+}
+
+/* CHECKBOX NORMAL */
+.filters-box .form-check-input,
+.filters-box .form-check-label {
+    cursor: pointer;
+}
+
+/* INPUT NUMBER */
+.filters-box input[type="number"] {
+    text-align: center;
+}
+
+/* BOTÓN TOGGLE */
+#toggleFiltersBtn {
+    border-radius: 8px;
+}

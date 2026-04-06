@@ -13,7 +13,7 @@ class UserRequest extends FormRequest
 
     public function rules()
     {
-        $user = $this->route('user'); // Obtiene el modelo User pasado en la ruta (o null en create)
+        $user = $this->route('user');
         
         // Si estamos creando (no hay user), o el usuario no tiene contraseña (vacía o null),
         // entonces password es requerido, si no, es opcional.

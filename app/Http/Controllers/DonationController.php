@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 
-use FPDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class DonationController extends Controller
@@ -194,12 +194,15 @@ class DonationController extends Controller
     }
 
     // Mostrar donaciones eliminadas
-    public function trashed(Request $request): View
-    {
-        $donations = Donation::onlyTrashed()->with(['user', 'receivedBy', 'externalDonor', 'status', 'campaign'])->paginate();
+public function trashed(Request $request): View
+{
+    $donations = Donation::onlyTrashed()
+        ->with(['user', 'receivedBy', 'externalDonor', 'status', 'campaign'])
+        ->paginate(10);
 
-        return back()->with('i', ($request->input('page', 1) - 1) * $donations->perPage());
-    }
+    return view('donation.trashed', compact('donations'))
+        ->with('i', ($request->input('page', 1) - 1) * $donations->perPage());
+}
 
     // Restaurar donación
     public function restore($id): RedirectResponse
@@ -221,82 +224,54 @@ class DonationController extends Controller
 
     
 
-    public function generatePdf($id)
-    {
-        $donation = Donation::with(['user', 'receivedBy', 'externalDonor', 'status', 'campaign', 'items'])->findOrFail($id);
-        
-        $pdf = new FPDF();
-        $pdf->AddPage();
+public function generatePdf($id, Request $request)
+{
+    $donation = Donation::with([
+        'user',
+        'receivedBy',
+        'externalDonor',
+        'status',
+        'campaign',
+        'items'
+    ])->findOrFail($id);
 
-        $pdf->SetFont('Arial', 'B', 16);
-        $pdf->Cell(0, 10, 'Donation Details', 0, 1, 'C');
-        $pdf->Ln(10);
+    $reportData = [
+        'generated_by' => Auth::user()->name ?? 'Sistema',
+        'generated_email' => Auth::user()->email ?? '-',
+        'date' => now()->format('d/m/Y'),
+        'time' => now()->format('H:i:s'),
+        'ip' => $request->ip(),
+        'user_agent' => $request->header('User-Agent'),
+    ];
 
-        $pdf->SetFont('Arial', '', 12);
-        $pdf->Cell(0, 10, 'Donor: ' . ($donation->externalDonor->names ?? 'N/A'), 0, 1);
-        $pdf->Cell(0, 10, 'Received By: ' . ($donation->receivedBy->name ?? 'N/A'), 0, 1);
-        $pdf->Cell(0, 10, 'Campaign: ' . ($donation->campaign->name ?? 'N/A'), 0, 1);
-        $pdf->Cell(0, 10, 'Donation Date: ' . $donation->donation_date, 0, 1);
-        $pdf->Cell(0, 10, 'Status: ' . ($donation->status->name ?? 'N/A'), 0, 1);
-        $pdf->Cell(0, 10, 'Notes: ' . ($donation->notes ?? 'N/A'), 0, 1);
-        $pdf->Ln(10);
+    $pdf = Pdf::loadView('pdf.donation', compact('donation', 'reportData'));
 
-        $pdf->SetFont('Arial', 'B', 12);
-        $pdf->Cell(30, 10, 'Item Name', 1, 0, 'C');
-        $pdf->Cell(30, 10, 'Quantity', 1, 0, 'C');
-        $pdf->Cell(50, 10, 'Unit', 1, 0, 'C');
-        $pdf->Cell(60, 10, 'Description', 1, 1, 'C');
+    return $pdf->stream("donacion_{$donation->id}.pdf");
+}
 
-        $pdf->SetFont('Arial', '', 12);
-        foreach ($donation->items as $item) {
-            $pdf->Cell(30, 10, $item->item_name, 1, 0, 'C');
-            $pdf->Cell(30, 10, $item->quantity, 1, 0, 'C');
-            $pdf->Cell(50, 10, $item->unit, 1, 0, 'C');
-            $pdf->Cell(60, 10, $item->description, 1, 1, 'C');
-        }
+public function generateAllDonationsPdf(Request $request)
+{
+    $donations = Donation::with([
+        'user',
+        'receivedBy',
+        'externalDonor',
+        'status',
+        'campaign'
+    ])->get();
 
-        $pdf->Output('D', 'donation_details_' . $donation->id . '.pdf');
-    }
+    $reportData = [
+        'generated_by' => Auth::user()->name ?? 'Sistema',
+        'generated_email' => Auth::user()->email ?? '-',
+        'date' => now()->format('d/m/Y'),
+        'time' => now()->format('H:i:s'),
+        'ip' => $request->ip(),
+        'user_agent' => $request->header('User-Agent'),
+        'total' => $donations->count()
+    ];
 
-    public function generateAllDonationsPdf()
-    {
-        // Obtener todas las donaciones con sus relaciones necesarias
-        $donations = Donation::with(['user', 'receivedBy', 'externalDonor', 'status', 'campaign'])->get();
-        
-        // Crear una instancia de FPDF
-        $pdf = new FPDF();
-        $pdf->AddPage();
+    $pdf = Pdf::loadView('pdf.donations', compact('donations', 'reportData'))
+        ->setPaper('a4', 'landscape');
 
-        // Título
-        $pdf->SetFont('Arial', 'B', 16);
-        $pdf->Cell(0, 10, 'List of All Donations', 0, 1, 'C');
-        $pdf->Ln(10);
-
-        // Encabezado de la tabla
-        $pdf->SetFont('Arial', 'B', 12);
-        $pdf->Cell(20, 10, 'No', 1, 0, 'C');
-        $pdf->Cell(40, 10, 'External Donor', 1, 0, 'C');
-        $pdf->Cell(40, 10, 'User', 1, 0, 'C');
-        $pdf->Cell(40, 10, 'Received By', 1, 0, 'C');
-        $pdf->Cell(40, 10, 'Status', 1, 0, 'C');
-        $pdf->Cell(40, 10, 'Campaign', 1, 0, 'C');
-        $pdf->Cell(40, 10, 'Donation Date', 1, 1, 'C');
-
-        // Detalles de las donaciones
-        $pdf->SetFont('Arial', '', 12);
-        foreach ($donations as $index => $donation) {
-            $pdf->Cell(20, 10, ++$index, 1, 0, 'C');
-            $pdf->Cell(40, 10, $donation->externalDonor->names ?? '-', 1, 0, 'C');
-            $pdf->Cell(40, 10, $donation->user->name ?? '-', 1, 0, 'C');
-            $pdf->Cell(40, 10, $donation->receivedBy->name ?? '-', 1, 0, 'C');
-            $pdf->Cell(40, 10, $donation->status->name ?? '-', 1, 0, 'C');
-            $pdf->Cell(40, 10, $donation->campaign->name ?? '-', 1, 0, 'C');
-            $pdf->Cell(40, 10, $donation->donation_date, 1, 1, 'C');
-        }
-
-        // Forzar la descarga del PDF
-        $pdf->Output('D', 'all_donations.pdf');
-    }
-
-
+    return $pdf->stream('reporte_donaciones.pdf');
+}
 }

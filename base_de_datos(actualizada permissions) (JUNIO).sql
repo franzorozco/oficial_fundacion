@@ -79,7 +79,7 @@ CREATE TABLE `profiles` (
     `availability_days` VARCHAR(100),
     `availability_hours` VARCHAR(100),
     `location` VARCHAR(100),
-    `transport_available` BOOLEAN DEFAULT FALSE,
+    `transport_available` VARCHAR(255),
     `experience_level` ENUM('básico', 'intermedio', 'avanzado') DEFAULT 'básico',
     `physical_condition` ENUM('buena', 'moderada', 'limitada') DEFAULT 'buena',
     `preferred_tasks` TEXT,

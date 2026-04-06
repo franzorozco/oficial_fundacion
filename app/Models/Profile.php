@@ -45,7 +45,7 @@ class Profile extends Model
 	protected $casts = [
 		'user_id' => 'int',
 		'birthdate' => 'datetime',
-		'transport_available' => 'bool'
+		'transport_available' => 'string'
 	];
 
 	protected $fillable = [
@@ -63,7 +63,9 @@ class Profile extends Model
 		'experience_level',
 		'physical_condition',
 		'preferred_tasks',
-		'languages_spoken'
+		'languages_spoken',
+		'latitude',
+		'longitude',
 	];
 
 	public function user()

@@ -12,7 +12,8 @@ use App\Http\Requests\CampaignRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use App\Models\User;
-use FPDF;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Transaction;
 use Illuminate\Support\Str;
@@ -348,197 +349,101 @@ class CampaignController extends Controller
     }
 
 
+public function search(Request $request)
+{
+    $query = Campaign::with(['user', 'events']);
 
+    $search = $request->input('q') ?? $request->input('search');
+
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%")
+              ->orWhereHas('user', function ($u) use ($search) {
+                  $u->where('name', 'like', "%{$search}%");
+              });
+        });
+    }
+
+    return response()->json(
+        $query->latest()->limit(20)->get()
+    );
+}
 
 
 
 
     // PARA PDF 
-     public function generatePdf(Request $request)
-    {
-        $search = $request->input('search');
-        $filters = $request->input('filters', []);
-        $minParticipantes = $request->input('min_participantes');
-        $maxParticipantes = $request->input('max_participantes');
+public function generatePdf(Request $request)
+{
+    $search = $request->input('search');
+    $filters = $request->input('filters', []);
+    $minParticipantes = $request->input('min_participantes');
+    $maxParticipantes = $request->input('max_participantes');
 
-        $campaigns = Campaign::with(['user', 'events.locations', 'events.participants'])
-            ->withCount('events')
-            ->withCount([
-                'events as total_participantes' => function ($query) {
-                    $query->join('event_participants', 'events.id', '=', 'event_participants.event_id');
-                },
-                'events as total_ubicaciones' => function ($query) {
-                    $query->join('event_locations', 'events.id', '=', 'event_locations.event_id')
-                        ->select(DB::raw('COUNT(DISTINCT event_locations.id)'));
-                }
-            ])
-            ->when($search, function ($query, $search) {
-                $query->where('name', 'like', "%$search%")
-                    ->orWhere('description', 'like', "%$search%")
-                    ->orWhereHas('user', function ($q) use ($search) {
-                        $q->where('name', 'like', "%$search%");
-                    });
-            })
-            ->when(in_array('activa', $filters), fn($q) => $q->whereDate('end_date', '>=', now()))
-            ->when(in_array('inactiva', $filters), fn($q) => $q->whereDate('end_date', '<', now()))
-            ->when(in_array('con_eventos', $filters), fn($q) => $q->has('events'))
-            ->when(in_array('sin_eventos', $filters), fn($q) => $q->doesntHave('events'))
-            ->when($minParticipantes !== null, fn($q) => $q->having('total_participantes', '>=', $minParticipantes))
-            ->when($maxParticipantes !== null, fn($q) => $q->having('total_participantes', '<=', $maxParticipantes))
-            ->when(in_array('mayor_eventos', $filters), fn($q) => $q->orderByDesc('events_count'))
-            ->when(in_array('multi_ubicacion', $filters), fn($q) => $q->having('total_ubicaciones', '>', 1))
-            ->when(in_array('eventos_largos', $filters), function ($query) {
-                $query->whereHas('events.locations', function ($q) {
-                    $q->whereRaw('TIMESTAMPDIFF(MINUTE, start_hour, end_hour) >= 180');
-                });
-            })
-            ->get();
-
-        $pdf = new FPDF('L', 'mm', 'A4');
-        $pdf->AddPage();
-        $pdf->SetFont('Arial', 'B', 14);
-        $pdf->Cell(0, 10, 'Lista de Campañas', 0, 1, 'C');
-        $pdf->Ln(3);
-
-        $pdf->SetFont('Arial', 'B', 8);
-        $pdf->SetFillColor(200, 220, 255);
-        $pdf->Cell(8, 8, 'No', 1, 0, 'C', true);
-        $pdf->Cell(28, 8, 'Creador', 1, 0, 'C', true);
-        $pdf->Cell(32, 8, 'Nombre Campaña', 1, 0, 'C', true);
-        $pdf->Cell(18, 8, 'Eventos', 1, 0, 'C', true);
-        $pdf->Cell(20, 8, 'N° Ubics.', 1, 0, 'C', true);
-        $pdf->Cell(45, 8, 'Ubicaciones', 1, 0, 'C', true);
-        $pdf->Cell(22, 8, 'Participantes', 1, 0, 'C', true);
-        $pdf->Cell(50, 8, 'Descripción', 1, 0, 'C', true);
-        $pdf->Cell(20, 8, 'Inicio', 1, 0, 'C', true);
-        $pdf->Cell(20, 8, 'Fin', 1, 1, 'C', true);
-
-        $pdf->SetFont('Arial', '', 7);
-
-        foreach ($campaigns as $index => $campaign) {
-            $ubicaciones = [];
-            foreach ($campaign->events as $event) {
-                foreach ($event->locations as $location) {
-                    $ubicaciones[] = $location->location_name;
-                }
+    $campaigns = Campaign::with(['user', 'events.locations', 'events.participants'])
+        ->withCount('events')
+        ->withCount([
+            'events as total_participantes' => function ($query) {
+                $query->join('event_participants', 'events.id', '=', 'event_participants.event_id');
+            },
+            'events as total_ubicaciones' => function ($query) {
+                $query->join('event_locations', 'events.id', '=', 'event_locations.event_id')
+                    ->select(DB::raw('COUNT(DISTINCT event_locations.id)'));
             }
-            $ubicaciones = implode(', ', array_unique($ubicaciones));
-            $ubicaciones = substr($ubicaciones, 0, 45);
+        ])
+        ->when($search, fn($q) => $q->where('name', 'like', "%$search%"))
+        ->get();
 
-            $pdf->Cell(8, 8, $index + 1, 1);
-            $pdf->Cell(28, 8, substr($campaign->user->name ?? '-', 0, 28), 1);
-            $pdf->Cell(32, 8, substr($campaign->name, 0, 32), 1);
-            $pdf->Cell(18, 8, $campaign->events_count, 1);
-            $pdf->Cell(20, 8, $campaign->total_ubicaciones, 1);
-            $pdf->Cell(45, 8, $ubicaciones ?: '-', 1);
-            $pdf->Cell(22, 8, $campaign->total_participantes ?? '0', 1);
-            $pdf->Cell(50, 8, substr($campaign->description, 0, 50), 1);
-            $pdf->Cell(20, 8, $campaign->start_date ?? '-', 1);
-            $pdf->Cell(20, 8, $campaign->end_date ?? '-', 1);
-            $pdf->Ln();
-        }
+    // 🔥 AUDITORÍA
+    $reportData = [
+        'generated_by' => Auth::check() ? Auth::user()->name : 'Sistema',
+        'generated_email' => Auth::check() ? Auth::user()->email : '-',
+        'date' => now()->format('d/m/Y'),
+        'time' => now()->format('H:i:s'),
+        'ip' => $request->ip(),
+        'user_agent' => $request->header('User-Agent'),
+        'total' => $campaigns->count(),
 
-        return response($pdf->Output('S'), 200)
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="campaigns.pdf"');
-    }
+        'filters' => [
+            'search' => $search,
+            'filters' => $filters,
+            'min_participantes' => $minParticipantes,
+            'max_participantes' => $maxParticipantes,
+        ]
+    ];
+
+    $pdf = Pdf::loadView('pdf.campaigns', compact('campaigns', 'reportData'))
+        ->setPaper('a4', 'landscape');
+
+    return $pdf->stream('reporte_campañas.pdf');
+}
 
 
-    public function generateReport($id)
-    {
-        $campaign = Campaign::with([
-            'user',
-            'events.user',
-            'events.eventLocations',
-            'events.eventParticipants.user',
-            'events.eventParticipants.eventLocation'
-        ])->findOrFail($id);
+public function generateReport($id, Request $request)
+{
+    $campaign = Campaign::with([
+        'user',
+        'events.user',
+        'events.eventLocations',
+        'events.eventParticipants.user',
+        'events.eventParticipants.eventLocation'
+    ])->findOrFail($id);
 
-        $pdf = new Fpdf();
-        $pdf->AddPage();
-        
-        // Encabezado
-        $pdf->SetFont('Arial', 'B', 16);
-        $pdf->Cell(0, 10, utf8_decode('FUNDACIÓN UNIFRANZ'), 0, 1, 'C');
-        $pdf->SetFont('Arial', '', 12);
-        $pdf->Cell(0, 10, utf8_decode('Recibo Oficial de Actividad Comunitaria'), 0, 1, 'C');
-        $pdf->Ln(5);
+    // 🔥 AUDITORÍA
+    $reportData = [
+        'generated_by' => Auth::check() ? Auth::user()->name : 'Sistema',
+        'generated_email' => Auth::check() ? Auth::user()->email : '-',
+        'date' => now()->format('d/m/Y'),
+        'time' => now()->format('H:i:s'),
+        'ip' => $request->ip(),
+        'user_agent' => $request->header('User-Agent'),
+        'campaign_id' => $campaign->id,
+    ];
 
-        // Información general
-        $pdf->SetFont('Arial', '', 12);
-        $pdf->Cell(0, 10, 'Fecha de Emisión: ' . date('d/m/Y'), 0, 1);
-        $pdf->Ln(3);
+    $pdf = Pdf::loadView('pdf.campaign_detail', compact('campaign', 'reportData'))
+        ->setPaper('a4', 'portrait');
 
-        $pdf->SetFont('Arial', 'B', 12);
-        $pdf->Cell(0, 10, 'DATOS DE LA CAMPAÑA', 0, 1);
-        $pdf->SetFont('Arial', '', 11);
-        $pdf->Cell(0, 8, 'Nombre: ' . $campaign->name, 0, 1);
-        $pdf->Cell(0, 8, 'Responsable: ' . ($campaign->user->name ?? 'N/A'), 0, 1);
-        $pdf->MultiCell(0, 8, 'Descripción: ' . $campaign->description, 0, 1);
-        $pdf->Cell(0, 8, 'Inicio: ' . $campaign->start_date, 0, 1);
-        $pdf->Cell(0, 8, 'Finalización: ' . $campaign->end_date, 0, 1);
-        $pdf->Ln(5);
-
-        if ($campaign->events->count()) {
-            foreach ($campaign->events as $event) {
-                $pdf->SetFont('Arial', 'B', 12);
-                $pdf->Cell(0, 10, 'Evento: ' . $event->name, 0, 1);
-                $pdf->SetFont('Arial', '', 11);
-                $pdf->MultiCell(0, 7, 'Descripción: ' . ($event->description ?? 'Sin descripción'), 0, 1);
-                $pdf->Cell(0, 7, 'Fecha: ' . $event->event_date, 0, 1);
-                $pdf->Cell(0, 7, 'Organizador: ' . ($event->user->name ?? 'N/A'), 0, 1);
-
-                // Ubicaciones
-                if ($event->eventLocations->count()) {
-                    $pdf->SetFont('Arial', 'I', 11);
-                    $pdf->Cell(0, 7, 'Ubicaciones del evento:', 0, 1);
-                    foreach ($event->eventLocations as $loc) {
-                        $pdf->SetFont('Arial', '', 11);
-                        $pdf->MultiCell(0, 6, '- ' . $loc->location_name . ' (' . ($loc->address ?? 'Dirección no disponible') . ')', 0, 1);
-                    }
-                } else {
-                    $pdf->Cell(0, 7, 'Ubicaciones: No registradas', 0, 1);
-                }
-
-                // Participantes
-                if ($event->eventParticipants->count()) {
-                    $pdf->SetFont('Arial', 'I', 11);
-                    $pdf->Cell(0, 7, 'Participantes:', 0, 1);
-                    foreach ($event->eventParticipants as $participant) {
-                        $user = $participant->user;
-                        $location = $participant->eventLocation;
-
-                        $pdf->SetFont('Arial', '', 11);
-                        $pdf->Cell(0, 6, '- Nombre: ' . ($user->name ?? 'Sin nombre'), 0, 1);
-                        $pdf->Cell(0, 6, '  Correo: ' . ($user->email ?? 'No disponible'), 0, 1);
-                        $pdf->Cell(0, 6, '  Edad: ' . ($user->edad ?? 'No registrada'), 0, 1);
-                        $pdf->Cell(0, 6, '  Estado: ' . $participant->status, 0, 1);
-                        if ($location) {
-                            $pdf->Cell(0, 6, '  Ubicación asignada: ' . $location->location_name, 0, 1);
-                        }
-                        $pdf->Ln(2);
-                    }
-                } else {
-                    $pdf->Cell(0, 7, 'Participantes: No registrados', 0, 1);
-                }
-
-                $pdf->Ln(5);
-            }
-        } else {
-            $pdf->Cell(0, 8, 'No se han registrado eventos en esta campaña.', 0, 1);
-        }
-
-        // Pie de recibo
-        $pdf->Ln(10);
-        $pdf->SetFont('Arial', 'I', 10);
-        $pdf->Cell(0, 6, utf8_decode('Este recibo certifica la realización de las actividades anteriormente descritas.'), 0, 1, 'C');
-        $pdf->Ln(15);
-        $pdf->Cell(0, 6, '___________________________', 0, 1, 'C');
-        $pdf->Cell(0, 6, 'Fundación UNIFRANZ', 0, 1, 'C');
-        $pdf->Cell(0, 6, 'La Paz - Bolivia', 0, 1, 'C');
-
-        return response($pdf->Output('S'), 200)
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="recibo_unifranz.pdf"');
-    }
+    return $pdf->stream("campaña_{$campaign->id}.pdf");
+}
 }

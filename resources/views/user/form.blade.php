@@ -82,7 +82,10 @@
     <div class="col-md-6">
         <div class="form-group mb-2">
             <label for="languages_spoken" class="form-label">Idiomas hablados</label>
-            <input type="text" name="languages_spoken" class="form-control" id="languages_spoken" placeholder="Ej: Español, Inglés" readonly>
+            <input type="text" name="languages_spoken" class="form-control"
+                id="languages_spoken"
+                value="{{ old('languages_spoken', $user?->profile?->languages_spoken) }}"
+                readonly>
             <div class="mt-2" id="language-options" class="d-flex flex-wrap gap-1">
                 @php
                     $idiomas = ['Español', 'Inglés', 'Francés', 'Portugués', 'Quechua', 'Aymara'];
@@ -98,7 +101,10 @@
     <div class="col-md-6">
         <div class="form-group mb-2">
             <label for="availability_days" class="form-label">Días disponibles</label>
-            <input type="text" name="availability_days" class="form-control" id="availability_days" placeholder="Ej: Lunes, Miércoles" readonly>
+            <input type="text" name="availability_days" class="form-control"
+                id="availability_days"
+                value="{{ old('availability_days', $user?->profile?->availability_days) }}"
+                readonly>
             <div class="mt-2" id="days-options" class="d-flex flex-wrap gap-1">
                 @php
                     $dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -115,7 +121,10 @@
     <div class="col-md-6">
         <div class="form-group mb-2">
             <label for="availability_hours" class="form-label">Horas disponibles</label>
-            <input type="text" name="availability_hours" class="form-control" id="availability_hours" placeholder="Ej: Mañana, Tarde" readonly>
+            <input type="text" name="availability_hours" class="form-control"
+                id="availability_hours"
+                value="{{ old('availability_hours', $user?->profile?->availability_hours) }}"
+                readonly>
             <div class="mt-2" id="hours-options" class="d-flex flex-wrap gap-1">
                 @php
                     $horas = ['Mañana', 'Medio día', 'Tarde', 'Noche', 'Todo el día'];
@@ -132,7 +141,10 @@
     <div class="col-md-6">
         <div class="form-group mb-2">
             <label for="transport_available" class="form-label">Tipos de transporte</label>
-            <input type="text" name="transport_available" class="form-control" id="transport_available" placeholder="Ej: Bicicleta, Auto" readonly>
+            <input type="text" name="transport_available" class="form-control"
+                id="transport_available"
+                value="{{ old('transport_available', $user?->profile?->transport_available) }}"
+                readonly>
             <div class="mt-2" id="transport-options" class="d-flex flex-wrap gap-1">
                 @php
                     $transportes = ['A pie', 'Bicicleta', 'Moto', 'Auto', 'Camioneta', 'Transporte público'];
@@ -205,134 +217,105 @@
 </div> 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2GCanK5Gxm26zDyPrKc7MNy7WhAJZK7M&callback=initMap" async defer></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const languageInput = document.getElementById('languages_spoken');
-    const dayInput = document.getElementById('availability_days');
-
-    const selectedLanguages = new Set();
-    const selectedDays = new Set();
-
-    document.querySelectorAll('.language-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const lang = btn.textContent.trim();
-            if (selectedLanguages.has(lang)) {
-                selectedLanguages.delete(lang);
-                btn.classList.remove('btn-dark');
-                btn.classList.add('btn-outline-dark');
-            } else {
-                selectedLanguages.add(lang);
-                btn.classList.add('btn-dark');
-                btn.classList.remove('btn-outline-dark');
-            }
-            languageInput.value = Array.from(selectedLanguages).join(', ');
-        });
-    });
-
-    document.querySelectorAll('.day-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const day = btn.textContent.trim();
-            if (selectedDays.has(day)) {
-                selectedDays.delete(day);
-                btn.classList.remove('btn-dark btn-sm');
-                btn.classList.add('btn-outline-dark');
-            } else {
-                selectedDays.add(day);
-                btn.classList.add('btn-dark btn-sm');
-                btn.classList.remove('btn-outline-dark');
-            }
-            dayInput.value = Array.from(selectedDays).join(', ');
-        });
-    });
-});
 
 document.addEventListener('DOMContentLoaded', () => {
+
     function setupSelection(inputId, buttonClass) {
-        const input = document.getElementById(inputId);
-        const buttons = document.querySelectorAll(`.${buttonClass}`);
-        let selected = [];
+    const input = document.getElementById(inputId);
+    const buttons = document.querySelectorAll(`.${buttonClass}`);
 
-        buttons.forEach(button => {
-            button.addEventListener('click', () => {
-                const value = button.textContent;
-                const index = selected.indexOf(value);
+    let selected = [];
 
-                if (index === -1) {
-                    selected.push(value);
-                    button.classList.add('active');
-                } else {
-                    selected.splice(index, 1);
-                    button.classList.remove('active');
-                }
-
-                input.value = selected.join(', ');
-            });
-        });
+    if (input.value && input.value.trim() !== '') {
+        selected = input.value
+            .split(',')
+            .map(v => v.trim().toLowerCase());
     }
+
+    buttons.forEach(button => {
+        const value = button.textContent.trim();
+        const normalizedValue = value.toLowerCase();
+
+        if (selected.includes(normalizedValue)) {
+            button.classList.add('btn-dark');
+            button.classList.remove('btn-outline-dark');
+        }
+
+        button.addEventListener('click', () => {
+            const index = selected.indexOf(normalizedValue);
+
+            if (index === -1) {
+                selected.push(normalizedValue);
+                button.classList.add('btn-dark');
+                button.classList.remove('btn-outline-dark');
+            } else {
+                selected.splice(index, 1);
+                button.classList.remove('btn-dark');
+                button.classList.add('btn-outline-dark');
+            }
+
+            input.value = selected
+                .map(val => val.charAt(0).toUpperCase() + val.slice(1))
+                .join(', ');
+        });
+    });
+}
+
     setupSelection('languages_spoken', 'language-btn');
     setupSelection('availability_days', 'day-btn');
     setupSelection('availability_hours', 'hour-btn');
     setupSelection('transport_available', 'transport-btn');
+
 });
 
 document.addEventListener('DOMContentLoaded', () => {
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
-    const locationInput = document.getElementById('location'); // país + departamento
-    const addressInput = document.getElementById('address');   // dirección exacta (calle, zona, etc.)
+    const locationInput = document.getElementById('location');
+    const addressInput = document.getElementById('address');
 
     let map, marker, geocoder;
 
-    function initMap() {
-        // Obtén lat y lng desde los inputs, si existen y son válidos
-        const latInput = document.getElementById('latitude').value;
-        const lngInput = document.getElementById('longitude').value;
+window.initMap = function () {
+    geocoder = new google.maps.Geocoder();
 
-        // Convierte a float
-        const lat = parseFloat(latInput);
-        const lng = parseFloat(lngInput);
+    const latInput = document.getElementById('latitude').value;
+    const lngInput = document.getElementById('longitude').value;
 
-        // Si lat o lng no son números válidos, pon valores por defecto
-        const initialLat = !isNaN(lat) ? lat : -16.5; // Ej: latitud de Bolivia
-        const initialLng = !isNaN(lng) ? lng : -68.15; // Ej: longitud de Bolivia
+    const lat = parseFloat(latInput);
+    const lng = parseFloat(lngInput);
 
-        // Crea el mapa centrado en la ubicación o valor por defecto
-        const map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 12,
-            center: { lat: initialLat, lng: initialLng },
-        });
+    const initialLat = !isNaN(lat) ? lat : -16.5;
+    const initialLng = !isNaN(lng) ? lng : -68.15;
 
-        // Crea un marcador si hay lat y lng válidos
-        let marker = null;
-        if (!isNaN(lat) && !isNaN(lng)) {
-            marker = new google.maps.Marker({
-                position: { lat, lng },
-                map: map,
-                draggable: true
-            });
-        } else {
-            // Si quieres, crea un marcador inicial en el centro y que sea draggable
-            marker = new google.maps.Marker({
-                position: { lat: initialLat, lng: initialLng },
-                map: map,
-                draggable: true
-            });
-        }
+    map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 12,
+        center: { lat: initialLat, lng: initialLng },
+    });
 
-        // Evento para actualizar inputs cuando se mueve el marcador
-        marker.addListener('dragend', function() {
-            const position = marker.getPosition();
-            document.getElementById('latitude').value = position.lat();
-            document.getElementById('longitude').value = position.lng();
-        });
+    marker = new google.maps.Marker({
+        position: { lat: initialLat, lng: initialLng },
+        map: map,
+        draggable: true
+    });
 
-        // Opcional: si quieres que al hacer click en el mapa cambie el marcador y los inputs
-        map.addListener('click', function(event) {
-            const clickedLocation = event.latLng;
-            marker.setPosition(clickedLocation);
-            document.getElementById('latitude').value = clickedLocation.lat();
-            document.getElementById('longitude').value = clickedLocation.lng();
-        });
-    }
+    marker.addListener('dragend', function () {
+        const position = marker.getPosition();
+        
+        document.getElementById('latitude').value = position.lat();
+        document.getElementById('longitude').value = position.lng();
+        updateLocation(position.lat(), position.lng()); // 🔥 AQUI
+    });
+
+    map.addListener('click', function (event) {
+        marker.setPosition(event.latLng);
+
+        document.getElementById('latitude').value = event.latLng.lat();
+        document.getElementById('longitude').value = event.latLng.lng();
+        updateLocation(event.latLng.lat(), event.latLng.lng()); // 🔥 AQUI
+    });
+    
+};
 
 
     function updateLocation(lat, lng) {
@@ -343,9 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
         geocoder.geocode({ location: latlng }, (results, status) => {
             if (status === 'OK') {
                 if (results[0]) {
-                    // Buscar componentes del address
                     const addressComponents = results[0].address_components;
-                    // Extraer país y departamento
                     let country = '';
                     let department = '';
                     let street = '';
@@ -364,11 +345,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
 
-                    // Ubicación: País + Departamento
                     locationInput.value = `${country}${department ? ', ' + department : ''}`;
 
-                    // Dirección: calle + zona + etc
-                    // Si el resultado tiene un formato (por ejemplo, línea completa de dirección), lo usamos
                     addressInput.value = results[0].formatted_address;
 
                 } else {

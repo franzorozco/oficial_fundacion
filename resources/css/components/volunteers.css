@@ -1,0 +1,9 @@
+/* SOLO SI QUIERES AISLAR ESTA VISTA */
+#extraFilters {
+    /* puedes dejar vacío o overrides específicos */
+}
+
+/* ESPACIADO PARTICULAR DE ESTA PÁGINA */
+#extraFilters .d-flex.flex-wrap {
+    gap: 8px;
+}

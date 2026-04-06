@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\StatusController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\RoleController;
@@ -72,14 +72,9 @@ Route::get('/completed/thank-you', function () {
 
 
 
-
-
-
-
-
 Route::get('/api/external-donors', [ExternalDonorController::class, 'search'])->name('api.external-donors');
 Route::get('/api/users', [UserController::class, 'search'])->name('api.users');
-Route::get('/api/receivers', [ReceiverController::class, 'search'])->name('api.receivers');
+Route::get('/api/receivers', [UserController::class, 'search'])->name('api.receivers');
 Route::get('/api/statuses', [StatusController::class, 'search'])->name('api.statuses');
 Route::get('/api/campaigns', [CampaignController::class, 'search'])->name('api.campaigns');
 
@@ -97,15 +92,14 @@ Route::get('/donations-incoming/pdf/all', [DonationsIncomingController::class, '
 
 
 
-
  
 Route::get('/donations-incoming/historial', [DonationsIncomingController::class, 'history'])->name('donations-incoming.history');
 Route::get('/volunteer-verifications/mis-decisiones', [VolunteerVerificationController::class, 'misDecisiones'])->name('volunteer-verifications.mis-decisiones');
 Route::post('/volunteer-verifications/{id}/reconsiderar', [VolunteerVerificationController::class, 'reconsiderar'])->name('volunteer-verifications.reconsiderar');
-Route::get('/donations-incoming/{id}/reconsiderar', [DonationsIncomingController::class, 'reconsiderar'])->name('donations-incoming.reconsiderar');
 
 
-Route::post('/donations-incoming/{id}/reconsiderar', [DonationsIncomingController::class, 'reconsider'])->name('donations-incoming.reconsider');
+Route::post('/donations-incoming/{id}/reconsiderar', [DonationsIncomingController::class, 'reconsiderar'])
+    ->name('donations-incoming.reconsiderar');
 Route::get('/donations-incoming/pdf', [DonationsIncomingController::class, 'decisionPdf'])->name('donations-incoming.export-pdf');
 Route::get('/campaign-finances/export-pdf', [CampaignFinanceController::class, 'exportPdf'])->name('campaign-finances.export-pdf');
 Route::get('/donations-cashes/pdf', [DonationsCashController::class, 'exportPdf'])->name('donations-cashes.pdf');
@@ -192,8 +186,8 @@ Route::patch('/event-participants/{id}/restore', [EventParticipantController::cl
 Route::delete('/event-participants/{id}/force-delete', [EventParticipantController::class, 'forceDelete'])->name('event-participants.forceDelete');
 
 /*  ACEPTACIONES Y RECHAZOS */
-Route::post('/donations-incoming/{donation}/accept', [DonationController::class, 'accept'])->name('donations-incoming.accept');
-Route::post('/donations-incoming/{donation}/reject', [DonationController::class, 'reject'])->name('donations-incoming.reject');
+Route::post('/donations/{donation}/accept', [DonationController::class, 'accept'])->name('donations-incoming.accept');
+Route::post('/donations/{donation}/reject', [DonationController::class, 'reject'])->name('donations-incoming.reject');
 
 Route::post('/volunteer-verifications/{id}/approve', [VolunteerVerificationController::class, 'approve'])->name('volunteer-verifications.approve');
 Route::post('/volunteer-verifications/{id}/reject', [VolunteerVerificationController::class, 'reject'])->name('volunteer-verifications.reject');
@@ -239,7 +233,7 @@ Route::resource('external-donors', ExternalDonorController::class);
 Route::resource('financial-accounts', FinancialAccountController::class);
 Route::resource('notifications', NotificationController::class);
 Route::resource('profiles', ProfileController::class);
-Route::resource('transactions', TransactionController::class);
+Route::resource('transactions', TransactionController::class)   ;
 Route::resource('volunteer-verifications', VolunteerVerificationController::class);
 Route::resource('roles', RoleController::class)->names('roles');
 Route::resource('tasks', TaskController::class);
@@ -253,3 +247,7 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
 
 Route::get('/verify-2fa', [TwoFactorController::class, 'index'])->name('2fa.verify');
 Route::post('/verify-2fa', [TwoFactorController::class, 'verify'])->name('2fa.check');
+
+
+
+

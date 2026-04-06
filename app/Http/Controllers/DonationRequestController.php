@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-use FPDF;
-use Illuminate\Support\Str;
+
+
 
 use App\Models\DonationRequest;
 use Illuminate\Http\RedirectResponse;
@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\Donation;
 use Illuminate\Support\Facades\Auth;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DonationRequestController extends Controller
 {
@@ -149,56 +150,58 @@ class DonationRequestController extends Controller
     }
 
 
+public function exportPdf(Request $request)
+{
+    $query = DonationRequest::with(['applicantUser', 'userInCharge', 'donation']);
 
-
-    public function exportPdf(Request $request)
-    {
-        $query = DonationRequest::query();
-
-        if ($search = $request->input('search')) {
-            $query->where('notes', 'LIKE', "%{$search}%")
-                ->orWhere('state', 'LIKE', "%{$search}%")
-                ->orWhereHas('user', fn($q) =>
-                    $q->where('name', 'LIKE', "%{$search}%")
+    // 🔎 Filtros
+    if ($request->filled('search')) {
+        $query->where(function ($q) use ($request) {
+            $q->where('notes', 'like', '%' . $request->search . '%')
+              ->orWhere('state', 'like', '%' . $request->search . '%')
+              ->orWhereHas('applicantUser', fn($q2) =>
+                    $q2->where('name', 'like', '%' . $request->search . '%')
                 )
-                ->orWhereHas('userInCharge', fn($q) =>
-                    $q->where('name', 'LIKE', "%{$search}%")
+              ->orWhereHas('userInCharge', fn($q3) =>
+                    $q3->where('name', 'like', '%' . $request->search . '%')
                 );
-        }
-
-        $donationRequests = $query->with(['user', 'userInCharge', 'donation'])->get();
-
-        $pdf = new Fpdf();
-        $pdf->AddPage('L');
-        $pdf->SetFont('Arial', 'B', 12);
-        $pdf->Cell(0, 10, utf8_decode('Reporte de Solicitudes de Donación'), 0, 1, 'C');
-
-        $pdf->SetFont('Arial', 'B', 10);
-        $pdf->Cell(10, 8, 'No', 1);
-        $pdf->Cell(40, 8, 'Solicitante', 1);
-        $pdf->Cell(40, 8, 'Encargado', 1);
-        $pdf->Cell(25, 8, 'Donación ID', 1);
-        $pdf->Cell(30, 8, 'Fecha', 1);
-        $pdf->Cell(60, 8, 'Notas', 1);
-        $pdf->Cell(25, 8, 'Estado', 1);
-        $pdf->Ln();
-
-        $pdf->SetFont('Arial', '', 10);
-        $i = 1;
-        foreach ($donationRequests as $req) {
-            $pdf->Cell(10, 8, $i++, 1);
-            $pdf->Cell(40, 8, utf8_decode(optional($req->user)->name ?? 'N/A'), 1);
-            $pdf->Cell(40, 8, utf8_decode(optional($req->userInCharge)->name ?? 'N/A'), 1);
-            $pdf->Cell(25, 8, $req->donation_id ?? 'N/A', 1);
-            $pdf->Cell(30, 8, $req->request_date, 1);
-            $pdf->Cell(60, 8, utf8_decode(Str::limit($req->notes, 35)), 1);
-            $pdf->Cell(25, 8, $req->state, 1);
-            $pdf->Ln();
-        }
-
-        $pdf->Output();
-        exit;
+        });
     }
+
+    if ($request->filled('state')) {
+        $query->where('state', $request->state);
+    }
+
+    if ($request->filled('from_date')) {
+        $query->whereDate('request_date', '>=', $request->from_date);
+    }
+
+    if ($request->filled('to_date')) {
+        $query->whereDate('request_date', '<=', $request->to_date);
+    }
+
+    if ($request->filled('user_in_charge_id')) {
+        $query->where('user_in_charge_id', $request->user_in_charge_id);
+    }
+
+    $donationRequests = $query->get();
+
+    // 📊 Auditoría
+    $reportData = [
+        'date' => now()->format('d/m/Y'),
+        'time' => now()->format('H:i'),
+        'generated_by' => Auth::user()->name ?? 'Sistema',
+        'generated_email' => Auth::user()->email ?? '-',
+        'ip' => $request->ip(),
+        'user_agent' => $request->header('User-Agent'),
+        'total' => $donationRequests->count(),
+    ];
+
+    $pdf = Pdf::loadView('pdf.donation-requests', compact('donationRequests', 'reportData'))
+        ->setPaper('a4', 'landscape');
+
+    return $pdf->stream('reporte_solicitudes_donacion.pdf');
+}
 
     public function trashed(Request $request): View
     {

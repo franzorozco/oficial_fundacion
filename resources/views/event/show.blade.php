@@ -1,320 +1,790 @@
 @extends('adminlte::page')
-@section('title', $event->name ?? __('Show') . ' ' . __('Event'))
+
+@section('title', $event->name ?? 'Evento')
+
 @section('content_header')
-    <h1>{{ __('Show') }} Event</h1>
+<div class="d-flex justify-content-between align-items-center">
+    <h1 class="mb-0">{{ $event->name }}</h1>
+
+    <a class="btn btn-outline-secondary btn-sm" href="{{ route('events.index') }}">
+        <i class="fas fa-arrow-left"></i> Volver
+    </a>
+</div>
 @endsection
+
 @section('content')
-    {{-- Información del Evento --}}
-    <div class="card shadow-sm rounded">
-        <div class="card-header d-flex justify-content-between align-items-center bg-dark text-white">
-            <h3 class="mb-0">{{ __('Show') }} {{ $event->name }}</h3>
-            <a class="btn btn-outline-light btn-sm" href="{{ route('events.index') }}">
-                <i class="fas fa-arrow-left"></i> {{ __('Back') }}
-            </a>
-        </div>
-        <div class="card-body bg-light">
-            <dl class="row">
-                <dt class="col-sm-3">Campaña:</dt>
-                <dd class="col-sm-9">{{ $event->campaign->name }}</dd>
 
-                <dt class="col-sm-3">Creador:</dt>
-                <dd class="col-sm-9">{{ $event->user->name }}</dd>
+<!-- ===================== INFO EVENTO ===================== -->
+<div class="card shadow-sm border-0 mb-4">
 
-                <dt class="col-sm-3">Nombre:</dt>
-                <dd class="col-sm-9">{{ $event->name }}</dd>
-
-                <dt class="col-sm-3">Descripción:</dt>
-                <dd class="col-sm-9">{{ $event->description }}</dd>
-
-                <dt class="col-sm-3">Fecha del Evento:</dt>
-                <dd class="col-sm-9">{{ $event->event_date }}</dd>
-            </dl>
-        </div>
+    <div class="card-header bg-white border-bottom">
+        <h5 class="mb-0">Información del evento</h5>
     </div>
 
-    {{-- Ubicaciones --}}
-    <div class="mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h4 class="mb-0">Ubicaciones del Evento</h4>
-            <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalNuevaUbicacion">
-                + Nueva Ubicación
-            </button>
-            <!-- Correcto para Bootstrap 5 -->
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#modalUbicacionesAnteriores">
-                <i class="fas fa-history"></i> Ubicaciones Anteriores
-            </button>
-        </div>
+    <div class="card-body">
+        <div class="row g-3">
 
-        <div class="row">
-            @foreach($event->eventLocations as $location)
-                <div class="col-md-4 mb-3">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <div id="map-{{ $location->id }}" style="width: 100%; height: 200px;" class="mb-3 rounded bg-secondary"></div>
-                            <h5 class="card-title">{{ $location->location_name }}</h5>
-                            <p class="card-text mb-1">
-                                <strong>Dirección:</strong> {{ $location->address ?? 'No especificada' }}<br>
-                                <strong>Latitud:</strong> {{ $location->latitud ?? 'N/A' }}<br>
-                                <strong>Longitud:</strong> {{ $location->longitud ?? 'N/A' }}<br>
-                                <strong>Registrado:</strong> {{ optional($location->created_at)->format('d/m/Y H:i') }}<br>
-                                <strong>Hora de Inicio:</strong> {{ $location->start_hour ? \Carbon\Carbon::parse($location->start_hour)->format('H:i') : 'No definida' }}<br>
-                                <strong>Hora de Fin:</strong> {{ $location->end_hour ? \Carbon\Carbon::parse($location->end_hour)->format('H:i') : 'No definida' }}
-                            </p>
-                            <div class="d-flex gap-2 mt-2">
-                                <a href="{{ route('event-locations.show', $location->id) }}" class="btn btn-outline-info btn-sm">Ver</a>
-                                <a href="{{ route('event-locations.edit', $location->id) }}" class="btn btn-outline-warning btn-sm">Editar</a>
-                                <form action="{{ route('event-locations.destroy', $location->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar esta ubicación?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-outline-danger btn-sm" type="submit">Eliminar</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded">
+                    <small class="text-muted">Campaña</small>
+                    <div class="fw-semibold">{{ $event->campaign->name }}</div>
                 </div>
-            @endforeach
+            </div>
+
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded">
+                    <small class="text-muted">Creador</small>
+                    <div>{{ $event->user->name }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded">
+                    <small class="text-muted">Nombre</small>
+                    <div>{{ $event->name }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded">
+                    <small class="text-muted">Fecha</small>
+                    <div>{{ $event->event_date }}</div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="p-3 bg-light rounded">
+                    <small class="text-muted">Descripción</small>
+                    <div>{{ $event->description ?? 'Sin descripción' }}</div>
+                </div>
+            </div>
+
         </div>
     </div>
+</div>
 
-    {{-- Participantes --}}
-    <div class="mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-            <h4 class="mb-0">Participantes del Evento</h4>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalAgregarParticipante">
-                    + Agregar Participante
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#modalParticipantesEliminados">
-                    <i class="fas fa-user-slash"></i> Eliminados
-                </button>
+<!-- ===================== UBICACIONES ===================== -->
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="mb-0">Ubicaciones</h4>
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalNuevaUbicacion">
+            <i class="fas fa-map-marker-alt"></i> Nueva
+        </button>
+
+        <button class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#modalUbicacionesAnteriores">
+            <i class="fas fa-history"></i> Eliminadas
+        </button>
+    </div>
+</div>
+
+<div class="row">
+
+@forelse($event->eventLocations as $location)
+
+    <div class="col-md-6 col-lg-4 mb-4">
+
+        <div class="card shadow-sm border-0 h-100">
+
+            <div class="card-body">
+
+                <!-- MAPA -->
+                <div id="map-{{ $location->id }}"
+                    class="rounded bg-secondary mb-3"
+                    style="height:200px;">
+                </div>
+
+                <!-- TITULO -->
+                <h5 class="fw-bold mb-2">
+                    {{ $location->location_name }}
+                </h5>
+
+                <hr>
+
+                <!-- INFO -->
+                <div class="small text-muted">
+
+                    <div class="mb-2">
+                        <strong>Dirección:</strong><br>
+                        {{ $location->address ?? 'No especificada' }}
+                    </div>
+
+                    <div class="mb-2">
+                        <strong>Lat:</strong> {{ $location->latitud ?? 'N/A' }}<br>
+                        <strong>Lng:</strong> {{ $location->longitud ?? 'N/A' }}
+                    </div>
+
+                    <div class="mb-2">
+                        <strong>Registro:</strong><br>
+                        {{ optional($location->created_at)->format('d/m/Y H:i') }}
+                    </div>
+
+                    <div>
+                        <strong>Horario:</strong><br>
+                        {{ $location->start_hour ? \Carbon\Carbon::parse($location->start_hour)->format('H:i') : '--' }}
+                        -
+                        {{ $location->end_hour ? \Carbon\Carbon::parse($location->end_hour)->format('H:i') : '--' }}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- ACCIONES -->
+            <div class="card-footer bg-white border-0">
+
+                <div class="btn-group w-100">
+
+                    <a href="{{ route('event-locations.show', $location->id) }}"
+                        class="btn btn-outline-info btn-sm">
+                        Ver
+                    </a>
+
+                    <a href="{{ route('event-locations.edit', $location->id) }}"
+                        class="btn btn-outline-warning btn-sm">
+                        Editar
+                    </a>
+
+                    <form action="{{ route('event-locations.destroy', $location->id) }}"
+                        method="POST"
+                        onsubmit="return confirm('¿Eliminar ubicación?')">
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn btn-outline-danger btn-sm">
+                            Eliminar
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+@empty
+
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center text-muted py-5">
+                <i class="fas fa-map-marker-alt fa-2x mb-2"></i><br>
+                No hay ubicaciones registradas en este evento
             </div>
         </div>
+    </div>
+
+@endforelse
+
+</div>
+
+
+<!-- ===================== PARTICIPANTES ===================== -->
+<div class="mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h4 class="mb-0">Participantes</h4>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalAgregarParticipante">
+                + Participante
+            </button>
+
+            <button class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#modalParticipantesEliminados">
+                <i class="fas fa-user-slash"></i> Eliminados
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
 
         @forelse($event->eventParticipants as $participant)
-            @php
-                $user = $participant->user;
-                $profilePhoto = $user->profile_photo
-                    ? asset('storage/' . $user->profile_photo)
-                    : asset('storage/users/user_default.jpg');
-            @endphp
 
-            <div class="card mb-3 shadow-sm">
-                <div class="card-body d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <img src="{{ $profilePhoto }}" alt="Foto de {{ $user->name }}" class="rounded-circle shadow" style="width: 80px; height: 80px; object-fit: cover;">
-                        <div>
-                            <h5 class="mb-1">{{ $user->name ?? 'Sin nombre' }}</h5>
-                            <div class="text-muted small">
-                                <div><strong>Email:</strong> {{ $user->email ?? 'No disponible' }}</div>
-                                <div><strong>Registro:</strong> {{ $participant->registration_date }}</div>
-                                <div><strong>Estado:</strong> {{ ucfirst($participant->status) }}</div>
-                                <div><strong>Observaciones:</strong> {{ $participant->observations ?? 'Ninguna' }}</div>
-                            </div>
-                        </div>
+        @php
+            $user = $participant->user;
+            $profilePhoto = $user->profile_photo
+                ? asset('storage/' . $user->profile_photo)
+                : asset('storage/users/user_default.jpg');
+        @endphp
+
+        <div class="col-md-6 col-lg-4 mb-4">
+
+            <div class="card shadow-sm border-0 h-100">
+
+                <div class="card-body text-center">
+
+                    <!-- FOTO -->
+                    <img src="{{ $profilePhoto }}"
+                        class="rounded-circle shadow mb-3"
+                        style="width:80px; height:80px; object-fit:cover;">
+
+                    <!-- NOMBRE -->
+                    <h5 class="fw-bold mb-1">{{ $user->name }}</h5>
+
+                    <!-- EMAIL -->
+                    <div class="text-muted small mb-2">
+                        {{ $user->email }}
                     </div>
-                    <div class="d-flex gap-2">
-                        <a href="{{ route('users.show', $user->id) }}" class="btn btn-outline-info btn-sm">Ver</a>
-                        <form action="{{ route('event-participants.destroy', $participant->id) }}" method="POST" onsubmit="return confirm('¿Eliminar participante del evento?')">
+
+                    <hr>
+
+                    <!-- INFO -->
+                    <div class="small text-muted text-start">
+
+                        <div class="mb-1">
+                            <strong>Registro:</strong><br>
+                            {{ $participant->registration_date }}
+                        </div>
+
+                        <div class="mb-1">
+                            <strong>Estado:</strong>
+                            <span class="badge bg-{{ $participant->status == 'activo' ? 'success' : 'secondary' }}">
+                                {{ ucfirst($participant->status) }}
+                            </span>
+                        </div>
+
+                        <div>
+                            <strong>Observaciones:</strong><br>
+                            {{ $participant->observations ?? 'Ninguna' }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- ACCIONES -->
+                <div class="card-footer bg-white border-0">
+
+                    <div class="btn-group w-100">
+
+                        <a href="{{ route('users.show', $user->id) }}"
+                            class="btn btn-outline-info btn-sm">
+                            Ver
+                        </a>
+
+                        <form action="{{ route('event-participants.destroy', $participant->id) }}"
+                            method="POST"
+                            onsubmit="return confirm('¿Eliminar participante?')">
                             @csrf
                             @method('DELETE')
-                            <button class="btn btn-outline-danger btn-sm" type="submit">Eliminar</button>
+                            <button class="btn btn-outline-danger btn-sm">
+                                Eliminar
+                            </button>
                         </form>
+
                     </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        @empty
+
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center text-muted">
+                    <i class="fas fa-user-times fa-2x mb-2"></i><br>
+                    No hay participantes registrados en este evento.
                 </div>
             </div>
-        @empty
-            <p class="text-muted">No hay participantes registrados en este evento.</p>
+        </div>
+
         @endforelse
+
     </div>
 
+</div>
 
-    <!-- Modal Nueva Ubicación -->
-    <div class="modal fade" id="modalNuevaUbicacion" tabindex="-1" aria-labelledby="modalNuevaUbicacionLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <form action="{{ route('event-locations.store') }}" method="POST">
+<!-- ===================== MODAL NUEVA UBICACION ===================== -->
+<div class="modal fade" id="modalNuevaUbicacion" tabindex="-1" aria-hidden="true">
+    
+    <!-- IMPORTANTE: centrado + ancho grande -->
+    <div class="modal-dialog modal-dialog-centered modal-xl" style="max-width: 95%;">
+        
+        <form action="{{ route('event-locations.store') }}" method="POST" class="w-100">
             @csrf
             <input type="hidden" name="event_id" value="{{ $event->id }}">
-            <div class="modal-content">
-                <div class="modal-header">
-                <h5 class="modal-title" id="modalNuevaUbicacionLabel">Nueva Ubicación del Evento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                    <label for="location_name" class="form-label">Nombre del lugar</label>
-                    <input type="text" class="form-control" name="location_name" required>
-                    </div>
-                    <div class="col-md-6">
-                    <label for="address" class="form-label">Dirección</label>
-                    <input type="text"es class="form-control" name="address" id="direccion" readonly>
-                    </div>
-                    <div class="col-md-4">
-                    <label for="latitud" class="form-label">Latitud</label>
-                    <input type="text" class="form-control" name="latitud" id="latitud" readonly>
-                    </div>
-                    <div class="col-md-4">
-                    <label for="longitud" class="form-label">Longitud</label>
-                    <input type="text" class="form-control" name="longitud" id="longitud" readonly>
-                    </div>
-                    <div class="col-md-2">
-                    <label for="start_hour" class="form-label">Hora Inicio</label>
-                    <input type="time" class="form-control" name="start_hour">
-                    </div>
-                    <div class="col-md-2">
-                    <label for="end_hour" class="form-label">Hora Fin</label>
-                    <input type="time" class="form-control" name="end_hour">
-                    </div>
-                    <div class="col-12">
-                    <label class="form-label">Ubicación en el mapa</label>
-                    <div id="nuevoMapa" style="width: 100%; height: 400px;" class="rounded border"></div>
-                    </div>
-                </div>
-                </div>
-                <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Guardar Ubicación</button>
-                </div>
-            </div>
-            </form>
-        </div>
-    </div>
 
-    <!-- Modal ubicaciones eliminadas-->
-    <div class="modal fade" id="modalUbicacionesAnteriores" tabindex="-1" aria-labelledby="modalUbicacionesAnterioresLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header bg-secondary text-white">
-                    <h5 class="modal-title" id="modalUbicacionesAnterioresLabel">Ubicaciones Eliminadas</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+
+                <!-- HEADER -->
+                <div class="modal-header bg-white border-bottom px-4 py-3">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0">Nueva ubicación</h5>
+                        <small class="text-muted">
+                            Haz clic en el mapa para autocompletar los datos
+                        </small>
+                    </div>
+
+                    <button type="button" class="btn-close" data-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+
+                <!-- BODY -->
+                <div class="modal-body p-4">
+
+                    <div class="row g-4">
+
+                        <!-- ================= FORM ================= -->
+                        <div class="col-lg-4">
+
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+
+                                    <h6 class="fw-bold mb-3">Datos</h6>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Nombre del lugar</label>
+                                        <input type="text"
+                                            name="location_name"
+                                            class="form-control"
+                                            placeholder="Ej: Plaza principal"
+                                            required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Dirección</label>
+                                        <input type="text"
+                                            name="address"
+                                            id="direccion"
+                                            class="form-control bg-light"
+                                            readonly>
+                                        <small class="text-muted">Se llena automáticamente</small>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-6 mb-3">
+                                            <label class="form-label fw-semibold">Latitud</label>
+                                            <input type="text"
+                                                name="latitud"
+                                                id="latitud"
+                                                class="form-control bg-light"
+                                                readonly>
+                                        </div>
+
+                                        <div class="col-6 mb-3">
+                                            <label class="form-label fw-semibold">Longitud</label>
+                                            <input type="text"
+                                                name="longitud"
+                                                id="longitud"
+                                                class="form-control bg-light"
+                                                readonly>
+                                        </div>
+                                    </div>
+
+                                    <hr>
+
+                                    <h6 class="fw-bold mb-3">Horario (opcional)</h6>
+
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <label class="form-label">Inicio</label>
+                                            <input type="time"
+                                                name="start_hour"
+                                                class="form-control">
+                                        </div>
+
+                                        <div class="col-6">
+                                            <label class="form-label">Fin</label>
+                                            <input type="time"
+                                                name="end_hour"
+                                                class="form-control">
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- ================= MAPA ================= -->
+                        <div class="col-lg-8">
+
+                            <div class="card border-0 shadow-sm h-100">
+
+                                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold mb-0">Mapa</h6>
+                                    <small class="text-muted">Selecciona una ubicación</small>
+                                </div>
+
+                                <div class="card-body p-2">
+
+                                    <div id="nuevoMapa"
+                                        class="rounded"
+                                        style="width: 100%; height: 500px;">
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- FOOTER -->
+                <div class="modal-footer bg-white border-top px-4 py-3 d-flex justify-content-between">
+
+                    <button type="button"
+                        class="btn btn-outline-secondary"
+                        data-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit"
+                        class="btn btn-primary px-4">
+                        <i class="fas fa-save"></i> Guardar ubicación
+                    </button>
+
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ===================== MODAL UBICACIONES ELIMINADAS ===================== -->
+<div class="modal fade" id="modalUbicacionesAnteriores" tabindex="-1" aria-labelledby="modalUbicacionesAnterioresLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+
+        <div class="modal-content border-0 shadow">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-white border-bottom">
+                <div>
+                    <h5 class="modal-title mb-0">Ubicaciones eliminadas</h5>
+                    <small class="text-muted">Puedes restaurarlas o eliminarlas definitivamente</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <div class="row">
+
                     @forelse($event->eventLocationsTrashed as $location)
-                        <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ $location->location_name }}</h5>
-                            <p class="card-text">
-                            <strong>Dirección:</strong> {{ $location->address ?? 'No especificada' }}<br>
-                            <strong>Latitud:</strong> {{ $location->latitud ?? 'N/A' }}<br>
-                            <strong>Longitud:</strong> {{ $location->longitud ?? 'N/A' }}
-                            </p>
-                            <div class="d-flex gap-2">
-                            <form action="{{ route('event-locations.restore', $location->id) }}" method="POST">
-                                @csrf
-                                @method('PATCH')
-                                <button class="btn btn-success btn-sm" type="submit">Restaurar</button>
-                            </form>
-                            <form action="{{ route('event-locations.force-delete', $location->id) }}" method="POST" onsubmit="return confirm('¿Eliminar permanentemente esta ubicación?')">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-danger btn-sm" type="submit">Eliminar Definitivamente</button>
-                            </form>
+
+                        <div class="col-md-6 col-lg-4 mb-4">
+
+                            <div class="card border-0 shadow-sm h-100">
+
+                                <div class="card-body">
+
+                                    <!-- TITULO -->
+                                    <h5 class="fw-bold mb-2">
+                                        {{ $location->location_name }}
+                                    </h5>
+
+                                    <hr>
+
+                                    <!-- INFO -->
+                                    <div class="small text-muted">
+
+                                        <div class="mb-2">
+                                            <strong>Dirección:</strong><br>
+                                            {{ $location->address ?? 'No especificada' }}
+                                        </div>
+
+                                        <div class="mb-2">
+                                            <strong>Latitud:</strong>
+                                            {{ $location->latitud ?? 'N/A' }}
+                                        </div>
+
+                                        <div>
+                                            <strong>Longitud:</strong>
+                                            {{ $location->longitud ?? 'N/A' }}
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                <!-- ACCIONES -->
+                                <div class="card-footer bg-white border-0">
+
+                                    <div class="d-grid gap-2">
+
+                                        <form action="{{ route('event-locations.restore', $location->id) }}" method="POST">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button class="btn btn-outline-success btn-sm w-100">
+                                                <i class="fas fa-undo"></i> Restaurar
+                                            </button>
+                                        </form>
+
+                                        <form action="{{ route('event-locations.force-delete', $location->id) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('¿Eliminar definitivamente esta ubicación?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-outline-danger btn-sm w-100">
+                                                <i class="fas fa-trash"></i> Eliminar permanente
+                                            </button>
+                                        </form>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    @empty
+
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body text-center text-muted py-5">
+                                    <i class="fas fa-map-marker-alt fa-2x mb-2"></i><br>
+                                    No hay ubicaciones eliminadas
+                                </div>
                             </div>
                         </div>
-                        </div>
-                    @empty
-                        <p class="text-muted">No hay ubicaciones eliminadas.</p>
+
                     @endforelse
+
                 </div>
+
             </div>
-        </div>
-    </div>
 
-    <!-- Modal Agregar Participante -->
-    <div class="modal fade" id="modalAgregarParticipante" tabindex="-1" aria-labelledby="modalAgregarParticipanteLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form action="{{ route('event-participants.store') }}" method="POST">
-                @csrf
-                <input type="hidden" name="event_id" value="{{ $event->id }}">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalAgregarParticipanteLabel">Agregar Participante al Evento</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            <!-- FOOTER -->
+            <div class="modal-footer bg-white border-top">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+    <!-- ===================== MODAL AGREGAR PARTICIPANTE ===================== -->
+<div class="modal fade" id="modalAgregarParticipante" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <form action="{{ route('event-participants.store') }}" method="POST" class="w-100">
+            @csrf
+            <input type="hidden" name="event_id" value="{{ $event->id }}">
+
+            <div class="modal-content border-0 shadow-lg rounded-4">
+
+                <!-- HEADER -->
+                <div class="modal-header bg-white border-bottom px-4 py-3">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0">Agregar participante</h5>
+                        <small class="text-muted">Selecciona usuario y ubicación</small>
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="event_locations_id" class="form-label">Seleccionar Ubicación</label>
+
+                    <button type="button" class="btn-close" data-dismiss="modal"></button>
+                </div>
+
+                <!-- BODY -->
+                <div class="modal-body p-4">
+
+                    <div class="row g-4">
+
+                        <!-- UBICACION -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Ubicación</label>
+
                             <select class="form-select" name="event_locations_id" required>
-                                <option value="" disabled selected>Seleccione una ubicación</option>
+                                <option value="" disabled selected>Selecciona una ubicación</option>
                                 @foreach($event->eventLocations as $location)
-                                    <option value="{{ $location->id }}">{{ $location->location_name }} - {{ $location->address }}</option>
+                                    <option value="{{ $location->id }}">
+                                        {{ $location->location_name }} - {{ $location->address }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label for="user_id" class="form-label">Seleccionar Participante</label>
-                            <select class="form-select" name="user_id" required>
-                                <option value="" disabled selected>Seleccione un participante</option>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }} - {{ $user->email }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="observations" class="form-label">Observaciones</label>
-                            <textarea class="form-control" name="observations" rows="2" placeholder="Opcional..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Agregar</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <!-- Modal Participantes Eliminados -->
-    <div class="modal fade" id="modalParticipantesEliminados" tabindex="-1" aria-labelledby="modalParticipantesEliminadosLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header bg-secondary text-white">
-                    <h5 class="modal-title" id="modalParticipantesEliminadosLabel">Participantes Eliminados</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        <!-- USUARIO -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Participante</label>
+
+                            <select class="form-select" name="user_id" required>
+                                <option value="" disabled selected>Selecciona un usuario</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}">
+                                        {{ $user->name }} - {{ $user->email }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- OBSERVACIONES -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Observaciones</label>
+
+                            <textarea class="form-control"
+                                name="observations"
+                                rows="3"
+                                placeholder="Opcional..."></textarea>
+                        </div>
+
+                    </div>
+
                 </div>
-                <div class="modal-body">
+
+                <!-- FOOTER -->
+                <div class="modal-footer bg-white border-top px-4 py-3 d-flex justify-content-between">
+
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="fas fa-user-plus"></i> Agregar
+                    </button>
+
+                </div>
+
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- ===================== MODAL PARTICIPANTES ELIMINADOS ===================== -->
+<div class="modal fade" id="modalParticipantesEliminados" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+
+        <div class="modal-content border-0 shadow-lg rounded-4">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-white border-bottom px-4 py-3">
+                <div>
+                    <h5 class="modal-title fw-bold mb-0">Participantes eliminados</h5>
+                    <small class="text-muted">Puedes restaurarlos o eliminarlos definitivamente</small>
+                </div>
+
+                <button type="button" class="btn-close" data-dismiss="modal"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body p-4">
+
+                <div class="row g-4">
+
                     @forelse($event->eventParticipants()->onlyTrashed()->get() as $deletedParticipant)
+
                         @php
                             $user = $deletedParticipant->user;
                             $profilePhoto = $user->profile_photo
                                 ? asset('storage/' . $user->profile_photo)
                                 : asset('storage/users/user_default.jpg');
                         @endphp
-                        <div class="card mb-3 shadow-sm">
-                            <div class="card-body d-flex align-items-center justify-content-between flex-column flex-md-row gap-3">
-                                <div class="d-flex align-items-center">
-                                    <img src="{{ $profilePhoto }}" alt="Foto de {{ $user->name }}" class="rounded-circle shadow-sm me-3" style="width: 80px; height: 80px; object-fit: cover;">
-                                    <div>
-                                        <h5 class="card-title mb-1">{{ $user->name }}</h5>
-                                        <p class="mb-0">
-                                            <strong>Email:</strong> {{ $user->email }}<br>
-                                            <strong>Registro:</strong> {{ $deletedParticipant->registration_date }}<br>
-                                            <strong>Estado:</strong> {{ ucfirst($deletedParticipant->status) }}<br>
-                                            <strong>Observaciones:</strong> {{ $deletedParticipant->observations ?? 'Ninguna' }}
-                                        </p>
+
+                        <div class="col-md-6 col-lg-4">
+
+                            <div class="card border-0 shadow-sm h-100">
+
+                                <!-- BODY -->
+                                <div class="card-body text-center">
+
+                                    <!-- FOTO -->
+                                    <img src="{{ $profilePhoto }}"
+                                        class="rounded-circle shadow mb-3"
+                                        style="width:80px; height:80px; object-fit:cover;">
+
+                                    <!-- NOMBRE -->
+                                    <h5 class="fw-bold mb-1">{{ $user->name }}</h5>
+
+                                    <!-- EMAIL -->
+                                    <div class="text-muted small mb-2">
+                                        {{ $user->email }}
                                     </div>
+
+                                    <hr>
+
+                                    <!-- INFO -->
+                                    <div class="small text-muted text-start">
+
+                                        <div class="mb-1">
+                                            <strong>Registro:</strong><br>
+                                            {{ $deletedParticipant->registration_date }}
+                                        </div>
+
+                                        <div class="mb-1">
+                                            <strong>Estado:</strong>
+                                            <span class="badge bg-secondary">
+                                                {{ ucfirst($deletedParticipant->status) }}
+                                            </span>
+                                        </div>
+
+                                        <div>
+                                            <strong>Observaciones:</strong><br>
+                                            {{ $deletedParticipant->observations ?? 'Ninguna' }}
+                                        </div>
+
+                                    </div>
+
                                 </div>
-                                <div class="d-flex gap-2">
-                                    <form action="{{ route('event-participants.restore', $deletedParticipant->id) }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button class="btn btn-outline-success btn-sm" type="submit">Restaurar</button>
-                                    </form>
-                                    <form action="{{ route('event-participants.forceDelete', $deletedParticipant->id) }}" method="POST" onsubmit="return confirm('¿Eliminar permanentemente este participante?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-outline-danger btn-sm" type="submit">Eliminar Permanente</button>
-                                    </form>
+
+                                <!-- FOOTER -->
+                                <div class="card-footer bg-white border-0">
+
+                                    <div class="btn-group w-100">
+
+                                        <!-- RESTAURAR -->
+                                        <form action="{{ route('event-participants.restore', $deletedParticipant->id) }}" method="POST">
+                                            @csrf
+                                            @method('PATCH')
+
+                                            <button class="btn btn-outline-success btn-sm w-100">
+                                                <i class="fas fa-undo"></i> Restaurar
+                                            </button>
+                                        </form>
+
+                                        <!-- ELIMINAR -->
+                                        <form action="{{ route('event-participants.forceDelete', $deletedParticipant->id) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('¿Eliminar definitivamente?')">
+
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button class="btn btn-outline-danger btn-sm w-100">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    @empty
+
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body text-center text-muted">
+                                    No hay participantes eliminados.
                                 </div>
                             </div>
                         </div>
-                    @empty
-                        <p class="text-muted">No hay participantes eliminados.</p>
+
                     @endforelse
+
                 </div>
+
             </div>
+
         </div>
     </div>
-
+</div>
 @endsection
+
 @section('js')
 <script async
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2GCanK5Gxm26zDyPrKc7MNy7WhAJZK7M&callback=initMaps">
@@ -353,7 +823,7 @@
 
     function initNuevoMapa() {
         nuevoMapa = new google.maps.Map(document.getElementById("nuevoMapa"), {
-            center: { lat: -12.0464, lng: -77.0428 },
+            center: { lat: -16.4897, lng: -68.1193 },
             zoom: 13,
         });
 

@@ -137,3 +137,13 @@ input[type="checkbox"] {
     height: 16px;
     cursor: pointer;
 }
+
+.brand-link {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+
+
+

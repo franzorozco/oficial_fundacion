@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use App\Http\Requests\TransactionRequest;
 use Barryvdh\DomPDF\Facade\Pdf;
-use FPDF;
 
 class TransactionController extends Controller
 {
@@ -88,8 +87,6 @@ class TransactionController extends Controller
         return view('transaction.index', compact('transactions'))
             ->with('i', ($request->input('page', 1) - 1) * $transactions->perPage());
     }
-
-
 
     public function create(): View
     {
@@ -177,96 +174,91 @@ class TransactionController extends Controller
 
                 ->setPaper('A4', 'portrait');
 
-        return $pdf->download('comprobante_transaccion_'.$transaction->id.'.pdf');
+        return $pdf->stream('comprobante_transaccion_'.$transaction->id.'.pdf');
     }
-
 
     public function exportPdf(Request $request)
     {
-        // Filtros igual que en el index
-        $search = $request->input('search');
-        $type = $request->input('type');
-        $description = $request->input('description');
-        $createdBy = $request->input('created_by');
-        $amountMin = $request->input('amount_min');
-        $amountMax = $request->input('amount_max');
-        $dateFrom = $request->input('date_from');
-        $dateTo = $request->input('date_to');
-        $timeFrom = $request->input('time_from');
-        $timeTo = $request->input('time_to');
-
         $query = Transaction::with(['financial_account', 'campaign', 'event', 'event_location', 'user']);
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('type', 'like', "%{$search}%")
-                ->orWhere('amount', 'like', "%{$search}%")
-                ->orWhere('description', 'like', "%{$search}%")
-                ->orWhere('transaction_date', 'like', "%{$search}%")
-                ->orWhere('transaction_time', 'like', "%{$search}%")
-                ->orWhereHas('financial_account', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
-                ->orWhereHas('campaign', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
-                ->orWhereHas('event', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
-                ->orWhereHas('event_location', fn($q2) => $q2->where('location_name', 'like', "%{$search}%"))
-                ->orWhereHas('user', fn($q2) => $q2->where('name', 'like', "%{$search}%"));
+        // 🔎 Filtros dinámicos igual que en index
+        $filters = [
+            'search' => $request->input('search'),
+            'type' => $request->input('type'),
+            'description' => $request->input('description'),
+            'created_by' => $request->input('created_by'),
+            'amount_min' => $request->input('amount_min'),
+            'amount_max' => $request->input('amount_max'),
+            'date_from' => $request->input('date_from'),
+            'date_to' => $request->input('date_to'),
+            'time_from' => $request->input('time_from'),
+            'time_to' => $request->input('time_to'),
+        ];
+
+        if ($filters['search']) {
+            $query->where(function ($q) use ($filters) {
+                $search = $filters['search'];
+                $q->where('type', 'like', "%$search%")
+                ->orWhere('amount', 'like', "%$search%")
+                ->orWhere('description', 'like', "%$search%")
+                ->orWhere('transaction_date', 'like', "%$search%")
+                ->orWhere('transaction_time', 'like', "%$search%")
+                ->orWhereHas('financial_account', fn($q2) => $q2->where('name', 'like', "%$search%"))
+                ->orWhereHas('campaign', fn($q2) => $q2->where('name', 'like', "%$search%"))
+                ->orWhereHas('event', fn($q2) => $q2->where('name', 'like', "%$search%"))
+                ->orWhereHas('event_location', fn($q2) => $q2->where('location_name', 'like', "%$search%"))
+                ->orWhereHas('user', fn($q2) => $q2->where('name', 'like', "%$search%"));
             });
         }
 
-        if ($type) $query->where('type', $type);
-        if ($description) $query->where('description', 'like', "%{$description}%");
-        if ($createdBy) {
-            $query->whereHas('user', function ($q) use ($createdBy) {
-                $q->where('name', 'like', "%{$createdBy}%");
-            });
+        foreach (['type', 'description', 'created_by', 'amount_min', 'amount_max', 'date_from', 'date_to', 'time_from', 'time_to'] as $key) {
+            if ($filters[$key]) {
+                switch ($key) {
+                    case 'created_by':
+                        $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$filters[$key]}%"));
+                        break;
+                    case 'amount_min':
+                        $query->where('amount', '>=', $filters[$key]);
+                        break;
+                    case 'amount_max':
+                        $query->where('amount', '<=', $filters[$key]);
+                        break;
+                    case 'date_from':
+                        $query->where('transaction_date', '>=', $filters[$key]);
+                        break;
+                    case 'date_to':
+                        $query->where('transaction_date', '<=', $filters[$key]);
+                        break;
+                    case 'time_from':
+                        $query->where('transaction_time', '>=', $filters[$key]);
+                        break;
+                    case 'time_to':
+                        $query->where('transaction_time', '<=', $filters[$key]);
+                        break;
+                    default:
+                        $query->where($key, 'like', "%{$filters[$key]}%");
+                }
+            }
         }
-        if ($amountMin) $query->where('amount', '>=', $amountMin);
-        if ($amountMax) $query->where('amount', '<=', $amountMax);
-        if ($dateFrom) $query->where('transaction_date', '>=', $dateFrom);
-        if ($dateTo) $query->where('transaction_date', '<=', $dateTo);
-        if ($timeFrom) $query->where('transaction_time', '>=', $timeFrom);
-        if ($timeTo) $query->where('transaction_time', '<=', $timeTo);
 
         $transactions = $query->get();
 
-        // Crear PDF horizontal
-        $pdf = new Fpdf('L', 'mm', 'A4'); // 'L' = Landscape
-        $pdf->AddPage();
-        $pdf->SetFont('Arial', 'B', 9);
+        // 🔹 Datos de auditoría
+        $reportData = [
+            'date' => now()->format('d/m/Y'),
+            'time' => now()->format('H:i'),
+            'generated_by' => Auth::user()->name ?? 'Sistema',
+            'generated_email' => Auth::user()->email ?? '-',
+            'ip' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+            'total' => $transactions->count(),
+        ];
 
-        // Títulos
-        $pdf->Cell(10, 10, '#', 1);
-        $pdf->Cell(30, 10, 'Cuenta (ID)', 1);
-        $pdf->Cell(20, 10, 'Tipo', 1);
-        $pdf->Cell(25, 10, 'Monto', 1);
-        $pdf->Cell(40, 10, 'Descripción', 1);
-        $pdf->Cell(30, 10, 'Campaña', 1);
-        $pdf->Cell(30, 10, 'Evento', 1);
-        $pdf->Cell(35, 10, 'Ubicación Evento', 1);
-        $pdf->Cell(25, 10, 'Fecha', 1);
-        $pdf->Cell(20, 10, 'Hora', 1);
-        $pdf->Cell(30, 10, 'Creado por', 1);
-        $pdf->Ln();
+        // 🔹 Generar PDF usando la vista blade
+        $pdf = Pdf::loadView('pdf.transactions', compact('transactions', 'reportData'))
+                ->setPaper('a4', 'landscape');
 
-        $pdf->SetFont('Arial', '', 8);
-
-        foreach ($transactions as $i => $t) {
-            $pdf->Cell(10, 8, $i + 1, 1);
-            $pdf->Cell(30, 8, ($t->financial_account->name ?? 'N/A') . ' (' . ($t->financial_account->id ?? 'N/A') . ')', 1);
-            $pdf->Cell(20, 8, ucfirst($t->type), 1);
-            $pdf->Cell(25, 8, number_format($t->amount, 2), 1);
-            $pdf->Cell(40, 8, substr($t->description, 0, 35), 1);
-            $pdf->Cell(30, 8, $t->campaign->name ?? 'N/A', 1);
-            $pdf->Cell(30, 8, $t->event->name ?? 'N/A', 1);
-            $pdf->Cell(35, 8, $t->event_location->location_name ?? 'N/A', 1);
-            $pdf->Cell(25, 8, $t->transaction_date->format('Y/m/d'), 1);
-            $pdf->Cell(20, 8, $t->transaction_time->format('H:i'), 1);
-            $pdf->Cell(30, 8, $t->user->name ?? 'N/A', 1);
-            $pdf->Ln();
-        }
-
-        $pdf->Output('D', 'transactions.pdf');
-        exit;
+        return $pdf->stream('reporte_transacciones.pdf');
     }
-
 
 }

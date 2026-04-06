@@ -11,7 +11,8 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 use App\Models\User;
-use FPDF;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class VolunteerVerificationController extends Controller
 {
@@ -178,64 +179,43 @@ class VolunteerVerificationController extends Controller
 
 
 
-    public function generatePdf(Request $request)
-    {
-        $query = VolunteerVerification::query();
-    
-        // Filtrado por los parámetros de búsqueda
-        if ($request->has('search') && $request->input('search') !== '') {
-            $searchTerm = $request->input('search');
-            $query->where(function ($q) use ($searchTerm) {
-                $q->whereHas('user', function ($q) use ($searchTerm) {
-                    $q->where('name', 'like', '%' . $searchTerm . '%');
-                })
-                ->orWhere('document_type', 'like', '%' . $searchTerm . '%')
-                ->orWhere('name_document', 'like', '%' . $searchTerm . '%');
-            });
-        }
-    
-        $volunteerVerifications = $query->get();
-    
-        // Crear una nueva instancia de FPDF
-        $pdf = new FPDF();
-        $pdf->AddPage();
-        $pdf->SetFont('Arial', 'B', 12);
-    
-        // Agregar un título
-        $pdf->Cell(200, 10, 'Volunteer Verifications Report', 0, 1, 'C');
-    
-        // Agregar los encabezados de la tabla
-        $pdf->Cell(20, 10, 'No', 1);
-        $pdf->Cell(40, 10, 'User Name', 1);
-        $pdf->Cell(40, 10, 'User Resp Name', 1);
-        $pdf->Cell(40, 10, 'Document Type', 1);
-        $pdf->Cell(40, 10, 'Document Url', 1);
-        $pdf->Cell(40, 10, 'Name Document', 1);
-        $pdf->Cell(30, 10, 'Status', 1);
-        $pdf->Cell(50, 10, 'Comment', 1);
-        $pdf->Ln();
-    
-        // Agregar los datos de cada verificación de voluntario
-        foreach ($volunteerVerifications as $index => $verification) {
-            $pdf->Cell(20, 10, $index + 1, 1);
-            $pdf->Cell(40, 10, $verification->user ? $verification->user->name : 'N/A', 1);
-            $pdf->Cell(40, 10, $verification->userResp ? $verification->userResp->name : 'N/A', 1);
-            $pdf->Cell(40, 10, $verification->document_type, 1);
-            $pdf->Cell(40, 10, $verification->document_url, 1);
-            $pdf->Cell(40, 10, $verification->name_document, 1);
-            $pdf->Cell(30, 10, $verification->status, 1);
-            $pdf->Cell(50, 10, $verification->coment, 1);
-            $pdf->Ln();
-        }
-    
-        // Generar el archivo PDF y devolverlo como respuesta de flujo
-        return response()->stream(function() use ($pdf) {
-            $pdf->Output('I', 'volunteer_verifications_report.pdf');  // 'I' para mostrar en el navegador
-        }, 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="volunteer_verifications_report.pdf"'
-        ]);
+public function generatePdf(Request $request)
+{
+    $query = VolunteerVerification::with(['user', 'userResp']);
+
+    if ($request->filled('search')) {
+        $searchTerm = $request->search;
+
+        $query->where(function ($q) use ($searchTerm) {
+            $q->whereHas('user', function ($q2) use ($searchTerm) {
+                $q2->where('name', 'like', '%' . $searchTerm . '%');
+            })
+            ->orWhere('document_type', 'like', '%' . $searchTerm . '%')
+            ->orWhere('name_document', 'like', '%' . $searchTerm . '%');
+        });
     }
+
+    $volunteerVerifications = $query->latest()->get();
+
+    // 🔥 AUDITORÍA (MISMO FORMATO)
+    $reportData = [
+        'generated_by' => auth()->user()->name ?? 'Sistema',
+        'generated_email' => auth()->user()->email ?? '-',
+        'date' => now()->format('d/m/Y'),
+        'time' => now()->format('H:i:s'),
+        'ip' => $request->ip(),
+        'user_agent' => $request->header('User-Agent'),
+        'total' => $volunteerVerifications->count(),
+        'filters' => $request->all()
+    ];
+
+    $pdf = Pdf::loadView(
+        'pdf.volunteer_verifications_report',
+        compact('volunteerVerifications', 'reportData')
+    )->setPaper('a4', 'landscape');
+
+    return $pdf->stream('reporte_verificaciones_voluntarios.pdf');
+}
     
 public function trashed(Request $request): View
 {

@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use App\Models\Campaign; // Asegúrate de tener esta línea al inicio del archivo
 use App\Models\User; // Asegúrate de tener esta línea al inicio del archivo
-use FPDF;
+use Barryvdh\DomPDF\Facade\Pdf;
+use illuminate\Support\Facades\Auth;
 class CampaignFinanceController extends Controller
 {
     public function index(Request $request): View
@@ -93,50 +94,71 @@ class CampaignFinanceController extends Controller
             ->with('success', 'CampaignFinance deleted successfully');
     }
 
-    public function exportPdf(Request $request)
-    {
-        $query = CampaignFinance::query();
-    
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->whereHas('campaign', function ($q) use ($search) {
-                $q->where('name', 'like', "%$search%");
-            })->orWhereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', "%$search%");
+public function exportPdf(Request $request)
+{
+    $query = CampaignFinance::with(['campaign', 'user']);
+
+    // 🔍 Filtro búsqueda
+    if ($request->filled('search')) {
+        $search = $request->search;
+
+        $query->where(function ($q) use ($search) {
+            $q->whereHas('campaign', function ($q2) use ($search) {
+                $q2->where('name', 'like', "%$search%");
+            })
+            ->orWhereHas('user', function ($q2) use ($search) {
+                $q2->where('name', 'like', "%$search%");
             });
-        }
-    
-        $finances = $query->get();
-    
-        $pdf = new FPDF();
-        $pdf->AddPage();
-        $pdf->SetFont('Arial', 'B', 12);
-        $pdf->Cell(0, 10, 'Reporte de Finanzas de Campaña', 0, 1, 'C');
-    
-        $pdf->SetFont('Arial', 'B', 10);
-        $pdf->Cell(10, 10, 'No', 1);
-        $pdf->Cell(50, 10, 'Campaña', 1);
-        $pdf->Cell(40, 10, 'Gerente', 1);
-        $pdf->Cell(30, 10, 'Ingreso', 1);
-        $pdf->Cell(30, 10, 'Gastos', 1);
-        $pdf->Cell(30, 10, 'Balance', 1);
-        $pdf->Ln();
-    
-        $pdf->SetFont('Arial', '', 10);
-        foreach ($finances as $i => $f) {
-            $pdf->Cell(10, 10, $i + 1, 1);
-            $pdf->Cell(50, 10, $f->campaign->name, 1);
-            $pdf->Cell(40, 10, $f->user->name, 1);
-            $pdf->Cell(30, 10, number_format($f->income, 2), 1);
-            $pdf->Cell(30, 10, number_format($f->expenses, 2), 1);
-            $pdf->Cell(30, 10, number_format($f->net_balance, 2), 1);
-            $pdf->Ln();
-        }
-    
-        $pdf->Output('I', 'reporte_finanzas.pdf');
-        exit;
+        });
     }
 
+    // 🔢 Filtros numéricos
+    if ($request->filled('income_min')) {
+        $query->where('income', '>=', $request->income_min);
+    }
+
+    if ($request->filled('income_max')) {
+        $query->where('income', '<=', $request->income_max);
+    }
+
+    if ($request->filled('expenses_min')) {
+        $query->where('expenses', '>=', $request->expenses_min);
+    }
+
+    if ($request->filled('expenses_max')) {
+        $query->where('expenses', '<=', $request->expenses_max);
+    }
+
+    if ($request->filled('balance_min')) {
+        $query->where('net_balance', '>=', $request->balance_min);
+    }
+
+    if ($request->filled('balance_max')) {
+        $query->where('net_balance', '<=', $request->balance_max);
+    }
+
+    $finances = $query->latest()->get();
+
+    // 📊 AUDITORÍA (MISMO ESTÁNDAR)
+    $reportData = [
+        'generated_by' => auth()->user()->name ?? 'Sistema',
+        'generated_email' => auth()->user()->email ?? '-',
+        'date' => now()->format('d/m/Y'),
+        'time' => now()->format('H:i:s'),
+        'ip' => $request->ip(),
+        'user_agent' => $request->header('User-Agent'),
+        'total' => $finances->count(),
+        'filters' => $request->all()
+    ];
+
+    $pdf = Pdf::loadView(
+        'pdf.campaign_finance_report',
+        compact('finances', 'reportData')
+    )->setPaper('a4', 'landscape');
+
+    // ✅ STREAM (como todo tu sistema ahora)
+    return $pdf->stream('reporte_finanzas_campañas.pdf');
+}
     public function trashed(Request $request): View
     {
         $search = $request->input('search');

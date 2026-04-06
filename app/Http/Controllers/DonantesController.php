@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Illuminate\Validation\Rule;
 
-use FPDF;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 
 class DonantesController extends Controller
 {
@@ -208,55 +209,50 @@ class DonantesController extends Controller
         return redirect()->route('donantes.trashed')->with('success', 'User permanently deleted.');
     }
 
-    public function generatePDF(Request $request)
-    {
-        $query = User::withTrashed()->with('profile', 'roles');
+public function generatePDF(Request $request)
+{
+    $query = User::withTrashed()->with(['profile', 'roles']);
 
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%$search%")
+    // 🔍 Filtros
+    if ($request->filled('search')) {
+        $search = $request->input('search');
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%$search%")
                 ->orWhere('email', 'like', "%$search%")
                 ->orWhere('phone', 'like', "%$search%")
                 ->orWhere('address', 'like', "%$search%");
-            });
-        }
-
-        if ($request->filled('start_date')) {
-            $query->where('created_at', '>=', $request->input('start_date'));
-        }
-
-        if ($request->filled('end_date')) {
-            $query->where('created_at', '<=', $request->input('end_date'));
-        }
-        if ($request->filled('city')) {
-            $query->where('address', $request->input('city'));
-        }
-
-        $users = $query->get();
-        $pdf = new Fpdf();
-        $pdf->SetTitle('Detalle de Usuarios');
-        $pdf->SetFont('Arial', '', 10);
-        foreach ($users as $user) {
-            $pdf->AddPage();
-            $pdf->SetFont('Arial', 'B', 14);
-            $pdf->Cell(0, 10, 'Datos del Usuario', 0, 1, 'C');
-            $pdf->Ln(2);
-            $pdf->SetFont('Arial', '', 10);
-            $pdf->Cell(50, 7, 'ID:', 0, 0); $pdf->Cell(0, 7, $user->id, 0, 1);
-            $pdf->Cell(50, 7, 'Nombre:', 0, 0); $pdf->Cell(0, 7, $user->name, 0, 1);
-            $pdf->Cell(50, 7, 'Correo:', 0, 0); $pdf->Cell(0, 7, $user->email, 0, 1);
-            $pdf->Cell(50, 7, 'Telefono:', 0, 0); $pdf->Cell(0, 7, $user->phone ?? '-', 0, 1);
-            $pdf->Cell(50, 7, 'Direccion:', 0, 0); $pdf->Cell(0, 7, $user->address ?? '-', 0, 1);
-            $pdf->Cell(50, 7, 'Email verificado:', 0, 0); $pdf->Cell(0, 7, $user->email_verified_at ?? '-', 0, 1);
-            $pdf->Cell(50, 7, 'Fecha de creación:', 0, 0); $pdf->Cell(0, 7, $user->created_at, 0, 1);
-            $pdf->Cell(50, 7, 'Fecha de actualización:', 0, 0); $pdf->Cell(0, 7, $user->updated_at, 0, 1);
-            $pdf->Cell(50, 7, 'Eliminado:', 0, 0); $pdf->Cell(0, 7, $user->deleted_at ?? 'No', 0, 1);
-            $pdf->Ln(5);
-            $pdf->Ln(10);
-        }
-        
-        $pdf->Output('D', 'detalle_usuarios.pdf');
-        exit;
+        });
     }
+
+    if ($request->filled('start_date')) {
+        $query->where('created_at', '>=', $request->input('start_date'));
+    }
+
+    if ($request->filled('end_date')) {
+        $query->where('created_at', '<=', $request->input('end_date'));
+    }
+
+    if ($request->filled('city')) {
+        $query->where('address', $request->input('city'));
+    }
+
+    $users = $query->get();
+
+    // 📊 Auditoría
+    $reportData = [
+        'generated_by' => Auth::user()->name ?? 'Sistema',
+        'generated_email' => Auth::user()->email ?? '-',
+        'date' => now()->format('d/m/Y'),
+        'time' => now()->format('H:i:s'),
+        'ip' => $request->ip(),
+        'user_agent' => $request->header('User-Agent'),
+        'total' => $users->count(),
+        'filters' => $request->all()
+    ];
+
+    $pdf = Pdf::loadView('pdf.donors_list', compact('users', 'reportData'))
+        ->setPaper('a4', 'landscape');
+
+    return $pdf->stream('reporte_donantes.pdf');
+}
 }

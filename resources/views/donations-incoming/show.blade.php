@@ -1,309 +1,562 @@
 @extends('adminlte::page')
 
-@section('title', $donation->id ? 'Detalle de Donación #' . $donation->id : 'Mostrar Donación')
+@section('title', 'Detalle de Donación #' . $donation->id)
 
 @section('content_header')
-    <h1 class="mb-4">Detalle de la Donación</h1>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+
+    <div>
+        <h2 class="mb-0 fw-bold">
+            <i class="fas fa-hand-holding-heart text-primary me-2"></i>
+            Detalle de Donación #{{ $donation->id }}
+        </h2>
+        <small class="text-muted">
+            Información completa de la donación y sus ítems asociados
+        </small>
+    </div>
+
+    <a class="btn btn-outline-info btn-sm"
+       href="{{ route('donations-incoming.pdf', $donation->id) }}">
+        <i class="fas fa-file-pdf"></i> Exportar PDF
+    </a>
+
+</div>
 @endsection
 
+
 @section('content')
-    {{-- Información General --}}
-    <div class="card shadow-sm rounded">
-        <div class="card-header d-flex justify-content-between align-items-center bg-dark text-white">
-            <h3 class="card-title mb-0">Información General</h3>
-            <a class="btn btn-outline-info btn-sm" href="{{ route('donations-incoming.pdf', $donation->id) }}">
-                <i class="fa fa-file-pdf"></i>
-            </a>
-        </div>
 
-        <div class="card-body bg-light">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <strong>Donante Externo:</strong><br>
-                    <span class="badge bg-secondary">{{ $donation->externalDonor->names ?? 'N/A' }}</span>
-                </div>
-                <div class="col-md-6">
-                    <strong>Donante Interno:</strong><br>
-                    <span class="badge bg-secondary">{{ $donation->user->name ?? 'N/A' }}</span>
-                </div>
-                
-            </div>
+{{-- ================= RESUMEN GENERAL ================= --}}
+<div class="card border-0 shadow-sm mt-3">
 
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <strong>Recibido por:</strong><br>
-                    <span class="badge bg-info">{{ $donation->receivedBy->name ?? 'N/A' }}</span>
-                </div>
-                <div class="col-md-6">
-                    <strong>Estado:</strong><br>
-                    <span class="badge bg-warning text-dark">{{ $donation->status->name ?? 'N/A' }}</span>
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <strong>Campaña Asociada:</strong><br>
-                    <span class="badge bg-success">{{ $donation->campaign->name ?? 'N/A' }}</span>
-                </div>
-                <div class="col-md-6">
-                    <strong>Fecha de Donación:</strong><br>
-                    <span class="badge bg-dark">{{ $donation->donation_date->format('d/m/Y') }}</span>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <strong>Notas:</strong><br>
-                <p class="text-muted">{{ $donation->notes ?? 'Sin notas adicionales.' }}</p>
-            </div>
-            <form action="{{ route('donations-incoming.accept', $donation->id) }}" method="POST" class="d-inline">
-                @csrf
-                <button type="submit" class="btn btn-outline-success btn-sm" onclick="return confirm('¿Aceptar esta donación?')">
-                    <i class="fa fa-check"></i> Aceptar
-                </button>
-            </form>
-
-            <form action="{{ route('donations-incoming.reject', $donation->id) }}" method="POST" class="d-inline">
-                @csrf
-                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Rechazar esta donación?')">
-                    <i class="fa fa-times"></i> Rechazar
-                </button>
-            </form>
-        </div>
+    <div class="card-header bg-white border-bottom">
+        <strong>Resumen de la donación</strong>
+        <small class="text-muted d-block">
+            Información principal del registro
+        </small>
     </div>
 
-    {{-- Ítems de la Donación --}}
-    <div class="card shadow-sm rounded mt-4">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-            <h3 class="mb-0">Ítems de la Donación</h3>
-            <div class="d-flex gap-2">
-                 <!-- Botón agregar ítem -->
-                <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addItemModal">
-                    <i class="fas fa-plus"></i> Agregar Ítem
-                </button>
-                <!-- Botón ver eliminados -->
-                <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#deletedItemsModal">
-                    <i class="fas fa-trash-restore"></i> Ítems Eliminados
-                </button>
-               
+    <div class="card-body">
+
+        <div class="row g-3">
+
+            <div class="col-md-3">
+                <div class="p-3 border rounded h-100">
+                    <small class="text-muted">Donante externo</small>
+                    <div class="fw-bold">
+                        {{ $donation->externalDonor->names ?? 'N/A' }}
+                    </div>
+                </div>
             </div>
+
+            <div class="col-md-3">
+                <div class="p-3 border rounded h-100">
+                    <small class="text-muted">Donante interno</small>
+                    <div class="fw-bold">
+                        {{ $donation->user->name ?? 'N/A' }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="p-3 border rounded h-100">
+                    <small class="text-muted">Recibido por</small>
+                    <div class="fw-bold">
+                        {{ $donation->receivedBy->name ?? 'N/A' }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="p-3 border rounded h-100">
+                    <small class="text-muted">Estado</small>
+                    <div>
+                        <span class="badge bg-warning text-dark">
+                            {{ $donation->status->name ?? 'N/A' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="p-3 border rounded h-100">
+                    <small class="text-muted">Campaña</small>
+                    <div class="fw-bold">
+                        {{ $donation->campaign->name ?? 'N/A' }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="p-3 border rounded h-100">
+                    <small class="text-muted">Fecha</small>
+                    <div class="fw-bold">
+                        {{ $donation->donation_date->format('d/m/Y') }}
+                    </div>
+                </div>
+            </div>
+
         </div>
 
+        {{-- NOTAS --}}
+        <div class="mt-4">
+            <strong>Notas</strong>
+            <p class="text-muted mb-0">
+                {{ $donation->notes ?? 'Sin notas adicionales.' }}
+            </p>
+        </div>
+
+        {{-- ACCIONES --}}
+        <div class="mt-3 d-flex gap-2">
+
+            <form action="{{ route('donations-incoming.accept', $donation->id) }}" method="POST">
+                @csrf
+                <button class="btn btn-outline-success btn-sm"
+                        onclick="return confirm('¿Aceptar esta donación?')">
+                    <i class="fas fa-check"></i> Aceptar
+                </button>
+            </form>
+
+            <form action="{{ route('donations-incoming.reject', $donation->id) }}" method="POST">
+                @csrf
+                <button class="btn btn-outline-danger btn-sm"
+                        onclick="return confirm('¿Rechazar esta donación?')">
+                    <i class="fas fa-times"></i> Rechazar
+                </button>
+            </form>
+
+        </div>
+
+    </div>
+</div>
 
 
+{{-- ================= ÍTEMS ================= --}}
+<div class="card border-0 shadow-sm mt-4">
 
-        <div class="card-body">
-            @if ($donation->items->count() > 0)
-                <div class="list-group">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+
+        <div>
+            <strong>Ítems de la donación</strong>
+            <small class="text-muted d-block">
+                Productos o elementos asociados a esta donación
+            </small>
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <button class="btn btn-primary btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#addItemModal">
+                <i class="fas fa-plus"></i> Agregar
+            </button>
+
+            <button class="btn btn-outline-secondary btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#deletedItemsModal">
+                <i class="fas fa-trash-restore"></i> Eliminados
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="card-body">
+
+        @if ($donation->items->count() > 0)
+
+            <div class="row g-3">
+
                 @foreach ($donation->items as $item)
-                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm">
-                        <div class="d-flex w-100 justify-content-between">
-                            <div class="d-flex align-items-start">
-                                @php
-                                    $photo = $item->donation_item_photos->first();
-                                    $photoUrl = $photo && !empty($photo->photo_url)
-                                        ? asset('storage/' . $photo->photo_url)
-                                        : asset('storage/items_donations/default-item.png');
-                                @endphp
-                                <img src="{{ $photoUrl }}"
-                                    alt="Imagen del ítem"
-                                    class="me-3 rounded"
-                                    style="width: 100px; height: 100px; object-fit: cover;">
-                                <div>
-                                    <h5 class="mb-1">{{ $item->item_name }}</h5>
-                                    <p class="mb-1"><strong>Tipo de donación:</strong> {{ $item->donation_type->name ?? 'N/A' }}</p>
-                                    <p class="mb-1"><strong>Cantidad:</strong> {{ $item->quantity }} {{ $item->unit }}</p>
-                                    <p class="mb-1"><strong>Descripción:</strong> {{ $item->description ?? 'N/A' }}</p>
-                                    <p class="mb-1"><strong>Registrado el:</strong> {{ $item->created_at->format('d/m/Y H:i') }}</p>
-                                </div>
-                            </div>
 
-                            <div class="text-end">
-                                <button type="button" class="btn btn-outline-primary btn-sm mb-1" data-bs-toggle="modal" data-bs-target="#modalItem{{ $item->id }}">
-                                    <i class="fas fa-eye"></i> Ver
-                                </button>
-
-                                <a href="{{ route('donation-items.edit', $item->id) }}" class="btn btn-outline-warning btn-sm mb-1">
-                                    <i class="fas fa-edit"></i> Editar
-                                </a>
-                                <form action="{{ route('donation-items.destroy', $item->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este ítem?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-outline-danger btn-sm">
-                                        <i class="fas fa-trash-alt"></i> Eliminar
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Modal individual para cada ítem -->
-                    <div class="modal fade" id="modalItem{{ $item->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $item->id }}" aria-hidden="true">
-                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-header bg-dark text-white">
-                                    <h5 class="modal-title" id="modalLabel{{ $item->id }}">Detalle del Ítem: {{ $item->item_name }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <p><strong>Nombre:</strong> {{ $item->item_name }}</p>
-                                            <p><strong>Tipo de Donación:</strong> {{ $item->donation_type->name ?? 'N/A' }}</p>
-                                            <p><strong>Cantidad:</strong> {{ $item->quantity }} {{ $item->unit }}</p>
-                                            <p><strong>Descripción:</strong> {{ $item->description ?? 'N/A' }}</p>
-                                            <p><strong>Registrado el:</strong> {{ $item->created_at->format('d/m/Y H:i') }}</p>
-                                        </div>
-                                        <div class="col-md-6 text-center">
-                                            <img src="{{ $photoUrl }}" class="img-fluid rounded border shadow-sm" alt="Imagen del ítem">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-                </div>
-            @else
-                <div class="alert alert-info">
-                    No hay ítems registrados para esta donación.
-                </div>
-            @endif
-        </div>
-    </div>
-
-    <!-- Modal para agregar ítem -->
-    <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <form action="{{ route('donation-items.store') }}" method="POST" enctype="multipart/form-data" class="modal-content">
-                @csrf
-                <input type="hidden" name="donation_id" value="{{ $donation->id }}">
-
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title" id="addItemModalLabel">Agregar Ítem</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="item_name" class="form-label">Nombre del Ítem</label>
-                        <input type="text" name="item_name" class="form-control" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="donation_type_id" class="form-label">Tipo de Donación</label>
-                        <select name="donation_type_id" class="form-select" required>
-                            @foreach(App\Models\DonationType::all() as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label for="quantity" class="form-label">Cantidad</label>
-                            <input type="number" name="quantity" class="form-control" min="1" required>
-                        </div>
-                        <div class="col">
-                            <label for="unit" class="form-label">Unidad</label>
-                            <input type="text" name="unit" class="form-control">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Descripción</label>
-                        <textarea name="description" class="form-control" rows="3"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="photo" class="form-label">Fotografía</label>
-                        <input type="file" name="photo" accept="image/*" class="form-control">
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Guardar Ítem</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-
-
-
-    <!-- Modal: Ítems Eliminados -->
-<div class="modal fade" id="deletedItemsModal" tabindex="-1" aria-labelledby="deletedItemsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="deletedItemsModalLabel">Ítems Eliminados</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
                 @php
-                    $deletedItems = $donation->items()->onlyTrashed()->get();
+                    $photo = $item->donation_item_photos->first();
+                    $photoUrl = $photo && !empty($photo->photo_url)
+                        ? asset('storage/items_donations/' . $photo->photo_url)
+                        : asset('storage/items_donations/default-item.png');
                 @endphp
 
-                @if($deletedItems->isEmpty())
-                    <div class="alert alert-info">No hay ítems eliminados para esta donación.</div>
-                @else
-                    <div class="list-group">
-                        @foreach($deletedItems as $item)
-                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-start mb-2 rounded shadow-sm">
-                                <div>
-                                    <h5 class="mb-1">{{ $item->item_name }}</h5>
-                                    <p class="mb-0"><strong>Tipo:</strong> {{ $item->donation_type->name ?? 'N/A' }}</p>
-                                    <p class="mb-0"><strong>Cantidad:</strong> {{ $item->quantity }} {{ $item->unit }}</p>
-                                </div>
-                                <div class="text-end">
-                                    <form action="{{ route('donation-items.restore', $item->id) }}" method="POST" class="d-inline-block">
-                                        @csrf
-                                        @method('PUT')
-                                        <button class="btn btn-success btn-sm" onclick="return confirm('¿Restaurar este ítem?')">
-                                            <i class="fas fa-undo"></i> Restaurar
-                                        </button>
-                                    </form>
+                <div class="col-md-6 col-lg-4">
 
-                                    <form action="{{ route('donation-items.forceDelete', $item->id) }}" method="POST" class="d-inline-block">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-danger btn-sm" onclick="return confirm('¿Eliminar permanentemente este ítem? Esta acción no se puede deshacer.')">
-                                            <i class="fas fa-times"></i> Eliminar Definitivamente
-                                        </button>
-                                    </form>
-                                </div>
+                    <div class="card border shadow-sm h-100">
+
+                        <img src="{{ $photoUrl }}"
+                             class="card-img-top"
+                             style="height: 160px; object-fit: cover;">
+
+                        <div class="card-body">
+
+                            <h5 class="fw-bold">{{ $item->item_name }}</h5>
+
+                            <p class="mb-1 text-muted">
+                                {{ $item->donation_type->name ?? 'Sin tipo' }}
+                            </p>
+
+                            <p class="mb-1">
+                                <strong>Cantidad:</strong> {{ $item->quantity }} {{ $item->unit }}
+                            </p>
+
+                            <p class="text-muted small">
+                                {{ Str::limit($item->description, 60) }}
+                            </p>
+
+                        </div>
+
+                        <div class="card-footer bg-white d-flex justify-content-between">
+
+                            <button class="btn btn-outline-primary btn-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalItem{{ $item->id }}">
+                                Ver
+                            </button>
+
+                            <div class="d-flex gap-1">
+
+                                <a href="{{ route('donation-items.edit', $item->id) }}"
+                                   class="btn btn-outline-warning btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                <form action="{{ route('donation-items.destroy', $item->id) }}"
+                                      method="POST"
+                                      onsubmit="return confirm('¿Eliminar ítem?')">
+                                    @csrf @method('DELETE')
+
+                                    <button class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+
                             </div>
-                        @endforeach
+
+                        </div>
+
                     </div>
-                @endif
+
+                </div>
+
+                @endforeach
+
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+
+        @else
+
+            {{-- EMPTY STATE UX --}}
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-box-open fa-3x mb-3"></i>
+                <div class="fw-semibold">No hay ítems registrados</div>
+                <small>Agrega el primer ítem para esta donación</small>
             </div>
-        </div>
+
+        @endif
+
+    </div>
+</div>
+
+
+{{-- ================= MODALES (se mantienen pero más limpios UX) ================= --}}
+
+{{-- ================= MODAL AGREGAR ÍTEM ================= --}}
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <form action="{{ route('donation-items.store') }}"
+              method="POST"
+              enctype="multipart/form-data"
+              class="modal-content border-0 shadow-lg rounded-3">
+
+            @csrf
+            <input type="hidden" name="donation_id" value="{{ $donation->id }}">
+
+            {{-- HEADER --}}
+            <div class="modal-header bg-white border-bottom">
+                <div>
+                    <h5 class="modal-title fw-bold" id="addItemModalLabel">
+                        <i class="fas fa-plus-circle text-success me-1"></i>
+                        Agregar Ítem
+                    </h5>
+                    <small class="text-muted">Registra un nuevo elemento en esta donación</small>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            {{-- BODY --}}
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nombre del Ítem</label>
+                    <input type="text" name="item_name" class="form-control form-control-lg" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Tipo de Donación</label>
+                    <select name="donation_type_id" class="form-select form-select-lg" required>
+                        @foreach(App\Models\DonationType::all() as $type)
+                            <option value="{{ $type->id }}">{{ $type->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="row g-2 mb-3">
+
+                    <div class="col">
+                        <label class="form-label fw-semibold">Cantidad</label>
+                        <input type="number" name="quantity" class="form-control" min="1" required>
+                    </div>
+
+                    <div class="col">
+                        <label class="form-label fw-semibold">Unidad</label>
+                        <input type="text" name="unit" class="form-control">
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Descripción</label>
+                    <textarea name="description" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label fw-semibold">Fotografía</label>
+                    <input type="file" name="photo" accept="image/*" class="form-control">
+                </div>
+
+            </div>
+
+            {{-- FOOTER --}}
+            <div class="modal-footer bg-light border-top">
+
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="submit" class="btn btn-success">
+                    Guardar Ítem
+                </button>
+
+            </div>
+
+        </form>
     </div>
 </div>
 
 
 
+<div class="modal fade" id="deletedItemsModal" tabindex="-1" aria-labelledby="deletedItemsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content border-0 shadow-lg rounded-3">
+
+            {{-- HEADER --}}
+            <div class="modal-header bg-white border-bottom">
+                <div>
+                    <h5 class="modal-title fw-bold">
+                        <i class="fas fa-trash-restore text-danger me-1"></i>
+                        Ítems Eliminados
+                    </h5>
+                    <small class="text-muted">Puedes restaurar o eliminar permanentemente</small>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            {{-- BODY --}}
+            <div class="modal-body">
+
+                @php
+                    $deletedItems = $donation->items()->onlyTrashed()->get();
+                @endphp
+
+                @if($deletedItems->isEmpty())
+
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-box-open fa-3x mb-2"></i>
+                        <div class="fw-semibold">No hay ítems eliminados</div>
+                        <small>Todo está en orden</small>
+                    </div>
+
+                @else
+
+                    <div class="row g-3">
+
+                        @foreach($deletedItems as $item)
+
+                        <div class="col-md-6">
+
+                            <div class="card border shadow-sm h-100">
+
+                                <div class="card-body">
+
+                                    <h5 class="fw-bold mb-1">
+                                        {{ $item->item_name }}
+                                    </h5>
+
+                                    <p class="mb-1 text-muted">
+                                        <strong>Tipo:</strong>
+                                        {{ $item->donation_type->name ?? 'N/A' }}
+                                    </p>
+
+                                    <p class="mb-2">
+                                        <strong>Cantidad:</strong>
+                                        {{ $item->quantity }} {{ $item->unit }}
+                                    </p>
+
+                                    <span class="badge bg-danger">
+                                        Eliminado
+                                    </span>
+
+                                </div>
+
+                                <div class="card-footer bg-white d-flex justify-content-between">
+
+                                    <form action="{{ route('donation-items.restore', $item->id) }}"
+                                          method="POST">
+                                        @csrf
+                                        @method('PUT')
+
+                                        <button class="btn btn-outline-success btn-sm"
+                                                onclick="return confirm('¿Restaurar este ítem?')">
+                                            <i class="fas fa-undo"></i>
+                                            Restaurar
+                                        </button>
+
+                                    </form>
+
+                                    <form action="{{ route('donation-items.forceDelete', $item->id) }}"
+                                          method="POST">
+                                        @csrf
+                                        @method('DELETE')
+
+                                        <button class="btn btn-outline-danger btn-sm"
+                                                onclick="return confirm('Eliminar permanentemente?')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        @endforeach
+
+
+                    </div>
+
+                @endif
+
+            </div>
+
+            {{-- FOOTER --}}
+            <div class="modal-footer bg-light border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+
+
+@foreach ($donation->items as $item)
+
+<div class="modal fade" id="modalItem{{ $item->id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content border-0 shadow-lg">
+
+            {{-- HEADER --}}
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    {{ $item->item_name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            {{-- BODY --}}
+            <div class="modal-body">
+
+                @php
+                    $photo = $item->donation_item_photos->first();
+                    $photoUrl = $photo && !empty($photo->photo_url)
+                        ? asset('storage/items_donations/' . $photo->photo_url)
+                        : asset('storage/items_donations/default-item.png');
+                @endphp
+
+                <div class="row">
+
+                    <div class="col-md-5 text-center">
+                        <img src="{{ $photoUrl }}"
+                             class="img-fluid rounded shadow-sm"
+                             style="max-height: 250px;">
+                    </div>
+
+                    <div class="col-md-7">
+
+                        <p><strong>Tipo:</strong>
+                            {{ $item->donation_type->name ?? 'N/A' }}
+                        </p>
+
+                        <p><strong>Cantidad:</strong>
+                            {{ $item->quantity }} {{ $item->unit }}
+                        </p>
+
+                        <p><strong>Descripción:</strong></p>
+                        <p class="text-muted">
+                            {{ $item->description ?? 'Sin descripción' }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {{-- FOOTER --}}
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+@endforeach
+
 @endsection
 
 @section('css')
     <style>
-        .list-group-item h5 {
-            font-size: 1.1rem;
-        }
+  .modal-content {
+    border-radius: 14px;
+}
 
-        .list-group-item p {
-            font-size: 0.9rem;
-        }
+.modal-header {
+    padding: 1rem 1.25rem;
+}
 
-        .btn-sm {
-            font-size: 0.75rem;
-        }
+.modal-body {
+    padding: 1.25rem;
+}
+
+.form-control,
+.form-select {
+    border-radius: 10px;
+}
+
+.btn {
+    border-radius: 10px;
+}
     </style>
 @endsection
 
