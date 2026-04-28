@@ -130,7 +130,7 @@ class DonationRequestController extends Controller
         $donationRequest = DonationRequest::findOrFail($id);
         $donationRequest->state = 'aceptado';
         $donationRequest->user_in_charge_id = Auth::id();
-        $donationRequest->observations = $request->input('observations');
+        $donationRequest->observacions = $request->input('observations');
         $donationRequest->save();
 
         return redirect()->route('donation-requests.show', $id)
@@ -142,7 +142,7 @@ class DonationRequestController extends Controller
         $donationRequest = DonationRequest::findOrFail($id);
         $donationRequest->state = 'rechazado';
         $donationRequest->user_in_charge_id = Auth::id();
-        $donationRequest->observations = $request->input('observations');
+        $donationRequest->observacions = $request->input('observations');
         $donationRequest->save();
 
         return redirect()->route('donation-requests.show', $id)

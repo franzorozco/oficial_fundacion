@@ -5,50 +5,53 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-/**
- * Class Task
- *
- * @property $id
- * @property $creator_id
- * @property $name
- * @property $description
- * @property $created_at
- * @property $updated_at
- * @property $deleted_at
- *
- * @property User $user
- * @property TaskAssignment[] $taskAssignments
- * @package App
- * @mixin \Illuminate\Database\Eloquent\Builder
- */
 class Task extends Model
 {
     use SoftDeletes;
 
     protected $perPage = 20;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = ['creator_id', 'name', 'description'];
+    protected $fillable = [
+        'name',
+        'description',
+        'location',
+        'latitude',
+        'longitude',
+        'required_days',
+        'required_hours',
+        'creator_id',
+        'requires_transport'
+    ];
 
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function user()
+    // 🔹 Usuario creador
+    public function creator()
     {
-        return $this->belongsTo(\App\Models\User::class, 'creator_id', 'id');
+        return $this->belongsTo(User::class, 'creator_id');
     }
-    
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
+
+    // 🔹 Asignaciones
     public function taskAssignments()
     {
-        return $this->hasMany(\App\Models\TaskAssignment::class, 'id', 'task_id');
+        return $this->hasMany(TaskAssignment::class, 'task_id');
     }
-    
+
+    // 🔹 HABILIDADES REQUERIDAS (CLAVE 🔥)
+    public function requirements()
+    {
+        return $this->hasMany(TaskRequirement::class);
+    }
+
+    // 🔹 Relación directa con skills (mucho más útil)
+    public function skills()
+    {
+        return $this->belongsToMany(
+            Skill::class,
+            'task_requirements',
+            'task_id',
+            'skill_id'
+        )->withPivot('required_level');
+    }
+
+
+
 }

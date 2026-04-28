@@ -73,8 +73,6 @@ CREATE TABLE `profiles` (
     `document_number` VARCHAR(50),
     `photo` VARCHAR(255),
     `birthdate` DATE,
-    -- Nuevos campos para capacidades, actitudes y disponibilidad
-    `skills` TEXT,
     `interests` TEXT,
     `availability_days` VARCHAR(100),
     `availability_hours` VARCHAR(100),
@@ -90,6 +88,20 @@ CREATE TABLE `profiles` (
     `deleted_at` TIMESTAMP NULL DEFAULT NULL,
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+
+CREATE TABLE `task_user_matches` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `task_id` BIGINT UNSIGNED,
+    `user_id` BIGINT UNSIGNED,
+    `score` DECIMAL(5,2), -- compatibilidad %
+    `reason` TEXT,
+    `created_at` TIMESTAMP NULL,
+
+    FOREIGN KEY (`task_id`) REFERENCES `tasks`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
 
 -- Tabla de campañas organizadas por la fundación
 CREATE TABLE `campaigns` (
@@ -285,7 +297,7 @@ CREATE TABLE donation_request_descriptions (
     `recipient_name` VARCHAR(255) NOT NULL, -- Nombre del destinatario
     `recipient_address` TEXT, -- Dirección del destinatario
     `recipient_contact` VARCHAR(100), -- Teléfono u otro medio de contacto
-    `recipient_type` ENUM('individual', 'organization', 'community', 'other') DEFAULT 'individual', -- Tipo de beneficiario
+    `tipo_beneficiario` ENUM('individual', 'organization', 'community', 'other') DEFAULT 'individual', -- Tipo de beneficiario
     `reason` TEXT, -- Justificación o contexto de la solicitud
     `latitude` DECIMAL(10, 8), -- Coordenadas geográficas para ubicación exacta
     `longitude` DECIMAL(11, 8),
@@ -302,14 +314,52 @@ CREATE TABLE donation_request_descriptions (
 -- Tabla de tareas (actividades disponibles para voluntarios)
 CREATE TABLE `tasks` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
     `creator_id` BIGINT UNSIGNED NOT NULL,
     FOREIGN KEY (`creator_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+
     `name` VARCHAR(150) NOT NULL, -- Nombre de la tarea
     `description` TEXT, -- Descripción de la tarea
+
+    -- NUEVOS CAMPOS
+    `required_days` VARCHAR(100), -- Días requeridos (ej: Lunes, Miércoles)
+    `required_hours` VARCHAR(100), -- Horas requeridas (ej: 08:00-12:00)
+    `location` VARCHAR(150), -- Ubicación de la tarea
+    `requires_transport` BOOLEAN DEFAULT FALSE, -- Si requiere transporte
+    `latitude` DECIMAL(10,8) NULL AFTER `location`,
+    `longitude` DECIMAL(11,8) NULL AFTER `latitude`;
     `created_at` TIMESTAMP NULL DEFAULT NULL,
     `updated_at` TIMESTAMP NULL DEFAULT NULL,
-    `deleted_at` TIMESTAMP NULL DEFAULT NULL -- Soft delete para tareas
+    `deleted_at` TIMESTAMP NULL DEFAULT NULL -- Soft delete
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `profile_skills` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `profile_id` BIGINT UNSIGNED NOT NULL,
+    `skill_id` BIGINT UNSIGNED NOT NULL,
+    `level` ENUM('básico','intermedio','avanzado') DEFAULT 'básico',
+    
+    FOREIGN KEY (`profile_id`) REFERENCES `profiles`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`skill_id`) REFERENCES `skills_catalog`(`id`) ON DELETE CASCADE
+);
+CREATE TABLE `skills_catalog` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(100) NOT NULL UNIQUE,
+    `description` TEXT,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `task_requirements` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `task_id` BIGINT UNSIGNED NOT NULL,
+    `skill_id` BIGINT UNSIGNED NOT NULL,
+    `required_level` ENUM('básico','intermedio','avanzado') DEFAULT 'básico',
+
+    FOREIGN KEY (`task_id`) REFERENCES `tasks`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`skill_id`) REFERENCES `skills_catalog`(`id`) ON DELETE CASCADE
+);
+
 
 -- Tabla de asignaciones de tareas a voluntarios
 CREATE TABLE `task_assignments` (

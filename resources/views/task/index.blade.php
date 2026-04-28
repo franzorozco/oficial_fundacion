@@ -29,48 +29,97 @@
 
         <div class="card-body bg-white">
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="thead">
-                        <tr>
-                            <th>No</th>
-                            <th>Nombre del Creador</th>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($tasks as $task)
-                            <tr>
-                                <td>{{ ++$i }}</td>
-                                <td>{{ $task->user->name }}</td>
-                                <td>{{ $task->name }}</td>
-                                <td>{{ $task->description }}</td>
-                                <td>
-                                    <form action="{{ route('tasks.destroy', $task->id) }}" method="POST" class="d-inline">
-                                        @can('tasks.ver')
-                                        <a class="btn btn-sm btn-primary" href="{{ route('tasks.show', $task->id) }}">
-                                            <i class="fa fa-fw fa-eye"></i> {{ __('Mostrar') }}
-                                        </a>
-                                        @endcan
-                                        @can('tasks.editar')
-                                        <a class="btn btn-sm btn-success" href="{{ route('tasks.edit', $task->id) }}">
-                                            <i class="fa fa-fw fa-edit"></i> {{ __('Editar') }}
-                                        </a>
-                                        @endcan
-                                        @csrf
-                                        @can('tasks.eliminar')
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('¿Está seguro de eliminar?') ? this.closest('form').submit() : false;">
-                                            <i class="fa fa-fw fa-trash"></i> {{ __('Eliminar') }}
-                                        </button>
-                                        @endcan
-                                    </form>
-                                </td>
-                            </tr>
+<table class="table table-striped table-hover">
+    <thead class="thead">
+        <tr>
+            <th>#</th>
+            <th>Creador</th>
+            <th>Tarea</th>
+            <th>Descripción</th>
+            <th>Días</th>
+            <th>Horas</th>
+            <th>Ubicación</th>
+            <th>Transporte</th>
+            <th>Habilidades</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach ($tasks as $task)
+            <tr>
+                <td>{{ ++$i }}</td>
+
+                {{-- CREADOR --}}
+                <td>{{ $task->creator?->name ?? 'Sin usuario' }}</td>
+
+                {{-- NOMBRE --}}
+                <td><strong>{{ $task->name }}</strong></td>
+
+                {{-- DESCRIPCIÓN --}}
+                <td>{{ $task->description ?? '-' }}</td>
+
+                {{-- DÍAS --}}
+                <td>{{ $task->required_days ?? '-' }}</td>
+
+                {{-- HORAS --}}
+                <td>{{ $task->required_hours ?? '-' }}</td>
+
+                {{-- UBICACIÓN --}}
+                <td>{{ $task->location ?? '-' }}</td>
+
+                {{-- TRANSPORTE --}}
+                <td>
+                    @if($task->requires_transport)
+                        <span class="badge bg-warning text-dark">Sí</span>
+                    @else
+                        <span class="badge bg-secondary">No</span>
+                    @endif
+                </td>
+
+                {{-- 🔥 SKILLS --}}
+                <td>
+                    @if($task->skills->count())
+                        @foreach ($task->skills as $skill)
+                            <span class="badge bg-info text-dark mb-1">
+                                {{ $skill->name }} ({{ $skill->pivot->required_level }})
+                            </span>
                         @endforeach
-                    </tbody>
-                </table>
+                    @else
+                        <span class="text-muted">Sin requisitos</span>
+                    @endif
+                </td>
+
+                {{-- ACCIONES --}}
+                <td>
+                    <form action="{{ route('tasks.destroy', $task->id) }}" method="POST" class="d-inline">
+
+                        @can('tasks.ver')
+                        <a class="btn btn-sm btn-primary" href="{{ route('tasks.show', $task->id) }}">
+                            <i class="fa fa-eye"></i>
+                        </a>
+                        @endcan
+
+                        @can('tasks.editar')
+                        <a class="btn btn-sm btn-success" href="{{ route('tasks.edit', $task->id) }}">
+                            <i class="fa fa-edit"></i>
+                        </a>
+                        @endcan
+
+                        @csrf
+                        @can('tasks.eliminar')
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-sm"
+                            onclick="event.preventDefault(); confirm('¿Eliminar?') ? this.closest('form').submit() : false;">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                        @endcan
+
+                    </form>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
             </div>
         </div>
     </div>

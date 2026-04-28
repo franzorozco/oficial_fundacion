@@ -33,7 +33,7 @@
                 <a href="{{ url('/') }}" class="text-[#1b1b18] hover:text-[#00B2E3] transition">Inicio</a>
                 <a href="{{ url('/about') }}" class="text-[#1b1b18] hover:text-[#00B2E3] transition">Sobre Nosotros</a>
                 <a href="{{ url('/contact') }}" class="text-[#1b1b18] hover:text-[#00B2E3] transition">Contacto</a>
-                <a href="{{ url('/help') }}" class="text-[#1b1b18] hover:text-[#00B2E3] transition">Ayuda</a>
+                <a href="{{ url('/ayuda') }}" class="text-[#1b1b18] hover:text-[#00B2E3] transition">Ayuda</a>
 
                 @auth
                     <a href="{{ url('/dashboard') }}" class="px-3 py-1 border border-[#00B2E3] text-[#00B2E3] rounded hover:bg-[#00B2E3] hover:text-white transition">Dashboard</a>

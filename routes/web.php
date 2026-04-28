@@ -1,34 +1,35 @@
 <?php
-use App\Http\Controllers\StatusController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\TaskController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\EventController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\CampaignFinanceController;
 use App\Http\Controllers\DonantesController;
 use App\Http\Controllers\DonationController;
-use App\Http\Controllers\VolunteerController;
-use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\DonationItemController;
-use App\Http\Controllers\DonationTypeController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\DonationsCashController;
-use App\Http\Controllers\EventLocationController;
-use App\Http\Controllers\ExternalDonorController;
-use App\Http\Controllers\CampaignFinanceController;
 use App\Http\Controllers\DonationRequestController;
-use App\Http\Controllers\EventParticipantController;
-use App\Http\Controllers\FinancialAccountController;
-use App\Http\Controllers\DonationsIncomingController;
-use App\Http\Controllers\VolunteerVerificationController;
 use App\Http\Controllers\DonationRequestDescriptionController;
-use App\Http\Controllers\TaskAssignmentController;
-use App\Http\Controllers\info\DonacionesInfoController;
+use App\Http\Controllers\DonationsCashController;
+use App\Http\Controllers\DonationsIncomingController;
+use App\Http\Controllers\DonationTypeController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventLocationController;
+use App\Http\Controllers\EventParticipantController;
+use App\Http\Controllers\ExternalDonorController;
+use App\Http\Controllers\FinancialAccountController;
 use App\Http\Controllers\Forms\DonationFormController;
-use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\info\DonacionesInfoController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\StatusController;
+use App\Http\Controllers\TaskAssignmentController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserDonationRequestController;
+use App\Http\Controllers\VolunteerController;
+use App\Http\Controllers\VolunteerVerificationController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
@@ -39,17 +40,20 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 require __DIR__.'/auth.php';
 
 
-Route::get('/informacion-donaciones', [DonacionesInfoController::class, 'index'])
-    ->name('info-activity.donaciones');
+Route::get('/informacion-donaciones', [DonacionesInfoController::class, 'index'])->name('info-activity.donaciones');
 
+Route::middleware('auth')->group(function () {
+    Route::get('/ayuda', [UserDonationRequestController::class, 'create'])->name('ayuda.form');
+    Route::post('/ayuda', [UserDonationRequestController::class, 'store'])->name('ayuda.store');
+});
 
 Route::get('/formulario-donacion/{campaign_id}', [DonationFormController::class, 'show'])->name('donation.form');
 Route::post('/formulario-donacion', [DonationFormController::class, 'store'])->name('donation.store');
