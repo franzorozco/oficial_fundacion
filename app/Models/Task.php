@@ -24,10 +24,10 @@ class Task extends Model
     ];
 
     // 🔹 Usuario creador
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'creator_id');
-    }
+public function creator()
+{
+    return $this->belongsTo(User::class, 'creator_id');
+}
 
     // 🔹 Asignaciones
     public function taskAssignments()
@@ -51,7 +51,7 @@ class Task extends Model
             'skill_id'
         )->withPivot('required_level');
     }
-
+    
 
 
 }

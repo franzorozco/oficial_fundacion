@@ -17,7 +17,7 @@
 
         <div class="card-body bg-white">
             <div class="mb-3">
-                <strong>{{ __('Creador') }}:</strong> {{ $task->user->name }}
+                <strong>{{ __('Creador') }}:</strong> {{ $task->creator->name }}
             </div>
             <div class="mb-3">
                 <strong>{{ __('Nombre') }}:</strong> {{ $task->name }}

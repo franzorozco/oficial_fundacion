@@ -1,169 +1,207 @@
-<div class="row padding-1 p-1">
+<div class="row p-2">
     <div class="col-md-12">
 
         {{-- CREADOR --}}
         <input type="hidden" name="creator_id" value="{{ auth()->id() }}">
 
-        {{-- NOMBRE --}}
-        <div class="form-group mb-2">
-            <label>Nombre</label>
-            <input type="text" name="name" maxlength="100"
-                class="form-control"
-                value="{{ old('name', $task?->name) }}"
-                required>
-            <small class="text-danger" id="error-name"></small>
+        {{-- DATOS PRINCIPALES --}}
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <strong>Información de la tarea</strong>
+            </div>
+            <div class="card-body">
+
+                {{-- NOMBRE --}}
+                <div class="form-group mb-3">
+                    <label><strong>Nombre de la tarea</strong></label>
+                    <input type="text" name="name" maxlength="100"
+                        class="form-control"
+                        placeholder="Ej: Entrega de alimentos"
+                        value="{{ old('name', $task?->name) }}" required>
+                    <small class="text-danger" id="error-name"></small>
+                </div>
+
+                {{-- DESCRIPCIÓN --}}
+                <div class="form-group mb-3">
+                    <label><strong>Descripción</strong></label>
+                    <textarea name="description" maxlength="255"
+                        class="form-control"
+                        rows="3"
+                        placeholder="Describe la tarea a realizar..."
+                        required>{{ old('description', $task?->description) }}</textarea>
+                    <small class="text-danger" id="error-description"></small>
+                </div>
+
+            </div>
         </div>
 
-        {{-- DESCRIPCIÓN --}}
-        <div class="form-group mb-2">
-            <label>Descripción</label>
-            <textarea name="description" maxlength="255"
-                class="form-control"
-                required>{{ old('description', $task?->description) }}</textarea>
-            <small class="text-danger" id="error-description"></small>
-        </div>
+        {{-- DISPONIBILIDAD --}}
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <strong>Disponibilidad requerida</strong>
+            </div>
+            <div class="card-body">
 
-        {{-- DÍAS --}}
-        <div class="form-group">
-            <label>Días requeridos</label>
-            <select name="required_days[]" multiple class="form-control">
+                {{-- DÍAS --}}
+                <div class="form-group mb-3">
+                    <label><strong>Días requeridos</strong></label>
+                    <select name="required_days[]" multiple class="form-control">
+                        @php
+                            $days = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+                            $selectedDays = old('required_days', explode(',', $task?->required_days ?? ''));
+                        @endphp
+
+                        @foreach($days as $day)
+                            <option value="{{ $day }}"
+                                {{ in_array($day, $selectedDays) ? 'selected' : '' }}>
+                                {{ $day }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- HORAS --}}
                 @php
-                    $days = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
-                    $selectedDays = old('required_days', explode(',', $task?->required_days ?? ''));
+                    $start = null;
+                    $end = null;
+                    if($task && $task->required_hours){
+                        [$start, $end] = explode(' - ', $task->required_hours);
+                    }
                 @endphp
 
-                @foreach($days as $day)
-                    <option value="{{ $day }}"
-                        {{ in_array($day, $selectedDays) ? 'selected' : '' }}>
-                        {{ $day }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label><strong>Hora de inicio</strong></label>
+                        <input type="time" name="start_hour" class="form-control"
+                            value="{{ old('start_hour', $start) }}" required>
+                    </div>
 
-        {{-- HORAS --}}
-        @php
-            $start = null;
-            $end = null;
+                    <div class="col-md-6">
+                        <label><strong>Hora de fin</strong></label>
+                        <input type="time" name="end_hour" class="form-control"
+                            value="{{ old('end_hour', $end) }}" required>
+                    </div>
+                </div>
+                <small class="text-danger" id="error-hours"></small>
 
-            if($task && $task->required_hours){
-                [$start, $end] = explode(' - ', $task->required_hours);
-            }
-        @endphp
-
-        <div class="row mt-2">
-            <div class="col-md-6">
-                <label>Hora inicio</label>
-                <input type="time" name="start_hour" class="form-control"
-                    value="{{ old('start_hour', $start) }}" required>
-            </div>
-
-            <div class="col-md-6">
-                <label>Hora fin</label>
-                <input type="time" name="end_hour" class="form-control"
-                    value="{{ old('end_hour', $end) }}" required>
             </div>
         </div>
-        <small class="text-danger" id="error-hours"></small>
 
         {{-- UBICACIÓN --}}
-        <div class="form-group mt-2">
-            <label>Ubicación</label>
-            <input type="text" id="autocomplete" name="location"
-                class="form-control"
-                value="{{ old('location', $task?->location) }}">
-        </div>
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <strong>Ubicación</strong>
+            </div>
+            <div class="card-body">
 
-        {{-- COORDENADAS --}}
-        <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude', $task?->latitude) }}">
-        <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude', $task?->longitude) }}">
-
-        {{-- MAPA --}}
-        <div class="form-group mt-2">
-            <label>Seleccionar ubicación en el mapa</label>
-            <div id="map" style="height: 400px; border-radius:10px;"></div>
-        </div>
-        {{-- TRANSPORTE --}}
-        <div class="form-check mt-2">
-            <input type="checkbox" name="requires_transport" value="1"
-                class="form-check-input"
-                {{ old('requires_transport', $task?->requires_transport) ? 'checked' : '' }}>
-            <label class="form-check-label">Requiere transporte</label>
-        </div>
-
-        <hr>
-
-        {{-- SKILLS --}}
-        <h5>Habilidades requeridas (máx 5)</h5>
-
-        @php
-            $taskSkills = old('skills', $task?->requirements->pluck('skill_id')->toArray() ?? []);
-            $taskLevels = old('levels', $task?->requirements->pluck('required_level')->toArray() ?? []);
-        @endphp
-
-        <div id="skills-container">
-
-            @forelse($taskSkills as $index => $skillId)
-                <div class="row mb-2 skill-row">
-                    <div class="col-md-6">
-                        <select name="skills[]" class="form-control" required>
-                            <option value="">Seleccionar</option>
-                            @foreach($skills as $skill)
-                                <option value="{{ $skill->id }}"
-                                    {{ $skill->id == $skillId ? 'selected' : '' }}>
-                                    {{ $skill->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-4">
-                        <select name="levels[]" class="form-control">
-                            <option value="básico" {{ ($taskLevels[$index] ?? '') == 'básico' ? 'selected' : '' }}>Básico</option>
-                            <option value="intermedio" {{ ($taskLevels[$index] ?? '') == 'intermedio' ? 'selected' : '' }}>Intermedio</option>
-                            <option value="avanzado" {{ ($taskLevels[$index] ?? '') == 'avanzado' ? 'selected' : '' }}>Avanzado</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-danger remove-skill">X</button>
-                    </div>
+                <div class="form-group mb-2">
+                    <label><strong>Dirección</strong></label>
+                    <input type="text" id="autocomplete" name="location"
+                        class="form-control"
+                        placeholder="Buscar ubicación..."
+                        value="{{ old('location', $task?->location) }}">
                 </div>
-            @empty
-                <div class="row mb-2 skill-row">
-                    <div class="col-md-6">
-                        <select name="skills[]" class="form-control" required>
-                            <option value="">Seleccionar</option>
-                            @foreach($skills as $skill)
-                                <option value="{{ $skill->id }}">{{ $skill->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
 
-                    <div class="col-md-4">
-                        <select name="levels[]" class="form-control">
-                            <option value="básico">Básico</option>
-                            <option value="intermedio">Intermedio</option>
-                            <option value="avanzado">Avanzado</option>
-                        </select>
-                    </div>
+                <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude', $task?->latitude) }}">
+                <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude', $task?->longitude) }}">
 
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-danger remove-skill">X</button>
-                    </div>
+                <div class="mt-2">
+                    <label><strong>Seleccionar en el mapa</strong></label>
+                    <div id="map" style="height: 400px; border-radius:10px;"></div>
                 </div>
-            @endforelse
 
+                <div class="form-check mt-3">
+                    <input type="checkbox" name="requires_transport" value="1"
+                        class="form-check-input"
+                        {{ old('requires_transport', $task?->requires_transport) ? 'checked' : '' }}>
+                    <label class="form-check-label">Requiere transporte</label>
+                </div>
+
+            </div>
         </div>
 
-        <button type="button" id="add-skill" class="btn btn-secondary mt-2">
-            + Agregar habilidad
-        </button>
+        {{-- HABILIDADES --}}
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <strong>Habilidades requeridas</strong>
+                <small class="text-muted">(Máximo 5)</small>
+            </div>
+            <div class="card-body">
+
+                @php
+                    $taskSkills = old('skills', $task?->requirements->pluck('skill_id')->toArray() ?? []);
+                    $taskLevels = old('levels', $task?->requirements->pluck('required_level')->toArray() ?? []);
+                @endphp
+
+                <div id="skills-container">
+
+                    @forelse($taskSkills as $index => $skillId)
+                        <div class="row mb-2 skill-row">
+                            <div class="col-md-6">
+                                <select name="skills[]" class="form-control" required>
+                                    <option value="">Seleccionar habilidad</option>
+                                    @foreach($skills as $skill)
+                                        <option value="{{ $skill->id }}"
+                                            {{ $skill->id == $skillId ? 'selected' : '' }}>
+                                            {{ $skill->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <select name="levels[]" class="form-control">
+                                    <option value="básico" {{ ($taskLevels[$index] ?? '') == 'básico' ? 'selected' : '' }}>Básico</option>
+                                    <option value="intermedio" {{ ($taskLevels[$index] ?? '') == 'intermedio' ? 'selected' : '' }}>Intermedio</option>
+                                    <option value="avanzado" {{ ($taskLevels[$index] ?? '') == 'avanzado' ? 'selected' : '' }}>Avanzado</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-danger remove-skill">Eliminar</button>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="row mb-2 skill-row">
+                            <div class="col-md-6">
+                                <select name="skills[]" class="form-control" required>
+                                    <option value="">Seleccionar habilidad</option>
+                                    @foreach($skills as $skill)
+                                        <option value="{{ $skill->id }}">{{ $skill->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <select name="levels[]" class="form-control">
+                                    <option value="básico">Básico</option>
+                                    <option value="intermedio">Intermedio</option>
+                                    <option value="avanzado">Avanzado</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-danger remove-skill">Eliminar</button>
+                            </div>
+                        </div>
+                    @endforelse
+
+                </div>
+
+                <button type="button" id="add-skill" class="btn btn-outline-secondary mt-2">
+                    + Agregar habilidad
+                </button>
+
+            </div>
+        </div>
 
     </div>
 
-    <div class="col-md-12 mt-3">
-        <button type="submit" class="btn btn-primary">Guardar</button>
+    {{-- BOTÓN --}}
+    <div class="col-md-12 mt-2">
+        <button type="submit" class="btn btn-primary btn-block">
+            Guardar tarea
+        </button>
     </div>
 </div>
 
@@ -336,4 +374,72 @@ function updateInputs(location) {
     document.getElementById('latitude').value = location.lat();
     document.getElementById('longitude').value = location.lng();
 }
+</script>
+
+<script>
+// =============================
+// AGREGAR / ELIMINAR SKILLS
+// =============================
+
+const addSkillBtn = document.getElementById('add-skill');
+const container = document.getElementById('skills-container');
+
+addSkillBtn.addEventListener('click', function () {
+
+    let total = document.querySelectorAll('.skill-row').length;
+
+    // 🔒 límite máximo
+    if (total >= 5) {
+        alert("Máximo 5 habilidades");
+        return;
+    }
+
+    const newRow = document.createElement('div');
+    newRow.classList.add('row', 'mb-2', 'skill-row');
+
+    newRow.innerHTML = `
+        <div class="col-md-6">
+            <select name="skills[]" class="form-control" required>
+                <option value="">Seleccionar habilidad</option>
+                @foreach($skills as $skill)
+                    <option value="{{ $skill->id }}">{{ $skill->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <select name="levels[]" class="form-control">
+                <option value="básico">Básico</option>
+                <option value="intermedio">Intermedio</option>
+                <option value="avanzado">Avanzado</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <button type="button" class="btn btn-outline-danger remove-skill">Eliminar</button>
+        </div>
+    `;
+
+    container.appendChild(newRow);
+});
+
+
+// =============================
+// ELIMINAR SKILL (IMPORTANTE)
+// =============================
+
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('remove-skill')) {
+
+        let rows = document.querySelectorAll('.skill-row');
+
+        // evitar eliminar la última
+        if (rows.length <= 1) {
+            alert("Debe existir al menos una habilidad");
+            return;
+        }
+
+        e.target.closest('.skill-row').remove();
+    }
+});
 </script>

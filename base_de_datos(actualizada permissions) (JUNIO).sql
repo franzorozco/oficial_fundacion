@@ -360,7 +360,7 @@ CREATE TABLE `task_requirements` (
     FOREIGN KEY (`skill_id`) REFERENCES `skills_catalog`(`id`) ON DELETE CASCADE
 );
 
-
+ 
 -- Tabla de asignaciones de tareas a voluntarios
 CREATE TABLE `task_assignments` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

@@ -69,10 +69,10 @@ class TaskController extends Controller
 
     public function show($id): View
     {
-        $task = Task::with('user')->findOrFail($id);
+        $task = Task::with('creator')->findOrFail($id);
 
         $assignments = collect(
-            TaskAssignment::with('user')
+            TaskAssignment::with(['assignedUser', 'supervisorUser'])
                 ->where('task_id', $id)
                 ->get()
                 ->groupBy('status')

@@ -27,8 +27,10 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserDonationRequestController;
+use App\Http\Controllers\VolunteeringController;
 use App\Http\Controllers\VolunteerController;
 use App\Http\Controllers\VolunteerVerificationController;
+use App\Http\Controllers\SkillsCatalogController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -53,6 +55,15 @@ Route::get('/informacion-donaciones', [DonacionesInfoController::class, 'index']
 Route::middleware('auth')->group(function () {
     Route::get('/ayuda', [UserDonationRequestController::class, 'create'])->name('ayuda.form');
     Route::post('/ayuda', [UserDonationRequestController::class, 'store'])->name('ayuda.store');
+});
+
+
+Route::middleware('auth')->group(function () {
+
+    Route::get('/volunteering', [VolunteeringController::class, 'index'])
+        ->name('volunteering.index');
+    Route::post('/volunteering/apply/{task}', [VolunteeringController::class, 'apply'])
+        ->name('volunteering.apply');
 });
 
 Route::get('/formulario-donacion/{campaign_id}', [DonationFormController::class, 'show'])->name('donation.form');
@@ -242,6 +253,7 @@ Route::resource('volunteer-verifications', VolunteerVerificationController::clas
 Route::resource('roles', RoleController::class)->names('roles');
 Route::resource('tasks', TaskController::class);
 Route::resource('task-assignments', TaskAssignmentController::class);
+Route::resource('skills-catalogs', SkillsCatalogController::class);
 Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
 
 
